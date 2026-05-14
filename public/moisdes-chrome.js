@@ -5,7 +5,7 @@
 
 (function() {
 
-  const LOGO = 'https://drive.google.com/uc?id=1Gu1AHcbqsG8KNMeCobFIQQn0VBcKTMPt';
+  const LOGO = '/logo.avif';
 
   const NAV = [
     { label: 'הויפט בלאט', href: '/'             },
@@ -36,7 +36,7 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(28, 18, 10, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -112,7 +112,7 @@
       position: fixed;
       inset: 0;
       z-index: 999;
-      background: rgba(0,0,0,0.96);
+      background: rgba(20, 13, 7, 0.98);
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -164,7 +164,7 @@
       border-top: 1px solid rgba(255,255,255,0.1);
       margin-top: 4rem;
       padding: 3rem 48px 2rem;
-      background: rgba(0,0,0,0.4);
+      background: rgba(20, 13, 7, 0.6);
     }
 
     .footer-inner {
@@ -368,8 +368,7 @@
     left.innerHTML = `
       <div class="footer-logo"><img src="${LOGO}" alt="מאישדעס"></div>
       <div class="footer-copy">
-        &copy; ${new Date().getFullYear()} מאישדעס וויען<br>
-        אלע רעכטן פארבהאלטן
+        &copy; ${new Date().getFullYear()} Moisdes Wien. All rights reserved.
       </div>
     `;
 

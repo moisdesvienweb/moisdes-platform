@@ -40,7 +40,7 @@ window.MOISDES.CFG = {
   },
 
   // ── Logo ───────────────────────────────────────────────────────
-  logo: 'https://drive.google.com/uc?id=1Gu1AHcbqsG8KNMeCobFIQQn0VBcKTMPt',
+  logo: '/logo.avif',
 
   // ── Site pages (used for cross-page links) ─────────────────────
   pages: {
