@@ -337,7 +337,9 @@ window.MOISDES.FileWidget = class {
 
     // Wire remove buttons
     this.listEl.querySelectorAll('[data-remove]').forEach(btn => {
-      btn.addEventListener('click', () => this.removeFile(parseFloat(btn.dataset.remove)));
+      if (btn && btn.addEventListener) {
+        btn.addEventListener('click', () => this.removeFile(parseFloat(btn.dataset.remove)));
+      }
     });
 
     // Wire rename inputs
@@ -595,7 +597,8 @@ class BaseUpload extends HTMLElement {
 
   // ── CREATE DRIVE FOLDER ────────────────────────────────────────
   async _createFolder(token, parentId, name) {
-    const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+    console.log('[Upload] Creating folder in parentId:', parentId, 'name:', name);
+    const res = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }),
@@ -605,9 +608,12 @@ class BaseUpload extends HTMLElement {
     try { d = JSON.parse(folderText); } catch(e) {
       throw new Error('Drive folder API returned non-JSON. Check that the Drive folder ID in shared-config.js is correct and shared with the service account. Response: ' + folderText.slice(0,120));
     }
-    if (!d.id) throw new Error('Folder create failed: ' + JSON.stringify(d));
+    if (!d.id) {
+      const reason = d.error?.errors?.[0]?.reason || d.error?.message || JSON.stringify(d);
+      throw new Error(`Drive 403 — ${reason}. Make sure: (1) the folder ID in shared-config.js is correct, (2) the folder is shared with the service account email as Editor, (3) Google Drive API is enabled in Google Cloud Console.`);
+    }
     // Make public
-    await fetch(`https://www.googleapis.com/drive/v3/files/${d.id}/permissions`, {
+    await fetch(`https://www.googleapis.com/drive/v3/files/${d.id}/permissions?supportsAllDrives=true`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: 'reader', type: 'anyone' }),
@@ -623,31 +629,28 @@ class BaseUpload extends HTMLElement {
       const reader = new FileReader();
       reader.onload = async (ev) => {
         try {
-          const boundary  = 'moisdes_boundary_' + Date.now();
+          const boundary  = 'moisdes_' + Date.now();
           const metadata  = JSON.stringify({ name: file.name, parents: [folderId] });
           const fileData  = ev.target.result; // ArrayBuffer
 
-          // Build multipart body
-          const encoder   = new TextEncoder();
-          const part1     = encoder.encode(
-            `--${boundary}
-Content-Type: application/json; charset=UTF-8
-
-${metadata}
---${boundary}
-Content-Type: ${file.mimeType}
-
-`
+          // Build multipart/related body with proper CRLF line endings
+          const CRLF    = '\r\n';
+          const encoder = new TextEncoder();
+          const part1   = encoder.encode(
+            '--' + boundary + CRLF +
+            'Content-Type: application/json; charset=UTF-8' + CRLF + CRLF +
+            metadata + CRLF +
+            '--' + boundary + CRLF +
+            'Content-Type: ' + file.mimeType + CRLF + CRLF
           );
-          const part2     = encoder.encode(`
---${boundary}--`);
-          const body      = new Uint8Array(part1.byteLength + fileData.byteLength + part2.byteLength);
+          const part2   = encoder.encode(CRLF + '--' + boundary + '--');
+          const body    = new Uint8Array(part1.byteLength + fileData.byteLength + part2.byteLength);
           body.set(part1, 0);
           body.set(new Uint8Array(fileData), part1.byteLength);
           body.set(part2, part1.byteLength + fileData.byteLength);
 
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id');
+          xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id&supportsAllDrives=true');
           xhr.setRequestHeader('Authorization', `Bearer ${token}`);
           xhr.setRequestHeader('Content-Type', `multipart/related; boundary=${boundary}`);
 
@@ -661,7 +664,7 @@ Content-Type: ${file.mimeType}
             if (xhr.status >= 200 && xhr.status < 300) {
               const data = JSON.parse(xhr.responseText);
               // Make file public
-              await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
+              await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions?supportsAllDrives=true`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role: 'reader', type: 'anyone' }),
