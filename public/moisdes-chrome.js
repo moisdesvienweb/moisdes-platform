@@ -36,10 +36,10 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(28, 18, 10, 0.95);
+      background: rgba(100, 60, 28, 0.97);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(0,0,0,0.25);
     }
 
     .header-inner {
@@ -61,9 +61,10 @@
     }
 
     .header-logo img {
-      height: 40px;
+      height: 52px;
       width: auto;
       display: block;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
     }
 
     .header-nav {
@@ -112,7 +113,7 @@
       position: fixed;
       inset: 0;
       z-index: 999;
-      background: rgba(20, 13, 7, 0.98);
+      background: rgba(90, 52, 18, 0.99);
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -161,10 +162,10 @@
 
     /* ── FOOTER ── */
     #moisdes-footer {
-      border-top: 1px solid rgba(255,255,255,0.1);
+      border-top: 1px solid rgba(0,0,0,0.2);
       margin-top: 4rem;
       padding: 3rem 48px 2rem;
-      background: rgba(20, 13, 7, 0.6);
+      background: rgba(70, 40, 15, 0.7);
     }
 
     .footer-inner {
@@ -179,10 +180,11 @@
     .footer-left { direction: rtl; }
 
     .footer-logo img {
-      height: 36px;
+      height: 52px;
       width: auto;
       margin-bottom: 1rem;
-      opacity: 0.7;
+      opacity: 0.9;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
     }
 
     .footer-copy {
