@@ -623,65 +623,59 @@ class BaseUpload extends HTMLElement {
 
   // ── UPLOAD SINGLE FILE DIRECTLY TO DRIVE with real progress ───
   async _uploadFile(token, folderId, file, onProgress) {
-    // Use XHR multipart upload for real progress tracking
-    // (resumable upload init is blocked by CORS from browsers)
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const boundary  = 'moisdes_' + Date.now();
-          const metadata  = JSON.stringify({ name: file.name, parents: [folderId] });
-          const fileData  = ev.target.result; // ArrayBuffer
-
-          // Build multipart/related body with proper CRLF line endings
-          const CRLF    = '\r\n';
-          const encoder = new TextEncoder();
-          const part1   = encoder.encode(
-            '--' + boundary + CRLF +
-            'Content-Type: application/json; charset=UTF-8' + CRLF + CRLF +
-            metadata + CRLF +
-            '--' + boundary + CRLF +
-            'Content-Type: ' + file.mimeType + CRLF + CRLF
-          );
-          const part2   = encoder.encode(CRLF + '--' + boundary + '--');
-          const body    = new Uint8Array(part1.byteLength + fileData.byteLength + part2.byteLength);
-          body.set(part1, 0);
-          body.set(new Uint8Array(fileData), part1.byteLength);
-          body.set(part2, part1.byteLength + fileData.byteLength);
-
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id&supportsAllDrives=true');
-          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-          xhr.setRequestHeader('Content-Type', `multipart/related; boundary=${boundary}`);
-
-          xhr.upload.onprogress = e => {
-            if (e.lengthComputable && onProgress) {
-              onProgress(Math.round((e.loaded / e.total) * 100));
-            }
-          };
-
-          xhr.onload = async () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              const data = JSON.parse(xhr.responseText);
-              // Make file public
-              await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions?supportsAllDrives=true`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role: 'reader', type: 'anyone' }),
-              });
-              resolve(data.id);
-            } else {
-              reject(new Error(`Upload failed: ${xhr.status} — ${xhr.responseText.slice(0,100)}`));
-            }
-          };
-          xhr.onerror = () => reject(new Error('Network error during upload'));
-          xhr.send(body);
-        } catch(err) { reject(err); }
-      };
-      reader.onerror = () => reject(new Error('File read error'));
-      reader.readAsArrayBuffer(file.blob);
+    // Step 1: Get a resumable upload URL from our Netlify function (server-side)
+    // This avoids the "service account has no storage quota" error
+    const CFG = window.MOISDES.CFG;
+    const initRes = await fetch(`${CFG.submitBase}/upload-init`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        mimeType: file.mimeType,
+        folderId: folderId,
+        fileSize: file.blob.size,
+      }),
     });
+    const initData = await initRes.json();
+    if (initData.error) throw new Error('Upload init: ' + initData.error);
+    const uploadUrl = initData.uploadUrl;
+
+    // Step 2: Upload file bytes directly to Google using XHR (real progress)
+    const fileId = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', uploadUrl);
+      xhr.setRequestHeader('Content-Type', file.mimeType);
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status === 200 || xhr.status === 201) {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data.id);
+        } else {
+          reject(new Error(`Upload PUT failed: ${xhr.status} — ${xhr.responseText.slice(0,120)}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(file.blob);
+    });
+
+    // Step 3: Make file public via finalize function
+    const finalRes = await fetch(`${CFG.submitBase}/upload-finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileId }),
+    });
+    const finalData = await finalRes.json();
+    if (finalData.error) console.warn('Finalize warning:', finalData.error);
+
+    return fileId;
   }
+
 
   // ── WRITE ROW TO SHEETS ────────────────────────────────────────
   async _appendRow(token, tab, row) {
