@@ -26,7 +26,7 @@ window.MOISDES.CFG = {
 
   // ── Netlify function base URL ──────────────────────────────────
   // Leave as-is — works on any Netlify deployment
-  submitBase: 'https://moisdesvienweb.netlify.app/.netlify/functions',
+  submitBase: '/.netlify/functions',
 
   // ── Google Drive parent folder IDs ────────────────────────────
   // Create a subfolder for each content type, share each with
@@ -40,11 +40,11 @@ window.MOISDES.CFG = {
   },
 
   // ── Logo ───────────────────────────────────────────────────────
-  logo: '/logo.avif',
+  logo: 'https://drive.google.com/uc?id=1Gu1AHcbqsG8KNMeCobFIQQn0VBcKTMPt',
 
   // ── Site pages (used for cross-page links) ─────────────────────
   pages: {
-    home:           '/',
+    home:           '/home',
     blog:           '/blog',
     posters:        '/posters',
     events:         '/events',

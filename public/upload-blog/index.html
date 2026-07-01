@@ -8,24 +8,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      min-height: 100vh;
-      font-family: 'Heebo', sans-serif;
-      background: #7a4a1e; min-height: 100vh;
-      color: #fff;
-      direction: rtl;
-    }
-    moisdes-upload-blog {
-      display: block;
-      width: 100%;
-    }
+    html, body { min-height: 100vh; font-family: 'Heebo', sans-serif; background: #7a4a1e; color: #fff; direction: rtl; }
+    moisdes-upload-blog { display: block; width: 100%; }
   </style>
 </head>
 <body>
+  <script src="/moisdes-auth.js"></script>
   <script src="/shared-config.js"></script>
-  <script src="/shared-upload.js"></script>
   <script src="/moisdes-uploads.js"></script>
-
   <moisdes-upload-blog></moisdes-upload-blog>
 </body>
 </html>

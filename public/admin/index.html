@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — מאישדעס</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a0e06; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.12);
+      --text: #fff; --muted: rgba(255,255,255,0.5); --subtle: rgba(255,255,255,0.25);
+      --accent: #c8844a; --error: #ff6b6b; --success: #69db7c;
+    }
+    body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    .admin-header { background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .admin-header img { height: 36px; }
+    .admin-title { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+    .logout-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'Heebo', sans-serif; font-size: 0.78rem; padding: 0.3rem 0.75rem; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
+    .logout-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
+
+    /* Layout */
+    .admin-layout { display: flex; min-height: calc(100vh - 56px); }
+    .sidebar { width: 200px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 1.5rem 0; }
+    .sidebar-link { display: block; padding: 0.55rem 1.5rem; font-size: 0.82rem; color: var(--muted); text-decoration: none; cursor: pointer; transition: all 0.12s; border-right: 2px solid transparent; }
+    .sidebar-link:hover, .sidebar-link.active { color: var(--text); border-right-color: var(--accent); background: rgba(255,255,255,0.04); }
+    .sidebar-section { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--subtle); padding: 1rem 1.5rem 0.35rem; }
+    .main { flex: 1; padding: 2rem; overflow-y: auto; }
+
+    /* Tabs */
+    .tab-content { display: none; } .tab-content.active { display: block; }
+    h2 { font-size: 1.1rem; font-weight: 900; margin-bottom: 1.5rem; }
+
+    /* Table */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .data-table th { text-align: left; padding: 0.6rem 0.75rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+    /* Badges */
+    .badge { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px; }
+    .badge-admin { background: rgba(200,132,74,0.2); color: #c8844a; }
+    .badge-super { background: rgba(200,132,74,0.35); color: #e8a46a; }
+    .badge-user  { background: rgba(255,255,255,0.08); color: var(--muted); }
+    .badge-on  { background: rgba(105,219,124,0.15); color: #69db7c; }
+    .badge-off { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.85rem; border-radius: 2px; font-family: 'Heebo', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s; border: 1px solid; }
+    .btn-primary { background: rgba(200,132,74,0.15); border-color: rgba(200,132,74,0.4); color: #c8844a; }
+    .btn-primary:hover { background: rgba(200,132,74,0.25); }
+    .btn-danger  { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: #ff6b6b; }
+    .btn-danger:hover  { background: rgba(255,107,107,0.2); }
+    .btn-ghost { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
+    .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.72rem; }
+    .btn + .btn { margin-left: 0.4rem; }
+
+    /* Modal */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #1e1206; border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+    .modal-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 0.95rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+    .modal-body { padding: 1.25rem; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+    .field input, .field select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.88rem; padding: 0.6rem 0.8rem; outline: none; border-radius: 2px; transition: border 0.15s; }
+    .field input:focus, .field select:focus { border-color: rgba(255,255,255,0.4); }
+    .field input::placeholder { color: var(--subtle); }
+    .field select option { background: #1e1206; }
+    .perms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .perm-check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 2px; transition: all 0.12s; }
+    .perm-check:hover { border-color: rgba(255,255,255,0.3); }
+    .perm-check input { width: auto; padding: 0; }
+    .perm-check.checked { border-color: rgba(200,132,74,0.5); background: rgba(200,132,74,0.08); }
+    .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
+    .msg { font-size: 0.78rem; margin-top: 0.75rem; min-height: 1.2rem; }
+    .msg.err { color: var(--error); } .msg.ok { color: var(--success); }
+
+    /* Content tabs */
+    .content-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-pill { padding: 0.3rem 0.85rem; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'Heebo', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.12s; }
+    .filter-pill.on { border-color: var(--accent); color: var(--accent); background: rgba(200,132,74,0.08); }
+    .search-input { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.85rem; border-radius: 2px; outline: none; width: 260px; transition: border 0.15s; }
+    .search-input:focus { border-color: rgba(255,255,255,0.35); }
+    .search-input::placeholder { color: var(--subtle); }
+    .deleted-badge { font-size: 0.65rem; color: #ff6b6b; background: rgba(255,107,107,0.12); padding: 0.1rem 0.4rem; border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<div class="admin-header">
+  <a href="/"><img src="/logo.avif" alt="מאישדעס"></a>
+  <div class="admin-title">Admin Backend</div>
+  <button class="logout-btn" onclick="logout()">Sign Out</button>
+</div>
+
+<div class="admin-layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">Users</div>
+    <a class="sidebar-link active" onclick="showTab('users')">All Users</a>
+    <div class="sidebar-section">Content</div>
+    <a class="sidebar-link" onclick="showTab('content')">Browse & Edit</a>
+    <a class="sidebar-link" onclick="showTab('trash')">Trash (30d)</a>
+    <div class="sidebar-section">Site</div>
+    <a class="sidebar-link" onclick="showTab('subscribers')">Subscribers</a>
+  </nav>
+
+  <main class="main">
+
+    <!-- USERS TAB -->
+    <div class="tab-content active" id="tab-users">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <h2>Users</h2>
+        <button class="btn btn-primary" onclick="openCreateUser()">+ New User</button>
+      </div>
+      <table class="data-table" id="users-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead>
+        <tbody id="users-body"><tr><td colspan="6" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- CONTENT TAB -->
+    <div class="tab-content" id="tab-content">
+      <h2>Browse & Edit Content</h2>
+      <div class="content-filters">
+        <button class="filter-pill on" onclick="setContentType('posts',this)">Blog Posts</button>
+        <button class="filter-pill" onclick="setContentType('posters',this)">Posters</button>
+        <button class="filter-pill" onclick="setContentType('events',this)">Events</button>
+        <button class="filter-pill" onclick="setContentType('videos',this)">Videos</button>
+        <button class="filter-pill" onclick="setContentType('pdfs',this)">PDFs</button>
+        <input class="search-input" type="text" placeholder="Search..." id="content-search" oninput="loadContent()">
+      </div>
+      <table class="data-table" id="content-table">
+        <thead><tr><th>Date</th><th>Title</th><th>Tags</th><th>Uploaded</th><th>Actions</th></tr></thead>
+        <tbody id="content-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- TRASH TAB -->
+    <div class="tab-content" id="tab-trash">
+      <h2>Trash <span style="font-size:0.75rem;font-weight:400;color:var(--muted)">(items deleted in last 30 days)</span></h2>
+      <table class="data-table">
+        <thead><tr><th>Type</th><th>Title / Date</th><th>Deleted</th><th>Actions</th></tr></thead>
+        <tbody id="trash-body"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- SUBSCRIBERS TAB -->
+    <div class="tab-content" id="tab-subscribers">
+      <h2>Email Subscribers</h2>
+      <table class="data-table">
+        <thead><tr><th>Email</th><th>Signed Up</th></tr></thead>
+        <tbody id="subs-body"><tr><td colspan="2" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<!-- CREATE / EDIT USER MODAL -->
+<div class="modal-bg" id="user-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="user-modal-title">New User</div>
+      <button class="modal-close" onclick="closeModal('user-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-user-id">
+      <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="Full name"></div>
+      <div class="field"><label>Email</label><input type="email" id="u-email" placeholder="user@email.com"></div>
+      <div class="field"><label>Password <span id="pw-hint" style="color:var(--subtle);font-size:0.65rem">(leave blank to keep current)</span></label><input type="password" id="u-password" placeholder="••••••••"></div>
+      <div class="field">
+        <label>Role</label>
+        <select id="u-role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+          <option value="superadmin">Superadmin</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Upload Permissions</label>
+        <div class="perms-grid" id="perms-grid">
+          <label class="perm-check" id="perm-blog"><input type="checkbox" value="blog"> Blog Posts</label>
+          <label class="perm-check" id="perm-posters"><input type="checkbox" value="posters"> Posters</label>
+          <label class="perm-check" id="perm-events"><input type="checkbox" value="events"> Events</label>
+          <label class="perm-check" id="perm-video"><input type="checkbox" value="video"> Videos</label>
+          <label class="perm-check" id="perm-pdfs"><input type="checkbox" value="pdfs"> PDFs</label>
+        </div>
+        <div style="font-size:0.68rem;color:var(--subtle);margin-top:0.4rem">Admins and superadmins have access to all pages</div>
+      </div>
+      <div class="msg" id="user-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CONTENT MODAL -->
+<div class="modal-bg" id="content-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Edit</div>
+      <button class="modal-close" onclick="closeModal('content-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="content-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('content-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContent()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://moisdes-worker.moisdesvienweb.workers.dev';
+  let token = localStorage.getItem('moisdes_token');
+  let user  = JSON.parse(localStorage.getItem('moisdes_user') || '{}');
+  let currentContentType = 'posts';
+  let editingContentId = null;
+
+  // ── INIT ──────────────────────────────────────────────────────
+  if (!token) window.location.href = '/login?redirect=/admin';
+  if (user.role !== 'superadmin') window.location.href = '/';
+
+  function auth() { return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+
+  function logout() {
+    fetch(`${API}/api/auth/logout`, { method: 'POST', headers: auth() });
+    localStorage.clear();
+    window.location.href = '/login';
+  }
+
+  // ── TABS ──────────────────────────────────────────────────────
+  function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'users')       loadUsers();
+    if (name === 'content')     loadContent();
+    if (name === 'trash')       loadTrash();
+    if (name === 'subscribers') loadSubscribers();
+  }
+
+  // ── USERS ─────────────────────────────────────────────────────
+  async function loadUsers() {
+    const res  = await fetch(`${API}/api/admin/users`, { headers: auth() });
+    const data = await res.json();
+    const tbody = document.getElementById('users-body');
+    if (!data.users?.length) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:2rem">No users</td></tr>'; return; }
+    tbody.innerHTML = data.users.map(u => `
+      <tr>
+        <td>${esc(u.name||'—')}</td>
+        <td style="color:var(--muted)">${esc(u.email)}</td>
+        <td><span class="badge badge-${u.role === 'superadmin' ? 'super' : u.role === 'admin' ? 'admin' : 'user'}">${u.role}</span></td>
+        <td><span class="badge badge-${u.active ? 'on' : 'off'}">${u.active ? 'Active' : 'Disabled'}</span></td>
+        <td style="font-size:0.72rem;color:var(--muted)">${(u.permissions||[]).join(', ') || (u.role !== 'user' ? 'All' : '—')}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>Edit</button>
+          ${u.role !== 'superadmin' ? `<button class="btn btn-danger btn-sm" onclick="disableUser(${u.id},${u.active})">${u.active ? 'Disable' : 'Enable'}</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openCreateUser() {
+    document.getElementById('edit-user-id').value = '';
+    document.getElementById('u-name').value = '';
+    document.getElementById('u-email').value = '';
+    document.getElementById('u-password').value = '';
+    document.getElementById('u-role').value = 'user';
+    document.getElementById('pw-hint').style.display = 'none';
+    document.querySelectorAll('.perm-check input').forEach(cb => { cb.checked = false; cb.closest('.perm-check').classList.remove('checked'); });
+    document.getElementById('user-modal-title').textContent = 'New User';
+    document.getElementById('user-msg').textContent = '';
+    openModal('user-modal');
+  }
+
+  function openEditUser(u) {
+    document.getElementById('edit-user-id').value = u.id;
+    document.getElementById('u-name').value  = u.name || '';
+    document.getElementById('u-email').value = u.email;
+    document.getElementById('u-password').value = '';
+    document.getElementById('u-role').value = u.role;
+    document.getElementById('pw-hint').style.display = '';
+    document.getElementById('user-modal-title').textContent = 'Edit User';
+    document.getElementById('user-msg').textContent = '';
+    const perms = u.permissions || [];
+    document.querySelectorAll('.perm-check input').forEach(cb => {
+      cb.checked = perms.includes(cb.value);
+      cb.closest('.perm-check').classList.toggle('checked', cb.checked);
+    });
+    openModal('user-modal');
+  }
+
+  async function saveUser() {
+    const id    = document.getElementById('edit-user-id').value;
+    const name  = document.getElementById('u-name').value.trim();
+    const email = document.getElementById('u-email').value.trim();
+    const pass  = document.getElementById('u-password').value;
+    const role  = document.getElementById('u-role').value;
+    const perms = [...document.querySelectorAll('.perm-check input:checked')].map(cb => cb.value);
+    const msg   = document.getElementById('user-msg');
+
+    try {
+      if (id) {
+        // Update existing
+        const body = { name, role };
+        if (pass) body.password = pass;
+        await fetch(`${API}/api/admin/users/${id}`, { method: 'PUT', headers: auth(), body: JSON.stringify(body) });
+        await fetch(`${API}/api/admin/users/${id}/permissions`, { method: 'PUT', headers: auth(), body: JSON.stringify({ permissions: perms }) });
+      } else {
+        // Create new
+        if (!email || !pass) { msg.className = 'msg err'; msg.textContent = 'Email and password required'; return; }
+        await fetch(`${API}/api/admin/users`, { method: 'POST', headers: auth(), body: JSON.stringify({ email, name, password: pass, role, permissions: perms }) });
+      }
+      msg.className = 'msg ok'; msg.textContent = 'Saved!';
+      setTimeout(() => { closeModal('user-modal'); loadUsers(); }, 800);
+    } catch(e) {
+      msg.className = 'msg err'; msg.textContent = e.message;
+    }
+  }
+
+  async function disableUser(id, currently) {
+    await fetch(`${API}/api/admin/users/${id}`, { method: 'PUT', headers: auth(), body: JSON.stringify({ active: !currently }) });
+    loadUsers();
+  }
+
+  document.querySelectorAll('.perm-check').forEach(label => {
+    label.addEventListener('click', () => {
+      setTimeout(() => label.classList.toggle('checked', label.querySelector('input').checked), 0);
+    });
+  });
+
+  // ── CONTENT ───────────────────────────────────────────────────
+  function setContentType(type, btn) {
+    currentContentType = type;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('on'));
+    btn.classList.add('on');
+    loadContent();
+  }
+
+  async function loadContent() {
+    const search = document.getElementById('content-search')?.value || '';
+    const res    = await fetch(`${API}/api/${currentContentType}?search=${encodeURIComponent(search)}&limit=100`, { headers: auth() });
+    const data   = await res.json();
+    const tbody  = document.getElementById('content-body');
+
+    if (!data.items?.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">No items</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.items.map(item => `
+      <tr>
+        <td style="color:var(--muted);white-space:nowrap">${item.date||'—'}</td>
+        <td>${esc(item.title || item.parsha || '—')}</td>
+        <td style="font-size:0.72rem;color:var(--muted)">${esc((item.tags||'').split(',').slice(0,3).join(', '))}</td>
+        <td style="font-size:0.72rem;color:var(--muted)">${item.created_at?.split('T')[0]||'—'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick='openEditContent(${JSON.stringify(item)})'>Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openEditContent(item) {
+    editingContentId = item.id;
+    const fields = {
+      posts:   ['date','title','body','tags'],
+      posters: ['date','parsha'],
+      events:  ['date','title','location','category','description','tags'],
+      videos:  ['date','title','location','category','description','tags','video_url'],
+      pdfs:    ['date','title','category','language','parsha','year','tags'],
+    };
+    const f = fields[currentContentType] || [];
+    document.getElementById('content-modal-body').innerHTML = f.map(field => `
+      <div class="field">
+        <label>${field.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</label>
+        ${field === 'body' || field === 'description'
+          ? `<textarea id="edit-${field}" rows="4" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;font-family:Heebo,sans-serif;font-size:0.88rem;padding:0.6rem 0.8rem;border-radius:2px;outline:none;resize:vertical">${esc(item[field]||'')}</textarea>`
+          : `<input type="text" id="edit-${field}" value="${esc(item[field]||'')}" placeholder="${field}">`
+        }
+      </div>
+    `).join('');
+    openModal('content-modal');
+  }
+
+  async function saveContent() {
+    const fields = {
+      posts:   ['date','title','body','tags'],
+      posters: ['date','parsha'],
+      events:  ['date','title','location','category','description','tags'],
+      videos:  ['date','title','location','category','description','tags','video_url'],
+      pdfs:    ['date','title','category','language','parsha','year','tags'],
+    };
+    const body = {};
+    (fields[currentContentType]||[]).forEach(f => {
+      const el = document.getElementById(`edit-${f}`);
+      if (el) body[f] = el.value;
+    });
+    await fetch(`${API}/api/${currentContentType}/${editingContentId}`, { method: 'PUT', headers: auth(), body: JSON.stringify(body) });
+    closeModal('content-modal');
+    loadContent();
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('Move to trash?')) return;
+    await fetch(`${API}/api/${currentContentType}/${id}`, { method: 'DELETE', headers: auth() });
+    loadContent();
+  }
+
+  // ── TRASH ─────────────────────────────────────────────────────
+  async function loadTrash() {
+    const res  = await fetch(`${API}/api/trash`, { headers: auth() });
+    const data = await res.json();
+    const tbody = document.getElementById('trash-body');
+    if (!data.items?.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:2rem">Trash is empty</td></tr>'; return; }
+    tbody.innerHTML = data.items.map(item => `
+      <tr>
+        <td><span class="badge badge-user">${item._table}</span></td>
+        <td>${esc(item.title || item.parsha || item.date || '—')}</td>
+        <td style="color:var(--muted);font-size:0.78rem">${item.deleted_at?.split('T')[0]||'—'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">Restore</button>
+          <button class="btn btn-danger btn-sm" onclick="permanentDelete('${item._table}',${item.id})">Delete Forever</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function restoreItem(table, id) {
+    await fetch(`${API}/api/trash/restore/${id}`, { method: 'POST', headers: auth(), body: JSON.stringify({ table, id }) });
+    loadTrash();
+  }
+
+  async function permanentDelete(table, id) {
+    if (!confirm('Permanently delete? This cannot be undone.')) return;
+    await fetch(`${API}/api/trash/permanent/${id}`, { method: 'DELETE', headers: auth(), body: JSON.stringify({ table, id }) });
+    loadTrash();
+  }
+
+  // ── SUBSCRIBERS ───────────────────────────────────────────────
+  async function loadSubscribers() {
+    const res  = await fetch(`${API}/api/subscribe`, { headers: auth() });
+    // TODO: add GET endpoint for subscribers
+    document.getElementById('subs-body').innerHTML = '<tr><td colspan="2" style="color:var(--muted);text-align:center;padding:2rem">Coming soon</td></tr>';
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // Load initial tab
+  loadUsers();
+</script>
+</body>
+</html>
