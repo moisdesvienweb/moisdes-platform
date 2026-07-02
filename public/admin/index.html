@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,12 +14,12 @@
       --accent:#c8844a;--accent2:rgba(200,132,74,0.15);
       --error:#ff6b6b;--success:#4ade80;
     }
-    body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:rtl}
+    body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:ltr}
 
     /* ── HEADER ── */
     .hdr{position:sticky;top:0;z-index:200;background:rgba(15,8,2,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
     .hdr img{height:38px}
-    .hdr-right{display:flex;align-items:center;gap:.75rem}
+    .hdr-right{display:flex;align-items:center;gap:.75rem;margin-left:auto}
     .hdr-user{font-size:.78rem;color:var(--muted)}
     .btn-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.75rem;padding:.28rem .7rem;border-radius:2px;cursor:pointer;transition:all .15s}
     .btn-logout:hover{color:var(--text);border-color:var(--border2)}
@@ -28,9 +28,9 @@
     .layout{display:flex;min-height:calc(100vh - 58px)}
 
     /* ── SIDEBAR ── */
-    .sidebar{width:220px;flex-shrink:0;border-left:1px solid var(--border);padding:.75rem 0;background:rgba(0,0,0,0.2)}
+    .sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);padding:.75rem 0;background:rgba(0,0,0,0.2)}
     .sb-section{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--subtle);padding:.9rem 1.2rem .3rem}
-    .sb-link{display:flex;align-items:center;gap:.55rem;padding:.48rem 1.2rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:all .12s;border-right:2px solid transparent;user-select:none}
+    .sb-link{display:flex;align-items:center;gap:.55rem;padding:.48rem 1.2rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:all .12s;border-left:2px solid transparent;user-select:none}
     .sb-link:hover{color:var(--text);background:rgba(255,255,255,0.03)}
     .sb-link.on{color:var(--text);border-right-color:var(--accent);background:rgba(200,132,74,0.07);font-weight:700}
     .sb-icon{font-size:.88rem;width:18px;text-align:center;flex-shrink:0}
@@ -50,7 +50,7 @@
     /* ── TABLE ── */
     .tbl-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:.81rem}
-    th{text-align:right;padding:.5rem .7rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+    th{text-align:left;padding:.5rem .7rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
     td{padding:.58rem .7rem;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:rgba(255,255,255,0.02)}
@@ -176,7 +176,7 @@
 
     /* ── PERMISSIONS TABLE ── */
     .perms-tbl{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.4rem}
-    .perms-tbl th{text-align:right;padding:.38rem .6rem;font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    .perms-tbl th{text-align:left;padding:.38rem .6rem;font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)}
     .perms-tbl td{padding:.42rem .6rem;border-bottom:1px solid rgba(255,255,255,.04)}
     .perms-tbl tr:last-child td{border-bottom:none}
     .perms-tbl td:first-child{font-weight:600}
@@ -201,147 +201,148 @@
 <body>
 
 <div class="hdr">
+  <a href="/"><img src="/logo.avif" alt="מאישדעס"></a>
   <div class="hdr-right">
     <span class="hdr-user" id="hdr-user"></span>
-    <button class="btn-logout" onclick="logout()">יציאה</button>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
   </div>
-  <a href="/"><img src="/logo.avif" alt="מאישדעס"></a>
 </div>
 
 <div class="layout">
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
     <div class="sb-section">כללי</div>
-    <div class="sb-link on" onclick="showTab('dash',this)"><span class="sb-icon">◈</span>סקירה</div>
+    <div class="sb-link on" onclick="showTab('dash',this)"><span class="sb-icon">◈</span>Overview</div>
 
     <div class="sb-section" id="sb-upload-title">העלאדן</div>
-    <div class="sb-link" id="sb-blog"    onclick="showTab('blog',this)"><span class="sb-icon">✎</span>בלאג פאסט</div>
-    <div class="sb-link" id="sb-posters" onclick="showTab('posters',this)"><span class="sb-icon">◻</span>מודעות</div>
-    <div class="sb-link" id="sb-events"  onclick="showTab('events',this)"><span class="sb-icon">♫</span>מעמדים</div>
-    <div class="sb-link" id="sb-video"   onclick="showTab('video',this)"><span class="sb-icon">▶</span>ווידיאו</div>
-    <div class="sb-link" id="sb-pdfs"    onclick="showTab('pdfs',this)"><span class="sb-icon">▤</span>גליונות</div>
+    <div class="sb-link" id="sb-blog"    onclick="showTab('blog',this)"><span class="sb-icon">✎</span>Blog Post</div>
+    <div class="sb-link" id="sb-posters" onclick="showTab('posters',this)"><span class="sb-icon">◻</span>Posters</div>
+    <div class="sb-link" id="sb-events"  onclick="showTab('events',this)"><span class="sb-icon">♫</span>Events</div>
+    <div class="sb-link" id="sb-video"   onclick="showTab('video',this)"><span class="sb-icon">▶</span>Videos</div>
+    <div class="sb-link" id="sb-pdfs"    onclick="showTab('pdfs',this)"><span class="sb-icon">▤</span>PDFs</div>
 
-    <div class="sb-section">פירהאלטן</div>
-    <div class="sb-link" id="sb-content" onclick="showTab('content',this)"><span class="sb-icon">≡</span>בלעטערן און רעדאקטירן</div>
-    <div class="sb-link" id="sb-trash"   onclick="showTab('trash',this)"><span class="sb-icon">⊘</span>אָפּפֿאַלגרוב</div>
+    <div class="sb-section">Manage</div>
+    <div class="sb-link" id="sb-content" onclick="showTab('content',this)"><span class="sb-icon">≡</span>Browse & Edit</div>
+    <div class="sb-link" id="sb-trash"   onclick="showTab('trash',this)"><span class="sb-icon">⊘</span>Trash</div>
 
-    <div class="sb-section" id="sb-admin-title">אַדמין</div>
-    <div class="sb-link" id="sb-users" onclick="showTab('users',this)"><span class="sb-icon">◉</span>באַניצער</div>
+    <div class="sb-section" id="sb-admin-title">Admin</div>
+    <div class="sb-link" id="sb-users" onclick="showTab('users',this)"><span class="sb-icon">◉</span>Users</div>
   </nav>
 
   <main class="main">
 
     <!-- DASHBOARD -->
     <div class="tab on" id="tab-dash">
-      <h2 style="margin-bottom:1.5rem">ברוכים הבאים</h2>
+      <h2 style="margin-bottom:1.5rem">Welcome</h2>
       <div class="stats">
-        <div class="stat"><div class="stat-n" id="sn-posts">—</div><div class="stat-l">בלאג פאסטן</div></div>
-        <div class="stat"><div class="stat-n" id="sn-events">—</div><div class="stat-l">מעמדים</div></div>
-        <div class="stat"><div class="stat-n" id="sn-videos">—</div><div class="stat-l">ווידיאוס</div></div>
-        <div class="stat"><div class="stat-n" id="sn-pdfs">—</div><div class="stat-l">גליונות</div></div>
-        <div class="stat"><div class="stat-n" id="sn-posters">—</div><div class="stat-l">מודעות</div></div>
+        <div class="stat"><div class="stat-n" id="sn-posts">—</div><div class="stat-l">Blog Posts</div></div>
+        <div class="stat"><div class="stat-n" id="sn-events">—</div><div class="stat-l">Events</div></div>
+        <div class="stat"><div class="stat-n" id="sn-videos">—</div><div class="stat-l">Videos</div></div>
+        <div class="stat"><div class="stat-n" id="sn-pdfs">—</div><div class="stat-l">PDFs</div></div>
+        <div class="stat"><div class="stat-n" id="sn-posters">—</div><div class="stat-l">Posters</div></div>
       </div>
-      <p style="color:var(--muted);font-size:.82rem">ניצט דעם סיידבאַר צו העלאָדן אינהאַלט אדער פירהאלטן בעסטעהענדיגע אייטעמס.</p>
+      <p style="color:var(--muted);font-size:.82rem">Use the sidebar to upload content or manage existing items.</p>
     </div>
 
     <!-- BLOG -->
     <div class="tab" id="tab-blog">
-      <div class="pg-hdr"><h2>העלאָדן בלאג פאסט</h2></div>
-      <div class="field"><label>דאטום <span style="color:var(--error)">*</span></label><div id="dp-blog"></div></div>
-      <div class="field"><label>קעפל <span style="color:var(--error)">*</span></label><input type="text" id="blog-title" placeholder="פאסט קעפל..."></div>
-      <div class="field"><label>טעקסט</label><textarea id="blog-body" rows="6" placeholder="שרייב דעם טעקסט..."></textarea></div>
-      <div class="field"><label>טאגן</label><div class="tags-box" id="tb-blog-tags"><div class="tags-pills" id="tp-blog-tags"></div><input class="t-input" id="ti-blog-tags" placeholder="צוגעבן טאגן..."><div class="t-dd" id="td-blog-tags"></div></div></div>
-      <div class="field"><label>בילדער</label><div class="u-zone" id="uz-blog"><div class="u-zone-icon">↑</div><div class="u-zone-text">קליק אדער שלעפ בילדער אהער</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-blog"></div></div>
+      <div class="pg-hdr"><h2>Upload Blog Post</h2></div>
+      <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-blog"></div></div>
+      <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="blog-title" placeholder="פאסט קעפל..."></div>
+      <div class="field"><label>Body</label><textarea id="blog-body" rows="6" placeholder="שרייב דעם טעקסט..."></textarea></div>
+      <div class="field"><label>Category</label><div class="tags-box" id="tb-blog-cat"><div class="tags-pills" id="tp-blog-cat"></div><input class="t-input" id="ti-blog-cat" placeholder="Category..."><div class="t-dd" id="td-blog-cat"></div></div></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-blog-tags"><div class="tags-pills" id="tp-blog-tags"></div><input class="t-input" id="ti-blog-tags" placeholder="Add tags..."><div class="t-dd" id="td-blog-tags"></div></div></div>
+      <div class="field"><label>בילדער</label><div class="u-zone" id="uz-blog"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag images here</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-blog"></div></div>
       <div class="prog" id="pr-blog"><div class="prog-hdr"><span id="pl-blog">העלאָדט...</span><span class="prog-pct" id="pp-blog">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-blog"></div></div></div>
-      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('blog')" id="sub-blog">שיק אריין</button>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('blog')" id="sub-blog">Submit Post</button>
       <div class="status" id="st-blog"></div>
     </div>
 
     <!-- POSTERS -->
     <div class="tab" id="tab-posters">
-      <div class="pg-hdr"><h2>העלאָדן מודעות</h2></div>
-      <div class="field"><label>דאטום <span style="color:var(--error)">*</span></label><div id="dp-posters"></div></div>
-      <div class="field"><label>פרשה</label><input type="text" id="posters-parsha" placeholder="ווערט אויטאמאטיש דעטעקטירט..."></div>
-      <div class="field"><label>בילדער <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-posters"><div class="u-zone-icon">↑</div><div class="u-zone-text">קליק אדער שלעפ בילדער אהער</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-posters"></div></div>
+      <div class="pg-hdr"><h2>Upload Posters</h2></div>
+      <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-posters"></div></div>
+      <div class="field"><label>Parsha</label><input type="text" id="posters-parsha" placeholder="ווערט אויטאמאטיש דעטעקטירט..."></div>
+      <div class="field"><label>בילדער <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-posters"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag images here</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-posters"></div></div>
       <div class="prog" id="pr-posters"><div class="prog-hdr"><span id="pl-posters">העלאָדט...</span><span class="prog-pct" id="pp-posters">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-posters"></div></div></div>
-      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('posters')" id="sub-posters">שיק אריין</button>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('posters')" id="sub-posters">Upload Posters</button>
       <div class="status" id="st-posters"></div>
     </div>
 
     <!-- EVENTS -->
     <div class="tab" id="tab-events">
-      <div class="pg-hdr"><h2>העלאָדן מעמד הקלטה</h2></div>
+      <div class="pg-hdr"><h2>Upload Event Recording</h2></div>
       <div class="row2">
-        <div class="field"><label>דאטום <span style="color:var(--error)">*</span></label><div id="dp-events"></div></div>
-        <div class="field"><label>טיטל <span style="color:var(--error)">*</span></label><input type="text" id="events-title" placeholder="נאמען פון מעמד..."></div>
+        <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-events"></div></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="events-title" placeholder="נאמען פון מעמד..."></div>
       </div>
       <div class="row2">
-        <div class="field"><label>אָרט</label><input type="text" id="events-loc" placeholder="וואו..."></div>
-        <div class="field"><label>קאטעגאריע</label><div class="tags-box" id="tb-events-cat"><div class="tags-pills" id="tp-events-cat"></div><input class="t-input" id="ti-events-cat" placeholder="קאטעגאריע..."><div class="t-dd" id="td-events-cat"></div></div></div>
+        <div class="field"><label>Location</label><input type="text" id="events-loc" placeholder="וואו..."></div>
+        <div class="field"><label>Category</label><div class="tags-box" id="tb-events-cat"><div class="tags-pills" id="tp-events-cat"></div><input class="t-input" id="ti-events-cat" placeholder="Category..."><div class="t-dd" id="td-events-cat"></div></div></div>
       </div>
-      <div class="field"><label>באשרייבונג</label><textarea id="events-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
-      <div class="field"><label>טאגן</label><div class="tags-box" id="tb-events-tags"><div class="tags-pills" id="tp-events-tags"></div><input class="t-input" id="ti-events-tags" placeholder="צוגעבן טאגן..."><div class="t-dd" id="td-events-tags"></div></div></div>
-      <div class="field"><label>טראַקס</label><div class="field-hint" style="margin-bottom:.4rem">שלעפ צו ארדענירן • קליק צו נעמען</div><div class="u-zone" id="uz-events"><div class="u-zone-icon">↑</div><div class="u-zone-text">קליק אדער שלעפ אויד פֿײלן אהער</div><div class="u-zone-sub">MP3, WAV, M4A</div></div><div class="f-list" id="fl-events"></div></div>
+      <div class="field"><label>Description</label><textarea id="events-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-events-tags"><div class="tags-pills" id="tp-events-tags"></div><input class="t-input" id="ti-events-tags" placeholder="Add tags..."><div class="t-dd" id="td-events-tags"></div></div></div>
+      <div class="field"><label>טראַקס</label><div class="field-hint" style="margin-bottom:.4rem">Drag to reorder • Click to rename</div><div class="u-zone" id="uz-events"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag audio files here</div><div class="u-zone-sub">MP3, WAV, M4A</div></div><div class="f-list" id="fl-events"></div></div>
       <div class="prog" id="pr-events"><div class="prog-hdr"><span id="pl-events">העלאָדט...</span><span class="prog-pct" id="pp-events">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-events"></div></div></div>
-      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('events')" id="sub-events">שיק אריין</button>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('events')" id="sub-events">Upload Event</button>
       <div class="status" id="st-events"></div>
     </div>
 
     <!-- VIDEO -->
     <div class="tab" id="tab-video">
-      <div class="pg-hdr"><h2>העלאָדן ווידיאו</h2></div>
+      <div class="pg-hdr"><h2>Upload Video</h2></div>
       <div class="row2">
-        <div class="field"><label>דאטום <span style="color:var(--error)">*</span></label><div id="dp-video"></div></div>
-        <div class="field"><label>טיטל <span style="color:var(--error)">*</span></label><input type="text" id="video-title" placeholder="ווידיאו טיטל..."></div>
+        <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-video"></div></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="video-title" placeholder="ווידיאו טיטל..."></div>
       </div>
       <div class="row2">
-        <div class="field"><label>אָרט</label><input type="text" id="video-loc" placeholder="וואו..."></div>
-        <div class="field"><label>קאטעגאריע</label><div class="tags-box" id="tb-video-cat"><div class="tags-pills" id="tp-video-cat"></div><input class="t-input" id="ti-video-cat" placeholder="קאטעגאריע..."><div class="t-dd" id="td-video-cat"></div></div></div>
+        <div class="field"><label>Location</label><input type="text" id="video-loc" placeholder="וואו..."></div>
+        <div class="field"><label>Category</label><div class="tags-box" id="tb-video-cat"><div class="tags-pills" id="tp-video-cat"></div><input class="t-input" id="ti-video-cat" placeholder="Category..."><div class="t-dd" id="td-video-cat"></div></div></div>
       </div>
-      <div class="field"><label>באשרייבונג</label><textarea id="video-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
-      <div class="field"><label>טאגן</label><div class="tags-box" id="tb-video-tags"><div class="tags-pills" id="tp-video-tags"></div><input class="t-input" id="ti-video-tags" placeholder="צוגעבן טאגן..."><div class="t-dd" id="td-video-tags"></div></div></div>
-      <div class="field"><label>YouTube / Drive / Dropbox לינק</label><input type="url" id="video-link" placeholder="https://..." style="direction:ltr;text-align:right"></div>
-      <div class="field"><label>אדער: לייג אַרויף א ווידיאו פֿײל</label><div class="u-zone" id="uz-video"><div class="u-zone-icon">↑</div><div class="u-zone-text">קליק אדער שלעפ ווידיאו אהער</div><div class="u-zone-sub">MP4, MOV, MKV</div></div><div class="f-list" id="fl-video"></div></div>
+      <div class="field"><label>Description</label><textarea id="video-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-video-tags"><div class="tags-pills" id="tp-video-tags"></div><input class="t-input" id="ti-video-tags" placeholder="Add tags..."><div class="t-dd" id="td-video-tags"></div></div></div>
+      <div class="field"><label>YouTube / Drive / Dropbox Link</label><input type="url" id="video-link" placeholder="https://..." style="direction:ltr;text-align:right"></div>
+      <div class="field"><label>Or upload a video file</label><div class="u-zone" id="uz-video"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag video here</div><div class="u-zone-sub">MP4, MOV, MKV</div></div><div class="f-list" id="fl-video"></div></div>
       <div class="prog" id="pr-video"><div class="prog-hdr"><span id="pl-video">העלאָדט...</span><span class="prog-pct" id="pp-video">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-video"></div></div></div>
-      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('video')" id="sub-video">שיק אריין</button>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('video')" id="sub-video">Upload Video</button>
       <div class="status" id="st-video"></div>
     </div>
 
     <!-- PDFs -->
     <div class="tab" id="tab-pdfs">
-      <div class="pg-hdr"><h2>העלאָדן גליונות</h2></div>
-      <div class="field" style="max-width:260px"><label>דאטום <span style="color:var(--error)">*</span></label><div id="dp-pdfs"></div></div>
-      <div class="field"><label>PDF פֿײלן <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-pdfs"><div class="u-zone-icon">↑</div><div class="u-zone-text">קליק אדער שלעפ PDFs אהער</div><div class="u-zone-sub">PDF בלויז • מולטיפּל ערלויבט</div></div><div class="f-list" id="fl-pdfs"></div></div>
+      <div class="pg-hdr"><h2>Upload PDFs</h2></div>
+      <div class="field" style="max-width:260px"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-pdfs"></div></div>
+      <div class="field"><label>PDF Files <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-pdfs"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag PDFs here</div><div class="u-zone-sub">PDF only • Multiple allowed</div></div><div class="f-list" id="fl-pdfs"></div></div>
       <div id="pdfs-meta"></div>
       <div class="prog" id="pr-pdfs"><div class="prog-hdr"><span id="pl-pdfs">העלאָדט...</span><span class="prog-pct" id="pp-pdfs">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-pdfs"></div></div></div>
-      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('pdfs')" id="sub-pdfs">שיק אריין</button>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('pdfs')" id="sub-pdfs">Upload PDFs</button>
       <div class="status" id="st-pdfs"></div>
     </div>
 
     <!-- CONTENT -->
     <div class="tab" id="tab-content">
-      <div class="pg-hdr"><h2>בלעטערן & רעדאקטירן</h2></div>
+      <div class="pg-hdr"><h2>Browse & Edit</h2></div>
       <div class="filters">
-        <button class="f-pill on" onclick="setCT('posts',this)">בלאג</button>
-        <button class="f-pill" onclick="setCT('posters',this)">מודעות</button>
-        <button class="f-pill" onclick="setCT('events',this)">מעמדים</button>
-        <button class="f-pill" onclick="setCT('videos',this)">ווידיאו</button>
-        <button class="f-pill" onclick="setCT('pdfs',this)">גליונות</button>
-        <input class="search-box" type="text" placeholder="זוכן..." id="ct-search" oninput="loadContent()">
+        <button class="f-pill on" onclick="setCT('posts',this)">Blog</button>
+        <button class="f-pill" onclick="setCT('posters',this)">Posters</button>
+        <button class="f-pill" onclick="setCT('events',this)">Events</button>
+        <button class="f-pill" onclick="setCT('videos',this)">Videos</button>
+        <button class="f-pill" onclick="setCT('pdfs',this)">PDFs</button>
+        <input class="search-box" type="text" placeholder="Search..." id="ct-search" oninput="loadContent()">
       </div>
-      <div class="tbl-wrap"><table><thead><tr><th>דאטום</th><th>טיטל</th><th>טאגן</th><th>צוגעגעבן</th><th>אקציעס</th></tr></thead><tbody id="ct-body"><tr class="empty"><td colspan="5">לאדט...</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Title</th><th>Tags</th><th>Added</th><th>Actions</th></tr></thead><tbody id="ct-body"><tr class="empty"><td colspan="5">לאדט...</td></tr></tbody></table></div>
     </div>
 
     <!-- TRASH -->
     <div class="tab" id="tab-trash">
-      <div class="pg-hdr"><h2>אָפּפֿאַלגרוב <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(30 טעג)</span></h2></div>
-      <div class="tbl-wrap"><table><thead><tr><th>טיפּ</th><th>טיטל</th><th>אויסגעמעקט</th><th>אקציעס</th></tr></thead><tbody id="trash-body"><tr class="empty"><td colspan="4">לאדט...</td></tr></tbody></table></div>
+      <div class="pg-hdr"><h2>Trash <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(30-day auto-delete)</span></h2></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Title</th><th>Deleted</th><th>Actions</th></tr></thead><tbody id="trash-body"><tr class="empty"><td colspan="4">לאדט...</td></tr></tbody></table></div>
     </div>
 
     <!-- USERS -->
     <div class="tab" id="tab-users">
-      <div class="pg-hdr"><h2>באַניצער</h2><button class="btn btn-primary" onclick="openCreateUser()">+ נייער באַניצער</button></div>
-      <div class="tbl-wrap"><table><thead><tr><th>נאמען</th><th>אימעיל</th><th>ראלע</th><th>סטאטוס</th><th>ערלויבענישן</th><th>אקציעס</th></tr></thead><tbody id="users-body"><tr class="empty"><td colspan="6">לאדט...</td></tr></tbody></table></div>
+      <div class="pg-hdr"><h2>Users</h2><button class="btn btn-primary" onclick="openCreateUser()">+ New User</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody id="users-body"><tr class="empty"><td colspan="6">לאדט...</td></tr></tbody></table></div>
     </div>
 
   </main>
@@ -350,35 +351,35 @@
 <!-- USER MODAL -->
 <div class="modal-bg" id="modal-user">
   <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="modal-user-title">נייער באַניצער</div><button class="modal-x" onclick="closeM('modal-user')">✕</button></div>
+    <div class="modal-hdr"><div class="modal-title" id="modal-user-title">נייער Users</div><button class="modal-x" onclick="closeM('modal-user')">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="u-id">
       <div class="row2">
-        <div class="field"><label>נאמען</label><input type="text" id="u-name" placeholder="פולן נאמען..."></div>
-        <div class="field"><label>אימעיל <span style="color:var(--error)">*</span></label><input type="email" id="u-email" placeholder="user@email.com" style="direction:ltr;text-align:right"></div>
+        <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="פולן נאמען..."></div>
+        <div class="field"><label>Email <span style="color:var(--error)">*</span></label><input type="email" id="u-email" placeholder="user@email.com" style="direction:ltr;text-align:right"></div>
       </div>
       <div class="row2">
-        <div class="field"><label>פּאַסווארט <span id="pw-hint" style="color:var(--subtle);font-size:.62rem;display:none">(לאז ליידיג צו באַהאַלטן)</span></label><input type="password" id="u-pass" placeholder="••••••••"></div>
-        <div class="field"><label>ראלע</label><select id="u-role"><option value="user">באַניצער</option><option value="admin">אַדמין</option><option value="superadmin">סופּעראַדמין</option></select></div>
+        <div class="field"><label>Password <span id="pw-hint" style="color:var(--subtle);font-size:.62rem;display:none">(leave blank to keep)</span></label><input type="password" id="u-pass" placeholder="••••••••"></div>
+        <div class="field"><label>Role</label><select id="u-role"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option></select></div>
       </div>
       <div class="field">
-        <label>זייטן ערלויבענישן <span style="color:var(--subtle);font-size:.62rem">(אדמינס האָבן אַלעס)</span></label>
+        <label>Page Permissions <span style="color:var(--subtle);font-size:.62rem">(admins have full access)</span></label>
         <table class="perms-tbl">
-          <thead><tr><th>זייט</th><th>העלאָדן</th><th>רעדאקטירן</th></tr></thead>
+          <thead><tr><th>Page</th><th>Upload</th><th>Edit</th></tr></thead>
           <tbody>
-            <tr><td>בלאג</td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="upload" checked> ערלויבן</label></td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="edit" checked> ערלויבן</label></td></tr>
-            <tr><td>מודעות</td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="upload" checked> ערלויבן</label></td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="edit" checked> ערלויבן</label></td></tr>
-            <tr><td>מעמדים</td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="upload" checked> ערלויבן</label></td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="edit" checked> ערלויבן</label></td></tr>
-            <tr><td>ווידיאו</td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="upload" checked> ערלויבן</label></td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="edit" checked> ערלויבן</label></td></tr>
-            <tr><td>גליונות</td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="upload" checked> ערלויבן</label></td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="edit" checked> ערלויבן</label></td></tr>
+            <tr><td>Blog</td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Posters</td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Events</td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Videos</td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>PDFs</td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="edit" checked> Allow</label></td></tr>
           </tbody>
         </table>
       </div>
       <div class="msg" id="u-msg"></div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-primary" onclick="saveUser()">שפּאָרן</button>
-      <button class="btn btn-ghost" onclick="closeM('modal-user')">אָפּזאגן</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-user')">Cancel</button>
     </div>
   </div>
 </div>
@@ -389,8 +390,8 @@
     <div class="modal-hdr"><div class="modal-title">רעדאקטירן</div><button class="modal-x" onclick="closeM('modal-ct')">✕</button></div>
     <div class="modal-body" id="ct-modal-body"></div>
     <div class="modal-ftr">
-      <button class="btn btn-primary" onclick="saveContent()">שפּאָרן</button>
-      <button class="btn btn-ghost" onclick="closeM('modal-ct')">אָפּזאגן</button>
+      <button class="btn btn-primary" onclick="saveContent()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-ct')">Cancel</button>
     </div>
   </div>
 </div>
@@ -434,6 +435,8 @@ const ANCHOR_DATE  = '2025-10-18';
 const ANCHOR_IDX   = 0;
 const SECOND_PAIR  = new Set(['פקודי','מצורע','קדושים','בחוקותי','מסעי','וילך']);
 const DOW_LABELS   = ['זונטאג','מאנטאג','דינסטאג','מיטוואך','דאנערשטאג','ערב שבת','מוצאי שבת'];
+const HEB_MONTHS   = ['ניסן','אייר','סיון','תמוז','אב','אלול','תשרי','חשון','כסלו','טבת','שבט','אדר','אדר א','אדר ב'];
+const HEB_DAYS     = Array.from({length:30},(_,i)=>{const n=i+1;const H=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];const T=['','י','כ','ל'];return n<=9?H[n]:n<=19?'י'+H[n-10]:n<=29?'כ'+H[n-20]:'ל';});
 
 function yearToHebrew(y) {
   const n=y-5000,H=['','ק','ר','ש','ת'],T=['','י','כ','ל','מ','נ','ס','ע','פ','צ'],O=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];
@@ -493,16 +496,39 @@ function initDatePicker(containerId) {
   let dowOpts = '<option value="">טאג</option>';
   DOW_LABELS.forEach((l,i) => dowOpts+=`<option value="${i}">${l}</option>`);
 
+  // Yiddish day options (א through ל)
+  let dayOpts='<option value="">טאג</option>';
+  for(let d=1;d<=30;d++){const h=HEB_DAYS[d-1];dayOpts+=`<option value="${d}">${h}${d===1?'':''} (${d})</option>`;}
+  let monOpts='<option value="">חודש</option>';
+  HEB_MONTHS.forEach((m,i)=>monOpts+=`<option value="${i}">${m}</option>`);
+  let yidYrOpts='<option value="">שנה</option>';
+  for(let y=currentHY();y>=5742;y--)yidYrOpts+=`<option value="${y}">${yearToHebrew(y)}</option>`;
+
   container.innerHTML = `
     <div class="heb-date-wrap">
-      <div class="heb-selects">
-        <select id="dp-yr-${key}">${yearOpts}</select>
-        <select id="dp-pr-${key}">${parshaOpts}</select>
-        <select id="dp-dw-${key}">${dowOpts}</select>
+      <div style="display:flex;gap:.4rem;margin-bottom:.4rem;border-bottom:1px solid var(--border);padding-bottom:.4rem">
+        <button type="button" class="dp-tab-btn on" id="dptab-parsha-${key}" onclick="switchDPTab('${key}','parsha')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">פרשה</button>
+        <button type="button" class="dp-tab-btn" id="dptab-yiddish-${key}" onclick="switchDPTab('${key}','yiddish')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">ייִד. דאטום</button>
+        <button type="button" class="dp-tab-btn" id="dptab-english-${key}" onclick="switchDPTab('${key}','english')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">English</button>
       </div>
-      <div class="date-divider">— אדער גיב א גענוי דאטום —</div>
-      <input type="date" class="heb-date-manual" id="dp-dt-${key}">
-      <div class="date-note" id="dp-nt-${key}"></div>
+      <div id="dppanel-parsha-${key}">
+        <div class="heb-selects">
+          <select id="dp-yr-${key}">${yearOpts}</select>
+          <select id="dp-pr-${key}">${parshaOpts}</select>
+          <select id="dp-dw-${key}">${dowOpts}</select>
+        </div>
+      </div>
+      <div id="dppanel-yiddish-${key}" style="display:none">
+        <div class="heb-selects">
+          <select id="dp-yd-${key}">${dayOpts}</select>
+          <select id="dp-ym-${key}">${monOpts}</select>
+          <select id="dp-yy-${key}">${yidYrOpts}</select>
+        </div>
+      </div>
+      <div id="dppanel-english-${key}" style="display:none">
+        <input type="date" class="heb-date-manual" id="dp-dt-${key}" style="width:100%">
+      </div>
+      <div class="date-note" id="dp-nt-${key}" style="margin-top:.35rem"></div>
     </div>`;
 
   const sY=document.getElementById(`dp-yr-${key}`);
@@ -536,6 +562,81 @@ function initDatePicker(containerId) {
   sP.addEventListener('change',fromDropdowns);
   sD.addEventListener('change',fromDropdowns);
   iD.addEventListener('change',fromManual);
+
+  // Wire Yiddish date selects
+  const yd=document.getElementById(`dp-yd-${key}`);
+  const ym=document.getElementById(`dp-ym-${key}`);
+  const yy=document.getElementById(`dp-yy-${key}`);
+  if(yd&&ym&&yy){
+    function fromYiddish(){
+      if(!yd.value||ym.value===''||!yy.value)return;
+      // Convert Hebrew calendar to Gregorian using HDate approximation
+      try{
+        const hYear=+yy.value,hMonth=+ym.value,hDay=+yd.value;
+        const gregDate=hebToGreg(hYear,hMonth,hDay);
+        if(gregDate){
+          iD.value=gregDate;
+          const d=new Date(gregDate+'T12:00:00Z');
+          nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+
+            ' ('+HEB_DAYS[hDay-1]+' '+HEB_MONTHS[hMonth]+' '+yearToHebrew(hYear)+')';
+        }
+      }catch(e){nE.textContent='Date conversion error';}
+    }
+    yd.addEventListener('change',fromYiddish);
+    ym.addEventListener('change',fromYiddish);
+    yy.addEventListener('change',fromYiddish);
+  }
+}
+
+function switchDPTab(key, tab) {
+  ['parsha','yiddish','english'].forEach(t=>{
+    const panel=document.getElementById(`dppanel-${t}-${key}`);
+    const btn=document.getElementById(`dptab-${t}-${key}`);
+    if(panel) panel.style.display = t===tab?'':'none';
+    if(btn){btn.style.color=t===tab?'var(--text)':'var(--muted)';btn.style.background=t===tab?'rgba(255,255,255,0.08)':'none';}
+  });
+}
+
+// Hebrew calendar to Gregorian conversion
+// Uses a simplified Molad-based calculation accurate to ±1 day
+function hebToGreg(hYear, hMonth, hDay) {
+  // hMonth: 0=ניסן,1=אייר,...,6=תשרי,...,11=אדר,12=אדרא,13=אדרב
+  // Convert month index to months-from-Tishri ordering
+  // Tishri=7(idx6), Cheshvan=8(idx7),..., Adar=12(idx11), Nisan=1(idx0)...
+  const monthsFromTishri = [7,8,9,10,11,12,13,1,2,3,4,5,6]; // maps idx to month number
+  // Simple approximation: use known epoch
+  // Julian Day Number of 1 Tishri hYear
+  function hebrewToJD(y,m,d){
+    // m here is 1-based month from Tishri (Tishri=1, Cheshvan=2, ... Elul=12, Adar in leap=13)
+    const elapsed = 234567 * (y-1) + Math.floor((7*(y+1))/19)*765433/25920;
+    const days=[0,30,29,30,29,30,29,30,29,30,29,30,29,30];
+    let jd = Math.floor(elapsed/25920) + d + 1715119;
+    for(let i=1;i<m;i++) jd+=days[i]||29;
+    return jd;
+  }
+  // Map our month index (0=Nisan) to month-from-Tishri
+  const mft = monthsFromTishri[hMonth] || 1;
+  // Check if leap year
+  const isLeap = ((7*hYear+1)%19) < 7;
+  // In non-leap years, Adar B doesn't exist; remap Adar A (idx12) to Adar (idx11)
+  const adjustedM = (!isLeap && hMonth === 13) ? 12 : hMonth;
+  const mft2 = monthsFromTishri[adjustedM] || 1;
+
+  try {
+    const jd = hebrewToJD(hYear, mft2, hDay);
+    // Convert JD to Gregorian
+    const l = jd + 68569;
+    const n = Math.floor(4*l/146097);
+    const l2 = l - Math.floor((146097*n+3)/4);
+    const i = Math.floor(4000*(l2+1)/1461001);
+    const l3 = l2 - Math.floor(1461*i/4) + 31;
+    const j = Math.floor(80*l3/2447);
+    const day = l3 - Math.floor(2447*j/80);
+    const l4 = Math.floor(j/11);
+    const month = j + 2 - 12*l4;
+    const year = 100*(n-49) + i + l4;
+    return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  } catch(e) { return null; }
 }
 
 function getDPValue(key) {
@@ -609,6 +710,7 @@ async function loadTaxonomy() {
     allTags=tr.tags||[];allCats=cr.categories||[];
   } catch(e){allTags=[];allCats=[];}
   initTW('blog-tags',()=>allTags);
+  initTW('blog-cat',()=>allCats);
   initTW('events-tags',()=>allTags);
   initTW('video-tags',()=>allTags);
   initTW('events-cat',()=>allCats);
@@ -684,16 +786,16 @@ function renderPdfMeta() {
     <div class="pdf-meta-card">
       <div class="pdf-meta-fname">${esc(f.file.name)}</div>
       <div class="row2">
-        <div class="field"><label>טיטל <span style="color:var(--error)">*</span></label><input type="text" class="pm-title" data-i="${i}" value="${esc(f.name)}" placeholder="טיטל..."></div>
-        <div class="field"><label>שפּראך</label><select class="pm-lang" data-i="${i}"><option value="">—</option><option>ייִדיש</option><option>לשון הקודש</option><option>English</option></select></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" class="pm-title" data-i="${i}" value="${esc(f.name)}" placeholder="טיטל..."></div>
+        <div class="field"><label>Language</label><select class="pm-lang" data-i="${i}"><option value="">—</option><option>ייִדיש</option><option>לשון הקודש</option><option>English</option></select></div>
       </div>
       <div class="row2">
-        <div class="field"><label>קאטעגאריע</label><input type="text" class="pm-cat" data-i="${i}" placeholder="קאטעגאריע..."></div>
-        <div class="field"><label>פּרשה / אנלאַס</label><input type="text" class="pm-parsha" data-i="${i}" placeholder="פּרשה..."></div>
+        <div class="field"><label>Category</label><input type="text" class="pm-cat" data-i="${i}" placeholder="Category..."></div>
+        <div class="field"><label>Parsha / Occasion</label><input type="text" class="pm-parsha" data-i="${i}" placeholder="פּרשה..."></div>
       </div>
       <div class="row2">
-        <div class="field"><label>יאָר</label><input type="text" class="pm-year" data-i="${i}" placeholder="ז.ב. תשפ״ה"></div>
-        <div class="field"><label>טאגן</label><input type="text" class="pm-tags" data-i="${i}" placeholder="טאג1, טאג2..."></div>
+        <div class="field"><label>Year</label><input type="text" class="pm-year" data-i="${i}" placeholder="ז.ב. תשפ״ה"></div>
+        <div class="field"><label>Tags</label><input type="text" class="pm-tags" data-i="${i}" placeholder="טאג1, טאג2..."></div>
       </div>
     </div>`).join('');
 }
@@ -752,7 +854,7 @@ async function doUpload(key) {
         await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/Math.max(files.length,1))*65),`העלאָדט בילד ${i+1}/${files.length}...`));
         r2Keys.push(k);
       }
-      payload={date,title,body:document.getElementById('blog-body').value,tags:getTW('blog-tags'),folder_url:r2Keys.length?`r2://blog/${Date.now()}`:'',r2_keys:r2Keys,newTags:getNewTW('blog-tags'),newCategories:[]};
+      payload={date,title,body:document.getElementById('blog-body').value,category:getTW('blog-cat'),tags:getTW('blog-tags'),folder_url:r2Keys.length?`r2://blog/${Date.now()}`:'',r2_keys:r2Keys,newTags:getNewTW('blog-tags'),newCategories:getNewTW('blog-cat')};
       setProg(key,80,'שפּאָרן...');
       const r=await fetch(`${API}/api/upload/post`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
@@ -833,7 +935,7 @@ async function doUpload(key) {
 function resetUpload(key) {
   fStore[key]=[];renderFL(key,key==='events',key==='events');
   const dp=dps[key];if(dp){dp.sY.value='';dp.sP.value='';dp.sD.value='';dp.iD.value='';dp.nE.textContent='';}
-  ['blog-tags','events-tags','events-cat','video-tags','video-cat'].forEach(k=>{if(tState[k])resetTW(k);});
+  ['blog-tags','blog-cat','events-tags','events-cat','video-tags','video-cat'].forEach(k=>{if(tState[k])resetTW(k);});
   ['blog-title','blog-body','events-title','events-loc','events-desc','video-title','video-loc','video-desc','video-link','posters-parsha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const pm=document.getElementById('pdfs-meta');if(pm)pm.innerHTML='';
   const pw=document.getElementById(`pr-${key}`);if(pw)pw.classList.remove('on');
@@ -951,8 +1053,8 @@ async function loadContent(){
       <td style="font-size:.7rem;color:var(--muted)">${esc((item.tags||'').split(',').slice(0,3).filter(Boolean).join(', '))}</td>
       <td style="font-size:.7rem;color:var(--muted);white-space:nowrap">${item.created_at?.split('T')[0]||'—'}</td>
       <td>
-        <button class="btn btn-ghost btn-sm" onclick='openEditCT(${JSON.stringify(item)})'>רעדאקטירן</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteCT(${item.id})">מעקן</button>
+        <button class="btn btn-ghost btn-sm" onclick='openEditCT(${JSON.stringify(item)})'>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCT(${item.id})">Delete</button>
       </td>
     </tr>`).join('');
 }
@@ -993,8 +1095,8 @@ async function loadTrash(){
       <td>${esc(item.title||item.parsha||item.date||'—')}</td>
       <td style="color:var(--muted);font-size:.77rem;white-space:nowrap">${item.deleted_at?.split('T')[0]||'—'}</td>
       <td>
-        <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">ריסטאָרן</button>
-        <button class="btn btn-danger btn-sm" onclick="permDel('${item._table}',${item.id})">פאר אייביג מעקן</button>
+        <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">Restore</button>
+        <button class="btn btn-danger btn-sm" onclick="permDel('${item._table}',${item.id})">פאר אייביג Delete</button>
       </td>
     </tr>`).join('');
 }
