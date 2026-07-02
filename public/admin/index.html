@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — מאישדעס</title>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -15,154 +15,349 @@
     body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* Header */
-    .admin-header { background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .admin-header { background: rgba(0,0,0,0.6); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .admin-header img { height: 36px; }
-    .admin-title { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .user-badge { font-size: 0.78rem; color: var(--muted); }
     .logout-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'Heebo', sans-serif; font-size: 0.78rem; padding: 0.3rem 0.75rem; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
     .logout-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
 
     /* Layout */
     .admin-layout { display: flex; min-height: calc(100vh - 56px); }
-    .sidebar { width: 200px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 1.5rem 0; }
-    .sidebar-link { display: block; padding: 0.55rem 1.5rem; font-size: 0.82rem; color: var(--muted); text-decoration: none; cursor: pointer; transition: all 0.12s; border-right: 2px solid transparent; }
-    .sidebar-link:hover, .sidebar-link.active { color: var(--text); border-right-color: var(--accent); background: rgba(255,255,255,0.04); }
-    .sidebar-section { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--subtle); padding: 1rem 1.5rem 0.35rem; }
-    .main { flex: 1; padding: 2rem; overflow-y: auto; }
 
-    /* Tabs */
+    /* Sidebar */
+    .sidebar { width: 210px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 1rem 0; overflow-y: auto; }
+    .sidebar-section { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--subtle); padding: 1rem 1.25rem 0.3rem; }
+    .sidebar-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; font-size: 0.82rem; color: var(--muted); cursor: pointer; transition: all 0.12s; border-right: 2px solid transparent; user-select: none; }
+    .sidebar-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .sidebar-link.active { color: var(--text); border-right-color: var(--accent); background: rgba(200,132,74,0.06); }
+    .sidebar-link .icon { width: 16px; text-align: center; font-size: 0.9rem; }
+
+    /* Main */
+    .main { flex: 1; padding: 1.75rem 2rem; overflow-y: auto; max-width: 1100px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.1rem; font-weight: 900; }
     .tab-content { display: none; } .tab-content.active { display: block; }
-    h2 { font-size: 1.1rem; font-weight: 900; margin-bottom: 1.5rem; }
+
+    /* Cards */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 1rem; }
+    .stat-num { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+    .stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; }
 
     /* Table */
+    .table-wrap { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    .data-table th { text-align: left; padding: 0.6rem 0.75rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--border); }
-    .data-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle; }
-    .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .data-table th { text-align: left; padding: 0.55rem 0.75rem; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .data-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .empty-row td { color: var(--muted); text-align: center; padding: 2.5rem; font-size: 0.85rem; }
 
     /* Badges */
-    .badge { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px; }
-    .badge-admin { background: rgba(200,132,74,0.2); color: #c8844a; }
-    .badge-super { background: rgba(200,132,74,0.35); color: #e8a46a; }
-    .badge-user  { background: rgba(255,255,255,0.08); color: var(--muted); }
+    .badge { display: inline-block; font-size: 0.62rem; font-weight: 700; padding: 0.12rem 0.45rem; border-radius: 99px; white-space: nowrap; }
+    .badge-superadmin { background: rgba(200,132,74,0.3); color: #e8a46a; }
+    .badge-admin  { background: rgba(200,132,74,0.15); color: #c8844a; }
+    .badge-user   { background: rgba(255,255,255,0.08); color: var(--muted); }
     .badge-on  { background: rgba(105,219,124,0.15); color: #69db7c; }
     .badge-off { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+    .badge-new { background: rgba(200,132,74,0.2); color: var(--accent); }
 
     /* Buttons */
-    .btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.85rem; border-radius: 2px; font-family: 'Heebo', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s; border: 1px solid; }
-    .btn-primary { background: rgba(200,132,74,0.15); border-color: rgba(200,132,74,0.4); color: #c8844a; }
-    .btn-primary:hover { background: rgba(200,132,74,0.25); }
-    .btn-danger  { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: #ff6b6b; }
+    .btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.85rem; border-radius: 2px; font-family: 'Heebo', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s; border: 1px solid; white-space: nowrap; }
+    .btn-primary { background: rgba(200,132,74,0.15); border-color: rgba(200,132,74,0.4); color: var(--accent); }
+    .btn-primary:hover { background: rgba(200,132,74,0.28); }
+    .btn-success { background: rgba(105,219,124,0.12); border-color: rgba(105,219,124,0.3); color: #69db7c; }
+    .btn-success:hover { background: rgba(105,219,124,0.22); }
+    .btn-danger  { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.25); color: #ff6b6b; }
     .btn-danger:hover  { background: rgba(255,107,107,0.2); }
     .btn-ghost { background: transparent; border-color: var(--border); color: var(--muted); }
-    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
-    .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.72rem; }
-    .btn + .btn { margin-left: 0.4rem; }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
+    .btn-sm { padding: 0.22rem 0.55rem; font-size: 0.7rem; }
+    .btn + .btn { margin-left: 0.35rem; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
     /* Modal */
-    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 500; align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto; }
     .modal-bg.open { display: flex; }
-    .modal { background: #1e1206; border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+    .modal { background: #1e1206; border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 520px; margin: auto; }
     .modal-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .modal-title { font-size: 0.95rem; font-weight: 700; }
-    .modal-close { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 0.2rem; }
+    .modal-close:hover { color: var(--text); }
     .modal-body { padding: 1.25rem; }
-    .field { margin-bottom: 1rem; }
-    .field label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
-    .field input, .field select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.88rem; padding: 0.6rem 0.8rem; outline: none; border-radius: 2px; transition: border 0.15s; }
-    .field input:focus, .field select:focus { border-color: rgba(255,255,255,0.4); }
-    .field input::placeholder { color: var(--subtle); }
-    .field select option { background: #1e1206; }
-    .perms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-    .perm-check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 2px; transition: all 0.12s; }
-    .perm-check:hover { border-color: rgba(255,255,255,0.3); }
-    .perm-check input { width: auto; padding: 0; }
-    .perm-check.checked { border-color: rgba(200,132,74,0.5); background: rgba(200,132,74,0.08); }
     .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
-    .msg { font-size: 0.78rem; margin-top: 0.75rem; min-height: 1.2rem; }
-    .msg.err { color: var(--error); } .msg.ok { color: var(--success); }
 
-    /* Content tabs */
-    .content-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .filter-pill { padding: 0.3rem 0.85rem; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'Heebo', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.12s; }
+    /* Form fields */
+    .field { margin-bottom: 1.1rem; }
+    .field label { display: block; font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+    .field input, .field select, .field textarea {
+      width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.88rem;
+      padding: 0.6rem 0.8rem; outline: none; border-radius: 2px; transition: border 0.15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: rgba(255,255,255,0.4); }
+    .field input::placeholder, .field textarea::placeholder { color: var(--subtle); }
+    .field select option { background: #1e1206; }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .field-hint { font-size: 0.65rem; color: var(--subtle); margin-top: 0.3rem; }
+
+    /* Permissions grid */
+    .perms-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.5rem; }
+    .perms-table th { text-align: left; padding: 0.4rem 0.6rem; font-size: 0.65rem; color: var(--muted); font-weight: 700; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .perms-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .perms-table tr:last-child td { border-bottom: none; }
+    .perm-page { font-weight: 600; }
+    .perm-check { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+    .perm-check input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+    /* Upload section */
+    .upload-section { background: var(--card); border: 1px solid var(--border); border-radius: 2px; margin-bottom: 1.5rem; }
+    .upload-section-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+    .upload-section-head:hover { background: rgba(255,255,255,0.02); }
+    .upload-section-title { font-size: 0.92rem; font-weight: 700; }
+    .upload-section-body { padding: 1.25rem; display: none; }
+    .upload-section-body.open { display: block; }
+    .upload-chevron { color: var(--muted); transition: transform 0.2s; }
+    .upload-chevron.open { transform: rotate(180deg); }
+
+    /* Upload zone */
+    .upload-zone { border: 1px dashed var(--border); border-radius: 2px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; background: rgba(255,255,255,0.02); transition: all 0.15s; }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(200,132,74,0.04); }
+    .upload-zone-text { font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem; }
+    .upload-zone-sub { font-size: 0.68rem; color: var(--subtle); margin-top: 0.2rem; }
+    .file-list { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; }
+    .file-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.8rem; }
+    .file-item:last-child { border-bottom: none; }
+    .file-item-name { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-item-rename { flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.8rem; outline: none; padding: 0.1rem 0; }
+    .file-item-rename:focus { border-bottom-color: var(--accent); }
+    .file-item-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; flex-shrink: 0; padding: 0.1rem; }
+    .file-item-remove:hover { color: var(--error); }
+    .file-item-drag { color: var(--subtle); cursor: grab; flex-shrink: 0; }
+
+    /* Tags widget */
+    .tags-wrap { border: 1px solid var(--border); border-radius: 2px; background: rgba(255,255,255,0.04); padding: 0.5rem 0.75rem; min-height: 42px; cursor: text; position: relative; }
+    .tags-wrap:focus-within { border-color: rgba(255,255,255,0.35); }
+    .tags-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.3rem; }
+    .tag-pill { display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(200,132,74,0.15); border: 1px solid rgba(200,132,74,0.3); color: var(--accent); font-size: 0.7rem; padding: 0.1rem 0.45rem; border-radius: 99px; }
+    .tag-pill-x { background: none; border: none; color: inherit; cursor: pointer; font-size: 0.75rem; padding: 0; opacity: 0.7; }
+    .tag-pill-x:hover { opacity: 1; }
+    .tag-input { background: transparent; border: none; color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.85rem; outline: none; width: 100%; min-width: 120px; }
+    .tag-input::placeholder { color: var(--subtle); }
+    .tag-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 200; background: #1e1206; border: 1px solid var(--border); border-radius: 2px; max-height: 160px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .tag-dropdown.open { display: block; }
+    .tag-opt { padding: 0.4rem 0.75rem; font-size: 0.82rem; cursor: pointer; transition: background 0.1s; }
+    .tag-opt:hover { background: rgba(255,255,255,0.06); }
+    .tag-opt.new { color: var(--subtle); font-style: italic; }
+
+    /* Progress */
+    .prog-wrap { display: none; margin-top: 1rem; }
+    .prog-wrap.on { display: block; }
+    .prog-header { display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.75rem; color: var(--muted); }
+    .prog-pct { font-weight: 700; color: var(--text); }
+    .prog-track { height: 5px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+    .prog-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); border-radius: 99px; transition: width 0.3s; width: 0%; }
+
+    /* Status */
+    .status { font-size: 0.8rem; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 2px; display: none; }
+    .status.on { display: block; }
+    .status.ok  { background: rgba(105,219,124,0.12); border: 1px solid rgba(105,219,124,0.25); color: #69db7c; }
+    .status.err { background: rgba(255,107,107,0.12); border: 1px solid rgba(255,107,107,0.25); color: #ff6b6b; }
+    .status.ld  { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
+
+    /* Content filters */
+    .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+    .filter-pill { padding: 0.28rem 0.8rem; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'Heebo', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.12s; }
     .filter-pill.on { border-color: var(--accent); color: var(--accent); background: rgba(200,132,74,0.08); }
-    .search-input { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.85rem; border-radius: 2px; outline: none; width: 260px; transition: border 0.15s; }
-    .search-input:focus { border-color: rgba(255,255,255,0.35); }
-    .search-input::placeholder { color: var(--subtle); }
-    .deleted-badge { font-size: 0.65rem; color: #ff6b6b; background: rgba(255,107,107,0.12); padding: 0.1rem 0.4rem; border-radius: 99px; }
+    .search-box { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 0.82rem; padding: 0.4rem 0.8rem; border-radius: 2px; outline: none; width: 220px; }
+    .search-box:focus { border-color: rgba(255,255,255,0.3); }
+    .search-box::placeholder { color: var(--subtle); }
+
+    /* Responsive */
+    @media(max-width:768px) {
+      .sidebar { display: none; }
+      .main { padding: 1rem; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    /* Msg */
+    .msg { font-size: 0.78rem; min-height: 1.2rem; margin-top: 0.5rem; }
+    .msg.ok { color: var(--success); } .msg.err { color: var(--error); }
   </style>
 </head>
 <body>
 
 <div class="admin-header">
   <a href="/"><img src="/logo.avif" alt="מאישדעס"></a>
-  <div class="admin-title">Admin Backend</div>
-  <button class="logout-btn" onclick="logout()">Sign Out</button>
+  <div class="header-right">
+    <span class="user-badge" id="user-badge"></span>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </div>
 </div>
 
 <div class="admin-layout">
-  <nav class="sidebar">
-    <div class="sidebar-section">Users</div>
-    <a class="sidebar-link active" onclick="showTab('users')">All Users</a>
-    <div class="sidebar-section">Content</div>
-    <a class="sidebar-link" onclick="showTab('content')">Browse & Edit</a>
-    <a class="sidebar-link" onclick="showTab('trash')">Trash (30d)</a>
-    <div class="sidebar-section">Site</div>
-    <a class="sidebar-link" onclick="showTab('subscribers')">Subscribers</a>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section">Dashboard</div>
+    <div class="sidebar-link active" onclick="showTab('dashboard',this)"><span class="icon">◈</span> Overview</div>
+
+    <div class="sidebar-section" id="nav-upload-section">Upload</div>
+    <div class="sidebar-link" id="nav-blog"    onclick="showTab('upload-blog',this)"><span class="icon">✎</span> Blog Post</div>
+    <div class="sidebar-link" id="nav-posters" onclick="showTab('upload-posters',this)"><span class="icon">◻</span> Posters</div>
+    <div class="sidebar-link" id="nav-events"  onclick="showTab('upload-events',this)"><span class="icon">♫</span> Events</div>
+    <div class="sidebar-link" id="nav-video"   onclick="showTab('upload-video',this)"><span class="icon">▶</span> Videos</div>
+    <div class="sidebar-link" id="nav-pdfs"    onclick="showTab('upload-pdfs',this)"><span class="icon">▤</span> PDFs</div>
+
+    <div class="sidebar-section" id="nav-manage-section">Manage</div>
+    <div class="sidebar-link" id="nav-content" onclick="showTab('content',this)"><span class="icon">≡</span> Browse & Edit</div>
+    <div class="sidebar-link" id="nav-trash"   onclick="showTab('trash',this)"><span class="icon">⊘</span> Trash</div>
+
+    <div class="sidebar-section" id="nav-admin-section">Admin</div>
+    <div class="sidebar-link" id="nav-users" onclick="showTab('users',this)"><span class="icon">◉</span> Users</div>
   </nav>
 
   <main class="main">
 
-    <!-- USERS TAB -->
-    <div class="tab-content active" id="tab-users">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-        <h2>Users</h2>
-        <button class="btn btn-primary" onclick="openCreateUser()">+ New User</button>
+    <!-- DASHBOARD -->
+    <div class="tab-content active" id="tab-dashboard">
+      <h2 style="margin-bottom:1.5rem">Overview</h2>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="stat-posts">—</div><div class="stat-label">Blog Posts</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-events">—</div><div class="stat-label">Events</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-videos">—</div><div class="stat-label">Videos</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-pdfs">—</div><div class="stat-label">PDFs</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-posters">—</div><div class="stat-label">Posters</div></div>
       </div>
-      <table class="data-table" id="users-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead>
-        <tbody id="users-body"><tr><td colspan="6" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
-      </table>
+      <p style="color:var(--muted);font-size:0.82rem">Welcome back. Use the sidebar to upload content or manage existing items.</p>
     </div>
 
-    <!-- CONTENT TAB -->
+    <!-- UPLOAD: BLOG -->
+    <div class="tab-content" id="tab-upload-blog">
+      <div class="page-header"><h2>Upload Blog Post</h2></div>
+      <div class="field-row">
+        <div class="field"><label>Date *</label><input type="date" id="blog-date"></div>
+        <div class="field"><label>Title *</label><input type="text" id="blog-title" placeholder="Post title..."></div>
+      </div>
+      <div class="field"><label>Body</label><textarea id="blog-body" rows="6" placeholder="Post content..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-wrap" id="blog-tags-wrap"><div class="tags-pills" id="blog-tags-pills"></div><input class="tag-input" id="blog-tags-input" placeholder="Add tags..."><div class="tag-dropdown" id="blog-tags-dd"></div></div></div>
+      <div class="field"><label>Images</label><div class="upload-zone" id="blog-zone"><div style="font-size:1.4rem;color:var(--muted)">↑</div><div class="upload-zone-text">Click or drag images here</div><div class="upload-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="file-list" id="blog-files"></div></div>
+      <div class="prog-wrap" id="blog-prog"><div class="prog-header"><span id="blog-prog-label">Uploading...</span><span class="prog-pct" id="blog-prog-pct">0%</span></div><div class="prog-track"><div class="prog-bar" id="blog-prog-bar"></div></div></div>
+      <button class="btn btn-success" style="margin-top:1rem;width:100%;padding:0.75rem" onclick="submitUpload('blog')" id="blog-submit-btn">Submit Post</button>
+      <div class="status" id="blog-status"></div>
+    </div>
+
+    <!-- UPLOAD: POSTERS -->
+    <div class="tab-content" id="tab-upload-posters">
+      <div class="page-header"><h2>Upload Posters</h2></div>
+      <div class="field-row">
+        <div class="field"><label>Date *</label><input type="date" id="posters-date"></div>
+        <div class="field"><label>Parsha</label><input type="text" id="posters-parsha" placeholder="Auto-detected from date"></div>
+      </div>
+      <div class="field"><label>Images *</label><div class="upload-zone" id="posters-zone"><div style="font-size:1.4rem;color:var(--muted)">↑</div><div class="upload-zone-text">Click or drag images here</div><div class="upload-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="file-list" id="posters-files"></div></div>
+      <div class="prog-wrap" id="posters-prog"><div class="prog-header"><span id="posters-prog-label">Uploading...</span><span class="prog-pct" id="posters-prog-pct">0%</span></div><div class="prog-track"><div class="prog-bar" id="posters-prog-bar"></div></div></div>
+      <button class="btn btn-success" style="margin-top:1rem;width:100%;padding:0.75rem" onclick="submitUpload('posters')" id="posters-submit-btn">Upload Posters</button>
+      <div class="status" id="posters-status"></div>
+    </div>
+
+    <!-- UPLOAD: EVENTS -->
+    <div class="tab-content" id="tab-upload-events">
+      <div class="page-header"><h2>Upload Event Recording</h2></div>
+      <div class="field-row">
+        <div class="field"><label>Date *</label><input type="date" id="events-date"></div>
+        <div class="field"><label>Title *</label><input type="text" id="events-title" placeholder="Event name..."></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Location</label><input type="text" id="events-location" placeholder="Where..."></div>
+        <div class="field"><label>Category</label><div class="tags-wrap" id="events-cat-wrap"><div class="tags-pills" id="events-cat-pills"></div><input class="tag-input" id="events-cat-input" placeholder="Category..."><div class="tag-dropdown" id="events-cat-dd"></div></div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="events-desc" rows="3" placeholder="Optional..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-wrap" id="events-tags-wrap"><div class="tags-pills" id="events-tags-pills"></div><input class="tag-input" id="events-tags-input" placeholder="Add tags..."><div class="tag-dropdown" id="events-tags-dd"></div></div></div>
+      <div class="field"><label>Audio Tracks</label><div class="field-hint" style="margin-bottom:0.4rem">Drag to reorder • Click to rename</div><div class="upload-zone" id="events-zone"><div style="font-size:1.4rem;color:var(--muted)">↑</div><div class="upload-zone-text">Click or drag audio files here</div><div class="upload-zone-sub">MP3, WAV, M4A</div></div><div class="file-list" id="events-files"></div></div>
+      <div class="prog-wrap" id="events-prog"><div class="prog-header"><span id="events-prog-label">Uploading...</span><span class="prog-pct" id="events-prog-pct">0%</span></div><div class="prog-track"><div class="prog-bar" id="events-prog-bar"></div></div></div>
+      <button class="btn btn-success" style="margin-top:1rem;width:100%;padding:0.75rem" onclick="submitUpload('events')" id="events-submit-btn">Upload Event</button>
+      <div class="status" id="events-status"></div>
+    </div>
+
+    <!-- UPLOAD: VIDEO -->
+    <div class="tab-content" id="tab-upload-video">
+      <div class="page-header"><h2>Upload Video</h2></div>
+      <div class="field-row">
+        <div class="field"><label>Date *</label><input type="date" id="video-date"></div>
+        <div class="field"><label>Title *</label><input type="text" id="video-title" placeholder="Video title..."></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Location</label><input type="text" id="video-location" placeholder="Where..."></div>
+        <div class="field"><label>Category</label><div class="tags-wrap" id="video-cat-wrap"><div class="tags-pills" id="video-cat-pills"></div><input class="tag-input" id="video-cat-input" placeholder="Category..."><div class="tag-dropdown" id="video-cat-dd"></div></div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="video-desc" rows="3" placeholder="Optional..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-wrap" id="video-tags-wrap"><div class="tags-pills" id="video-tags-pills"></div><input class="tag-input" id="video-tags-input" placeholder="Add tags..."><div class="tag-dropdown" id="video-tags-dd"></div></div></div>
+      <div class="field"><label>YouTube / Drive / Dropbox Link</label><input type="url" id="video-link" placeholder="https://..."></div>
+      <div class="field"><label>Or upload a video file</label><div class="upload-zone" id="video-zone"><div style="font-size:1.4rem;color:var(--muted)">↑</div><div class="upload-zone-text">Click or drag video here</div><div class="upload-zone-sub">MP4, MOV, MKV</div></div><div class="file-list" id="video-files"></div></div>
+      <div class="prog-wrap" id="video-prog"><div class="prog-header"><span id="video-prog-label">Uploading...</span><span class="prog-pct" id="video-prog-pct">0%</span></div><div class="prog-track"><div class="prog-bar" id="video-prog-bar"></div></div></div>
+      <button class="btn btn-success" style="margin-top:1rem;width:100%;padding:0.75rem" onclick="submitUpload('video')" id="video-submit-btn">Upload Video</button>
+      <div class="status" id="video-status"></div>
+    </div>
+
+    <!-- UPLOAD: PDFs -->
+    <div class="tab-content" id="tab-upload-pdfs">
+      <div class="page-header"><h2>Upload PDFs</h2></div>
+      <div class="field"><label>Date *</label><input type="date" id="pdfs-date" style="max-width:220px"></div>
+      <div class="field"><label>PDF Files *</label><div class="upload-zone" id="pdfs-zone"><div style="font-size:1.4rem;color:var(--muted)">↑</div><div class="upload-zone-text">Click or drag PDFs here</div><div class="upload-zone-sub">PDF only • Multiple allowed</div></div><div class="file-list" id="pdfs-files"></div></div>
+      <div id="pdfs-meta-list"></div>
+      <div class="prog-wrap" id="pdfs-prog"><div class="prog-header"><span id="pdfs-prog-label">Uploading...</span><span class="prog-pct" id="pdfs-prog-pct">0%</span></div><div class="prog-track"><div class="prog-bar" id="pdfs-prog-bar"></div></div></div>
+      <button class="btn btn-success" style="margin-top:1rem;width:100%;padding:0.75rem" onclick="submitUpload('pdfs')" id="pdfs-submit-btn">Upload PDFs</button>
+      <div class="status" id="pdfs-status"></div>
+    </div>
+
+    <!-- CONTENT -->
     <div class="tab-content" id="tab-content">
-      <h2>Browse & Edit Content</h2>
-      <div class="content-filters">
-        <button class="filter-pill on" onclick="setContentType('posts',this)">Blog Posts</button>
+      <div class="page-header"><h2>Browse & Edit</h2></div>
+      <div class="filters">
+        <button class="filter-pill on" onclick="setContentType('posts',this)">Blog</button>
         <button class="filter-pill" onclick="setContentType('posters',this)">Posters</button>
         <button class="filter-pill" onclick="setContentType('events',this)">Events</button>
         <button class="filter-pill" onclick="setContentType('videos',this)">Videos</button>
         <button class="filter-pill" onclick="setContentType('pdfs',this)">PDFs</button>
-        <input class="search-input" type="text" placeholder="Search..." id="content-search" oninput="loadContent()">
+        <input class="search-box" type="text" placeholder="Search..." id="content-search" oninput="loadContent()">
       </div>
-      <table class="data-table" id="content-table">
-        <thead><tr><th>Date</th><th>Title</th><th>Tags</th><th>Uploaded</th><th>Actions</th></tr></thead>
-        <tbody id="content-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
-      </table>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Title / Info</th><th>Tags</th><th>Added</th><th>Actions</th></tr></thead>
+          <tbody id="content-body"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- TRASH TAB -->
+    <!-- TRASH -->
     <div class="tab-content" id="tab-trash">
-      <h2>Trash <span style="font-size:0.75rem;font-weight:400;color:var(--muted)">(items deleted in last 30 days)</span></h2>
-      <table class="data-table">
-        <thead><tr><th>Type</th><th>Title / Date</th><th>Deleted</th><th>Actions</th></tr></thead>
-        <tbody id="trash-body"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
-      </table>
+      <div class="page-header"><h2>Trash <span style="font-size:0.75rem;font-weight:400;color:var(--muted)">(30-day auto-delete)</span></h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Type</th><th>Title</th><th>Deleted</th><th>Actions</th></tr></thead>
+          <tbody id="trash-body"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- SUBSCRIBERS TAB -->
-    <div class="tab-content" id="tab-subscribers">
-      <h2>Email Subscribers</h2>
-      <table class="data-table">
-        <thead><tr><th>Email</th><th>Signed Up</th></tr></thead>
-        <tbody id="subs-body"><tr><td colspan="2" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr></tbody>
-      </table>
+    <!-- USERS -->
+    <div class="tab-content" id="tab-users">
+      <div class="page-header">
+        <h2>Users</h2>
+        <button class="btn btn-primary" onclick="openCreateUser()">+ New User</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
   </main>
 </div>
 
-<!-- CREATE / EDIT USER MODAL -->
+<!-- USER MODAL -->
 <div class="modal-bg" id="user-modal">
   <div class="modal">
     <div class="modal-head">
@@ -171,42 +366,41 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-user-id">
-      <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="Full name"></div>
-      <div class="field"><label>Email</label><input type="email" id="u-email" placeholder="user@email.com"></div>
-      <div class="field"><label>Password <span id="pw-hint" style="color:var(--subtle);font-size:0.65rem">(leave blank to keep current)</span></label><input type="password" id="u-password" placeholder="••••••••"></div>
-      <div class="field">
-        <label>Role</label>
-        <select id="u-role">
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-          <option value="superadmin">Superadmin</option>
-        </select>
+      <div class="field-row">
+        <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="Full name"></div>
+        <div class="field"><label>Email *</label><input type="email" id="u-email" placeholder="user@email.com"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Password <span id="pw-hint" style="color:var(--subtle);font-size:0.62rem;display:none">(leave blank to keep)</span></label><input type="password" id="u-password" placeholder="••••••••"></div>
+        <div class="field"><label>Role</label><select id="u-role"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option></select></div>
       </div>
       <div class="field">
-        <label>Upload Permissions</label>
-        <div class="perms-grid" id="perms-grid">
-          <label class="perm-check" id="perm-blog"><input type="checkbox" value="blog"> Blog Posts</label>
-          <label class="perm-check" id="perm-posters"><input type="checkbox" value="posters"> Posters</label>
-          <label class="perm-check" id="perm-events"><input type="checkbox" value="events"> Events</label>
-          <label class="perm-check" id="perm-video"><input type="checkbox" value="video"> Videos</label>
-          <label class="perm-check" id="perm-pdfs"><input type="checkbox" value="pdfs"> PDFs</label>
-        </div>
-        <div style="font-size:0.68rem;color:var(--subtle);margin-top:0.4rem">Admins and superadmins have access to all pages</div>
+        <label>Page Permissions <span style="color:var(--subtle);font-size:0.62rem">(superadmin/admin have full access by default)</span></label>
+        <table class="perms-table" id="perms-table">
+          <thead><tr><th>Page</th><th>Upload</th><th>Edit</th></tr></thead>
+          <tbody>
+            <tr><td class="perm-page">Blog</td><td><label class="perm-check"><input type="checkbox" data-page="blog" data-type="upload" checked> Allow</label></td><td><label class="perm-check"><input type="checkbox" data-page="blog" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td class="perm-page">Posters</td><td><label class="perm-check"><input type="checkbox" data-page="posters" data-type="upload" checked> Allow</label></td><td><label class="perm-check"><input type="checkbox" data-page="posters" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td class="perm-page">Events</td><td><label class="perm-check"><input type="checkbox" data-page="events" data-type="upload" checked> Allow</label></td><td><label class="perm-check"><input type="checkbox" data-page="events" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td class="perm-page">Videos</td><td><label class="perm-check"><input type="checkbox" data-page="video" data-type="upload" checked> Allow</label></td><td><label class="perm-check"><input type="checkbox" data-page="video" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td class="perm-page">PDFs</td><td><label class="perm-check"><input type="checkbox" data-page="pdfs" data-type="upload" checked> Allow</label></td><td><label class="perm-check"><input type="checkbox" data-page="pdfs" data-type="edit" checked> Allow</label></td></tr>
+          </tbody>
+        </table>
       </div>
       <div class="msg" id="user-msg"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('user-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()">Save</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
     </div>
   </div>
 </div>
 
-<!-- EDIT CONTENT MODAL -->
+<!-- CONTENT EDIT MODAL -->
 <div class="modal-bg" id="content-modal">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title">Edit</div>
+      <div class="modal-title" id="content-modal-title">Edit</div>
       <button class="modal-close" onclick="closeModal('content-modal')">✕</button>
     </div>
     <div class="modal-body" id="content-modal-body"></div>
@@ -218,249 +412,656 @@
 </div>
 
 <script>
-  const API = 'https://moisdes-worker.moisdesvienweb.workers.dev';
-  let token = localStorage.getItem('moisdes_token');
-  let user  = JSON.parse(localStorage.getItem('moisdes_user') || '{}');
-  let currentContentType = 'posts';
-  let editingContentId = null;
+const API   = 'https://moisdes-worker.moisdesvienweb.workers.dev';
+let token   = localStorage.getItem('moisdes_token');
+let user    = JSON.parse(localStorage.getItem('moisdes_user') || 'null');
+let perms   = JSON.parse(localStorage.getItem('moisdes_perms') || '[]');
+let currentContentType = 'posts';
+let editingContentId   = null;
 
-  // ── INIT ──────────────────────────────────────────────────────
-  if (!token) window.location.href = '/login?redirect=/admin';
-  if (user.role !== 'superadmin') window.location.href = '/';
+// Files state per upload section
+const fileStore = { blog:[], posters:[], events:[], video:[], pdfs:[] };
+// Tags state
+const tagsState = {};
+// All tags/cats from API
+let allTags = [], allCats = [];
 
-  function auth() { return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+// ── INIT ──────────────────────────────────────────────────────────
+if (!token || !user) { window.location.href = '/login?redirect=/admin'; }
+document.getElementById('user-badge').textContent = user?.name || user?.email || '';
 
-  function logout() {
-    fetch(`${API}/api/auth/logout`, { method: 'POST', headers: auth() });
-    localStorage.clear();
-    window.location.href = '/login';
-  }
+// Hide sections based on role
+if (user?.role !== 'superadmin') {
+  document.getElementById('nav-admin-section').style.display = 'none';
+  document.getElementById('nav-users').style.display = 'none';
+}
 
-  // ── TABS ──────────────────────────────────────────────────────
-  function showTab(name) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-    document.getElementById(`tab-${name}`).classList.add('active');
-    event.target.classList.add('active');
-    if (name === 'users')       loadUsers();
-    if (name === 'content')     loadContent();
-    if (name === 'trash')       loadTrash();
-    if (name === 'subscribers') loadSubscribers();
-  }
-
-  // ── USERS ─────────────────────────────────────────────────────
-  async function loadUsers() {
-    const res  = await fetch(`${API}/api/admin/users`, { headers: auth() });
-    const data = await res.json();
-    const tbody = document.getElementById('users-body');
-    if (!data.users?.length) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:2rem">No users</td></tr>'; return; }
-    tbody.innerHTML = data.users.map(u => `
-      <tr>
-        <td>${esc(u.name||'—')}</td>
-        <td style="color:var(--muted)">${esc(u.email)}</td>
-        <td><span class="badge badge-${u.role === 'superadmin' ? 'super' : u.role === 'admin' ? 'admin' : 'user'}">${u.role}</span></td>
-        <td><span class="badge badge-${u.active ? 'on' : 'off'}">${u.active ? 'Active' : 'Disabled'}</span></td>
-        <td style="font-size:0.72rem;color:var(--muted)">${(u.permissions||[]).join(', ') || (u.role !== 'user' ? 'All' : '—')}</td>
-        <td>
-          <button class="btn btn-ghost btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>Edit</button>
-          ${u.role !== 'superadmin' ? `<button class="btn btn-danger btn-sm" onclick="disableUser(${u.id},${u.active})">${u.active ? 'Disable' : 'Enable'}</button>` : ''}
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  function openCreateUser() {
-    document.getElementById('edit-user-id').value = '';
-    document.getElementById('u-name').value = '';
-    document.getElementById('u-email').value = '';
-    document.getElementById('u-password').value = '';
-    document.getElementById('u-role').value = 'user';
-    document.getElementById('pw-hint').style.display = 'none';
-    document.querySelectorAll('.perm-check input').forEach(cb => { cb.checked = false; cb.closest('.perm-check').classList.remove('checked'); });
-    document.getElementById('user-modal-title').textContent = 'New User';
-    document.getElementById('user-msg').textContent = '';
-    openModal('user-modal');
-  }
-
-  function openEditUser(u) {
-    document.getElementById('edit-user-id').value = u.id;
-    document.getElementById('u-name').value  = u.name || '';
-    document.getElementById('u-email').value = u.email;
-    document.getElementById('u-password').value = '';
-    document.getElementById('u-role').value = u.role;
-    document.getElementById('pw-hint').style.display = '';
-    document.getElementById('user-modal-title').textContent = 'Edit User';
-    document.getElementById('user-msg').textContent = '';
-    const perms = u.permissions || [];
-    document.querySelectorAll('.perm-check input').forEach(cb => {
-      cb.checked = perms.includes(cb.value);
-      cb.closest('.perm-check').classList.toggle('checked', cb.checked);
-    });
-    openModal('user-modal');
-  }
-
-  async function saveUser() {
-    const id    = document.getElementById('edit-user-id').value;
-    const name  = document.getElementById('u-name').value.trim();
-    const email = document.getElementById('u-email').value.trim();
-    const pass  = document.getElementById('u-password').value;
-    const role  = document.getElementById('u-role').value;
-    const perms = [...document.querySelectorAll('.perm-check input:checked')].map(cb => cb.value);
-    const msg   = document.getElementById('user-msg');
-
-    try {
-      if (id) {
-        // Update existing
-        const body = { name, role };
-        if (pass) body.password = pass;
-        await fetch(`${API}/api/admin/users/${id}`, { method: 'PUT', headers: auth(), body: JSON.stringify(body) });
-        await fetch(`${API}/api/admin/users/${id}/permissions`, { method: 'PUT', headers: auth(), body: JSON.stringify({ permissions: perms }) });
-      } else {
-        // Create new
-        if (!email || !pass) { msg.className = 'msg err'; msg.textContent = 'Email and password required'; return; }
-        await fetch(`${API}/api/admin/users`, { method: 'POST', headers: auth(), body: JSON.stringify({ email, name, password: pass, role, permissions: perms }) });
-      }
-      msg.className = 'msg ok'; msg.textContent = 'Saved!';
-      setTimeout(() => { closeModal('user-modal'); loadUsers(); }, 800);
-    } catch(e) {
-      msg.className = 'msg err'; msg.textContent = e.message;
+// Hide upload nav items based on permissions
+if (user?.role === 'user') {
+  const pages = ['blog','posters','events','video','pdfs'];
+  pages.forEach(p => {
+    const canUpload = perms.some(perm => (typeof perm === 'string' ? perm === p : perm.page === p && perm.can_upload));
+    if (!canUpload) {
+      const el = document.getElementById(`nav-${p}`);
+      if (el) el.style.display = 'none';
     }
+  });
+}
+
+function auth() { return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+
+function logout() {
+  fetch(`${API}/api/auth/logout`, { method: 'POST', headers: auth() }).catch(()=>{});
+  localStorage.clear();
+  window.location.href = '/login';
+}
+
+// ── TABS ──────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'content')   loadContent();
+  if (name === 'trash')     loadTrash();
+  if (name === 'users')     loadUsers();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDashboard() {
+  const tables = ['posts','events','videos','pdfs','posters'];
+  for (const t of tables) {
+    fetch(`${API}/api/${t}?limit=1`, { headers: auth() })
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById(`stat-${t}`);
+        if (el) el.textContent = d.items?.length >= 1 ? d.items.length : '0';
+      }).catch(()=>{});
+  }
+}
+
+// ── TAGS WIDGET ───────────────────────────────────────────────────
+function initTagsWidget(prefix, sourceList, allowNew=true) {
+  const key      = prefix;
+  tagsState[key] = { selected: [], newItems: [] };
+
+  const wrap   = document.getElementById(`${prefix}-wrap`);
+  const pillsEl= document.getElementById(`${prefix}-pills`);
+  const input  = document.getElementById(`${prefix}-input`);
+  const dd     = document.getElementById(`${prefix}-dd`);
+  if (!wrap) return;
+
+  wrap.addEventListener('click', () => input.focus());
+
+  function renderPills() {
+    pillsEl.innerHTML = tagsState[key].selected.map(t =>
+      `<span class="tag-pill">${esc(t)}<button class="tag-pill-x" onclick="removeTag('${key}','${esc(t)}')">✕</button></span>`
+    ).join('');
   }
 
-  async function disableUser(id, currently) {
-    await fetch(`${API}/api/admin/users/${id}`, { method: 'PUT', headers: auth(), body: JSON.stringify({ active: !currently }) });
-    loadUsers();
+  function renderDD(q='') {
+    const list = sourceList().filter(t => !tagsState[key].selected.includes(t) && (!q || t.toLowerCase().includes(q.toLowerCase())));
+    let html = list.map(t => `<div class="tag-opt" onmousedown="event.preventDefault();addTag('${key}','${esc(t)}')">${esc(t)}</div>`).join('');
+    const typed = q.trim();
+    if (allowNew && typed && !sourceList().some(t => t.toLowerCase()===typed.toLowerCase()) && !tagsState[key].selected.some(t=>t.toLowerCase()===typed.toLowerCase())) {
+      html += `<div class="tag-opt new" onmousedown="event.preventDefault();addNewTag('${key}','${esc(typed)}')">+ Add: "${esc(typed)}"</div>`;
+    }
+    if (!html) html = `<div class="tag-opt" style="color:var(--subtle);cursor:default">No results</div>`;
+    dd.innerHTML = html;
   }
 
-  document.querySelectorAll('.perm-check').forEach(label => {
-    label.addEventListener('click', () => {
-      setTimeout(() => label.classList.toggle('checked', label.querySelector('input').checked), 0);
-    });
+  input.addEventListener('focus', () => { renderDD(input.value); dd.classList.add('open'); });
+  input.addEventListener('blur',  () => setTimeout(() => dd.classList.remove('open'), 150));
+  input.addEventListener('input', () => renderDD(input.value));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const v = input.value.trim();
+      if (!v) return;
+      const match = sourceList().find(t => t.toLowerCase()===v.toLowerCase());
+      if (match) addTag(key, match);
+      else if (allowNew) addNewTag(key, v);
+    }
   });
 
-  // ── CONTENT ───────────────────────────────────────────────────
-  function setContentType(type, btn) {
-    currentContentType = type;
-    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('on'));
-    btn.classList.add('on');
-    loadContent();
+  renderPills();
+}
+
+function addTag(key, tag) {
+  if (!tagsState[key].selected.includes(tag)) tagsState[key].selected.push(tag);
+  const input = document.getElementById(`${key}-input`);
+  if (input) input.value = '';
+  const pillsEl = document.getElementById(`${key}-pills`);
+  if (pillsEl) pillsEl.innerHTML = tagsState[key].selected.map(t =>
+    `<span class="tag-pill">${esc(t)}<button class="tag-pill-x" onclick="removeTag('${key}','${esc(t)}')">✕</button></span>`
+  ).join('');
+}
+
+function addNewTag(key, tag) {
+  if (key.endsWith('-tags')) { if (!allTags.includes(tag)) allTags.push(tag); tagsState[key].newItems.push(tag); }
+  else { if (!allCats.includes(tag)) allCats.push(tag); tagsState[key].newItems.push(tag); }
+  addTag(key, tag);
+}
+
+function removeTag(key, tag) {
+  tagsState[key].selected = tagsState[key].selected.filter(t => t !== tag);
+  const pillsEl = document.getElementById(`${key}-pills`);
+  if (pillsEl) pillsEl.innerHTML = tagsState[key].selected.map(t =>
+    `<span class="tag-pill">${esc(t)}<button class="tag-pill-x" onclick="removeTag('${key}','${esc(t)}')">✕</button></span>`
+  ).join('');
+}
+
+function getTagsValue(key) { return tagsState[key]?.selected.join(', ') || ''; }
+function getNewTags(key)   { return tagsState[key]?.newItems || []; }
+function resetTags(key)    { if (tagsState[key]) { tagsState[key].selected = []; tagsState[key].newItems = []; } const p = document.getElementById(`${key}-pills`); if(p) p.innerHTML=''; }
+
+// Load tags from API
+async function loadTaxonomy() {
+  try {
+    const [tr, cr] = await Promise.all([
+      fetch(`${API}/api/tags`, { headers: auth() }).then(r=>r.json()),
+      fetch(`${API}/api/categories`, { headers: auth() }).then(r=>r.json()),
+    ]);
+    allTags = tr.tags || [];
+    allCats = cr.categories || [];
+  } catch(e) { allTags = []; allCats = []; }
+
+  // Init all tag widgets
+  initTagsWidget('blog-tags',    () => allTags);
+  initTagsWidget('events-tags',  () => allTags);
+  initTagsWidget('video-tags',   () => allTags);
+  initTagsWidget('events-cat',   () => allCats);
+  initTagsWidget('video-cat',    () => allCats);
+}
+
+// ── FILE UPLOAD WIDGET ────────────────────────────────────────────
+function initFileZone(prefix, accept, multiple, reorderable, named) {
+  const zone = document.getElementById(`${prefix}-zone`);
+  if (!zone) return;
+
+  zone.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = accept; inp.multiple = multiple;
+    inp.style.cssText = 'position:fixed;top:-9999px';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => { addFiles(prefix, e.target.files, named); document.body.removeChild(inp); });
+    inp.click();
+  });
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); addFiles(prefix, e.dataTransfer.files, named); });
+}
+
+function addFiles(prefix, fileList, named) {
+  for (const f of fileList) {
+    fileStore[prefix] = fileStore[prefix] || [];
+    fileStore[prefix].push({ id: Date.now()+Math.random(), file: f, name: f.name.replace(/\.[^.]+$/,'') });
   }
+  renderFileList(prefix, named);
+  if (prefix === 'pdfs') renderPdfMeta();
+}
 
-  async function loadContent() {
-    const search = document.getElementById('content-search')?.value || '';
-    const res    = await fetch(`${API}/api/${currentContentType}?search=${encodeURIComponent(search)}&limit=100`, { headers: auth() });
-    const data   = await res.json();
-    const tbody  = document.getElementById('content-body');
+function renderFileList(prefix, named) {
+  const listEl = document.getElementById(`${prefix}-files`);
+  if (!listEl) return;
+  const files = fileStore[prefix] || [];
+  listEl.innerHTML = files.map((f,i) => `
+    <div class="file-item" data-id="${f.id}">
+      ${named ? '<span class="file-item-drag">≡</span>' : ''}
+      ${named
+        ? `<input class="file-item-rename" value="${esc(f.name)}" onchange="renameFile('${prefix}',${f.id},this.value)">`
+        : `<span class="file-item-name">${esc(f.file.name)}</span>`}
+      <button class="file-item-remove" onclick="removeFile('${prefix}',${f.id})">✕</button>
+    </div>
+  `).join('');
+}
 
-    if (!data.items?.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">No items</td></tr>';
+function removeFile(prefix, id) {
+  fileStore[prefix] = (fileStore[prefix]||[]).filter(f => f.id !== id);
+  renderFileList(prefix, false);
+  if (prefix === 'pdfs') renderPdfMeta();
+}
+
+function renameFile(prefix, id, name) {
+  const f = (fileStore[prefix]||[]).find(f => f.id === id);
+  if (f) f.name = name;
+}
+
+function renderPdfMeta() {
+  const listEl = document.getElementById('pdfs-meta-list');
+  if (!listEl) return;
+  const files = fileStore['pdfs'] || [];
+  if (!files.length) { listEl.innerHTML=''; return; }
+
+  listEl.innerHTML = files.map((f,i) => `
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:2px;padding:1rem;margin-top:0.75rem">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--muted);margin-bottom:0.75rem">${esc(f.file.name)}</div>
+      <div class="field-row">
+        <div class="field"><label>Title *</label><input type="text" class="pdf-title" data-i="${i}" placeholder="Title..." value="${esc(f.name)}"></div>
+        <div class="field"><label>Language</label><select class="pdf-lang" data-i="${i}"><option value="">—</option><option>ייִדיש</option><option>לשון הקודש</option><option>English</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Category</label><input type="text" class="pdf-cat" data-i="${i}" placeholder="Category..."></div>
+        <div class="field"><label>Parsha / Occasion</label><input type="text" class="pdf-parsha" data-i="${i}" placeholder="Parsha..."></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Year</label><input type="text" class="pdf-year" data-i="${i}" placeholder="e.g. תשפ״ה"></div>
+        <div class="field"><label>Tags</label><input type="text" class="pdf-tags" data-i="${i}" placeholder="tag1, tag2..."></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── UPLOAD SUBMIT ─────────────────────────────────────────────────
+function setProgress(prefix, pct, label) {
+  const wrap = document.getElementById(`${prefix}-prog`);
+  const bar  = document.getElementById(`${prefix}-prog-bar`);
+  const pctEl= document.getElementById(`${prefix}-prog-pct`);
+  const lbl  = document.getElementById(`${prefix}-prog-label`);
+  if (!wrap) return;
+  wrap.classList.add('on');
+  if (bar) bar.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = Math.round(pct) + '%';
+  if (lbl && label) lbl.textContent = label;
+}
+
+function showStatus(prefix, type, msg) {
+  const el = document.getElementById(`${prefix}-status`);
+  if (!el) return;
+  el.className = `status ${type} on`;
+  el.textContent = msg;
+  if (type === 'ok') setTimeout(() => el.classList.remove('on'), 6000);
+}
+
+async function uploadToR2(key, blob, mimeType, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API}/api/upload/r2-put?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(mimeType)}`);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded/e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const d = JSON.parse(xhr.responseText);
+        resolve(d.key);
+      } else reject(new Error(`Upload failed: ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(blob);
+  });
+}
+
+async function submitUpload(prefix) {
+  const btn = document.getElementById(`${prefix}-submit-btn`);
+  btn.disabled = true;
+  showStatus(prefix, 'ld', 'Preparing...');
+  setProgress(prefix, 5, 'Preparing...');
+
+  try {
+    const token_r = await fetch(`${API}/api/auth/me`, { headers: auth() });
+    if (!token_r.ok) throw new Error('Not authenticated');
+
+    let payload = {};
+    const r2Keys = [];
+
+    if (prefix === 'blog') {
+      const date  = document.getElementById('blog-date').value;
+      const title = document.getElementById('blog-title').value.trim();
+      if (!date || !title) throw new Error('Date and title are required');
+
+      // Upload images to R2
+      const files = fileStore['blog'] || [];
+      setProgress(prefix, 15, `Uploading ${files.length} image(s)...`);
+      const folderKey = `blog/${Date.now()}`;
+      for (let i=0; i<files.length; i++) {
+        const f   = files[i];
+        const ext = f.file.name.split('.').pop();
+        const key = `${folderKey}/${i+1}-${f.name}.${ext}`;
+        await uploadToR2(key, f.file, f.file.type, p => setProgress(prefix, 15+Math.round(p*55), `Uploading image ${i+1}/${files.length}...`));
+        r2Keys.push(key);
+      }
+      payload = { date: formatDate(date), title, body: document.getElementById('blog-body').value, tags: getTagsValue('blog-tags'), newTags: getNewTags('blog-tags'), folder_url: r2Keys.length ? `r2://${r2Keys[0].split('/').slice(0,-1).join('/')}` : '', r2_keys: r2Keys };
+
+    } else if (prefix === 'posters') {
+      const date = document.getElementById('posters-date').value;
+      if (!date) throw new Error('Date is required');
+      const files = fileStore['posters'] || [];
+      if (!files.length) throw new Error('Please upload at least one image');
+      const folderKey = `posters/${Date.now()}`;
+      for (let i=0; i<files.length; i++) {
+        const f   = files[i];
+        const ext = f.file.name.split('.').pop();
+        const key = `${folderKey}/${i+1}.${ext}`;
+        await uploadToR2(key, f.file, f.file.type, p => setProgress(prefix, 15+Math.round(p*65), `Uploading image ${i+1}/${files.length}...`));
+        r2Keys.push(key);
+      }
+      payload = { date: formatDate(date), parsha: document.getElementById('posters-parsha').value, folder_url: `r2://${folderKey}`, r2_keys: r2Keys };
+
+    } else if (prefix === 'events') {
+      const date  = document.getElementById('events-date').value;
+      const title = document.getElementById('events-title').value.trim();
+      if (!date || !title) throw new Error('Date and title are required');
+      const files = fileStore['events'] || [];
+      const folderKey = `events/${Date.now()}`;
+      for (let i=0; i<files.length; i++) {
+        const f   = files[i];
+        const ext = f.file.name.split('.').pop();
+        const key = `${folderKey}/${String(i+1).padStart(2,'0')}-${f.name}.${ext}`;
+        await uploadToR2(key, f.file, f.file.type, p => setProgress(prefix, 15+Math.round(p*65), `Uploading track ${i+1}/${files.length}: ${f.name}`));
+        r2Keys.push(key);
+      }
+      payload = { date: formatDate(date), title, location: document.getElementById('events-location').value, category: getTagsValue('events-cat'), description: document.getElementById('events-desc').value, tags: getTagsValue('events-tags'), folder_url: r2Keys.length ? `r2://${folderKey}` : '', newTags: getNewTags('events-tags'), newCategories: getNewTags('events-cat'), r2_keys: r2Keys };
+
+    } else if (prefix === 'video') {
+      const date  = document.getElementById('video-date').value;
+      const title = document.getElementById('video-title').value.trim();
+      const link  = document.getElementById('video-link').value.trim();
+      if (!date || !title) throw new Error('Date and title are required');
+      let video_url = link;
+      const files = fileStore['video'] || [];
+      if (!link && files.length) {
+        const f   = files[0];
+        const ext = f.file.name.split('.').pop();
+        const key = `video/${Date.now()}.${ext}`;
+        await uploadToR2(key, f.file, f.file.type, p => setProgress(prefix, 15+Math.round(p*65), 'Uploading video...'));
+        video_url = `r2://${key}`;
+        r2Keys.push(key);
+      }
+      payload = { date: formatDate(date), title, location: document.getElementById('video-location').value, category: getTagsValue('video-cat'), description: document.getElementById('video-desc').value, tags: getTagsValue('video-tags'), video_url, newTags: getNewTags('video-tags'), newCategories: getNewTags('video-cat'), r2_keys: r2Keys };
+
+    } else if (prefix === 'pdfs') {
+      const date = document.getElementById('pdfs-date').value;
+      if (!date) throw new Error('Date is required');
+      const files = fileStore['pdfs'] || [];
+      if (!files.length) throw new Error('Please upload at least one PDF');
+
+      // Upload each PDF
+      const pdfItems = [];
+      for (let i=0; i<files.length; i++) {
+        const f       = files[i];
+        const titleEl = document.querySelector(`.pdf-title[data-i="${i}"]`);
+        const langEl  = document.querySelector(`.pdf-lang[data-i="${i}"]`);
+        const catEl   = document.querySelector(`.pdf-cat[data-i="${i}"]`);
+        const parshaEl= document.querySelector(`.pdf-parsha[data-i="${i}"]`);
+        const yearEl  = document.querySelector(`.pdf-year[data-i="${i}"]`);
+        const tagsEl  = document.querySelector(`.pdf-tags[data-i="${i}"]`);
+        const key     = `pdfs/${Date.now()}-${i+1}.pdf`;
+        setProgress(prefix, 15+Math.round((i/files.length)*65), `Uploading PDF ${i+1}/${files.length}...`);
+        await uploadToR2(key, f.file, 'application/pdf', p => setProgress(prefix, 15+Math.round(((i+p)/files.length)*65), `Uploading PDF ${i+1}/${files.length}...`));
+        r2Keys.push(key);
+        pdfItems.push({ title: titleEl?.value || f.name, language: langEl?.value||'', category: catEl?.value||'', parsha: parshaEl?.value||'', year: yearEl?.value||'', tags: tagsEl?.value||'', pdf_url: `r2://${key}` });
+      }
+      // Submit each PDF as separate record
+      setProgress(prefix, 85, 'Saving to database...');
+      for (const item of pdfItems) {
+        await fetch(`${API}/api/upload/pdf`, { method:'POST', headers: auth(), body: JSON.stringify({ date: formatDate(date), ...item, r2_keys: [item.pdf_url.replace('r2://','')], newTags: [], newCategories: [] }) });
+      }
+      setProgress(prefix, 100, 'Done!');
+      showStatus(prefix, 'ok', `✓ ${pdfItems.length} PDF(s) uploaded successfully!`);
+      resetUpload(prefix);
+      btn.disabled = false;
       return;
     }
 
-    tbody.innerHTML = data.items.map(item => `
-      <tr>
-        <td style="color:var(--muted);white-space:nowrap">${item.date||'—'}</td>
-        <td>${esc(item.title || item.parsha || '—')}</td>
-        <td style="font-size:0.72rem;color:var(--muted)">${esc((item.tags||'').split(',').slice(0,3).join(', '))}</td>
-        <td style="font-size:0.72rem;color:var(--muted)">${item.created_at?.split('T')[0]||'—'}</td>
-        <td>
-          <button class="btn btn-ghost btn-sm" onclick='openEditContent(${JSON.stringify(item)})'>Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  function openEditContent(item) {
-    editingContentId = item.id;
-    const fields = {
-      posts:   ['date','title','body','tags'],
-      posters: ['date','parsha'],
-      events:  ['date','title','location','category','description','tags'],
-      videos:  ['date','title','location','category','description','tags','video_url'],
-      pdfs:    ['date','title','category','language','parsha','year','tags'],
-    };
-    const f = fields[currentContentType] || [];
-    document.getElementById('content-modal-body').innerHTML = f.map(field => `
-      <div class="field">
-        <label>${field.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</label>
-        ${field === 'body' || field === 'description'
-          ? `<textarea id="edit-${field}" rows="4" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;font-family:Heebo,sans-serif;font-size:0.88rem;padding:0.6rem 0.8rem;border-radius:2px;outline:none;resize:vertical">${esc(item[field]||'')}</textarea>`
-          : `<input type="text" id="edit-${field}" value="${esc(item[field]||'')}" placeholder="${field}">`
-        }
-      </div>
-    `).join('');
-    openModal('content-modal');
-  }
-
-  async function saveContent() {
-    const fields = {
-      posts:   ['date','title','body','tags'],
-      posters: ['date','parsha'],
-      events:  ['date','title','location','category','description','tags'],
-      videos:  ['date','title','location','category','description','tags','video_url'],
-      pdfs:    ['date','title','category','language','parsha','year','tags'],
-    };
-    const body = {};
-    (fields[currentContentType]||[]).forEach(f => {
-      const el = document.getElementById(`edit-${f}`);
-      if (el) body[f] = el.value;
-    });
-    await fetch(`${API}/api/${currentContentType}/${editingContentId}`, { method: 'PUT', headers: auth(), body: JSON.stringify(body) });
-    closeModal('content-modal');
-    loadContent();
-  }
-
-  async function deleteItem(id) {
-    if (!confirm('Move to trash?')) return;
-    await fetch(`${API}/api/${currentContentType}/${id}`, { method: 'DELETE', headers: auth() });
-    loadContent();
-  }
-
-  // ── TRASH ─────────────────────────────────────────────────────
-  async function loadTrash() {
-    const res  = await fetch(`${API}/api/trash`, { headers: auth() });
+    setProgress(prefix, 85, 'Saving to database...');
+    const tableMap = { blog:'post', posters:'poster', events:'event', video:'video' };
+    const res  = await fetch(`${API}/api/upload/${tableMap[prefix]}`, { method:'POST', headers: auth(), body: JSON.stringify(payload) });
     const data = await res.json();
-    const tbody = document.getElementById('trash-body');
-    if (!data.items?.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:2rem">Trash is empty</td></tr>'; return; }
-    tbody.innerHTML = data.items.map(item => `
-      <tr>
-        <td><span class="badge badge-user">${item._table}</span></td>
-        <td>${esc(item.title || item.parsha || item.date || '—')}</td>
-        <td style="color:var(--muted);font-size:0.78rem">${item.deleted_at?.split('T')[0]||'—'}</td>
-        <td>
-          <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">Restore</button>
-          <button class="btn btn-danger btn-sm" onclick="permanentDelete('${item._table}',${item.id})">Delete Forever</button>
-        </td>
-      </tr>
-    `).join('');
+    if (!res.ok || data.error) throw new Error(data.error || 'Upload failed');
+
+    setProgress(prefix, 100, 'Done!');
+    showStatus(prefix, 'ok', '✓ Uploaded successfully!');
+    resetUpload(prefix);
+
+  } catch(e) {
+    showStatus(prefix, 'err', '⚠ ' + e.message);
+    console.error(e);
   }
+  btn.disabled = false;
+}
 
-  async function restoreItem(table, id) {
-    await fetch(`${API}/api/trash/restore/${id}`, { method: 'POST', headers: auth(), body: JSON.stringify({ table, id }) });
-    loadTrash();
+function resetUpload(prefix) {
+  fileStore[prefix] = [];
+  renderFileList(prefix, false);
+  const fields = document.querySelectorAll(`#tab-upload-${prefix} input[type=text], #tab-upload-${prefix} input[type=date], #tab-upload-${prefix} input[type=url], #tab-upload-${prefix} textarea`);
+  fields.forEach(f => { if (f.type !== 'date') f.value = ''; });
+  ['blog-tags','events-tags','events-cat','video-tags','video-cat'].forEach(k => resetTags(k));
+  if (prefix === 'pdfs') document.getElementById('pdfs-meta-list').innerHTML = '';
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+// ── USERS ─────────────────────────────────────────────────────────
+async function loadUsers() {
+  const res  = await fetch(`${API}/api/admin/users`, { headers: auth() });
+  const data = await res.json();
+  const tbody = document.getElementById('users-body');
+  if (!data.users?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users yet</td></tr>'; return; }
+  tbody.innerHTML = data.users.map(u => `
+    <tr>
+      <td>${esc(u.name||'—')}</td>
+      <td style="color:var(--muted)">${esc(u.email)}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td><span class="badge badge-${u.active?'on':'off'}">${u.active?'Active':'Disabled'}</span></td>
+      <td style="font-size:0.72rem;color:var(--muted)">${formatPerms(u.permissions, u.role)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>Edit</button>
+        ${u.role!=='superadmin'?`<button class="btn btn-danger btn-sm" onclick="toggleUser(${u.id},${u.active})">${u.active?'Disable':'Enable'}</button>`:''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function formatPerms(perms, role) {
+  if (role === 'superadmin' || role === 'admin') return 'Full access';
+  if (!perms?.length) return '—';
+  return perms.map(p => {
+    const page = typeof p === 'string' ? p : p.page;
+    const up   = typeof p === 'string' ? true : p.can_upload;
+    const ed   = typeof p === 'string' ? true : p.can_edit;
+    return `${page}(${up?'U':''}${ed?'E':''})`;
+  }).join(', ');
+}
+
+function openCreateUser() {
+  document.getElementById('edit-user-id').value = '';
+  document.getElementById('u-name').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-password').value = '';
+  document.getElementById('u-role').value = 'user';
+  document.getElementById('pw-hint').style.display = 'none';
+  document.getElementById('user-modal-title').textContent = 'New User';
+  document.getElementById('user-msg').textContent = '';
+  // Default all checkboxes checked
+  document.querySelectorAll('#perms-table input[type=checkbox]').forEach(cb => cb.checked = true);
+  openModal('user-modal');
+}
+
+function openEditUser(u) {
+  document.getElementById('edit-user-id').value = u.id;
+  document.getElementById('u-name').value  = u.name || '';
+  document.getElementById('u-email').value = u.email;
+  document.getElementById('u-password').value = '';
+  document.getElementById('u-role').value = u.role;
+  document.getElementById('pw-hint').style.display = '';
+  document.getElementById('user-modal-title').textContent = 'Edit User';
+  document.getElementById('user-msg').textContent = '';
+
+  // Set permissions checkboxes
+  const perms = u.permissions || [];
+  document.querySelectorAll('#perms-table input[type=checkbox]').forEach(cb => {
+    const page = cb.dataset.page;
+    const type = cb.dataset.type;
+    const perm = perms.find(p => (typeof p === 'string' ? p === page : p.page === page));
+    if (perm) {
+      if (type === 'upload') cb.checked = typeof perm === 'string' ? true : !!perm.can_upload;
+      if (type === 'edit')   cb.checked = typeof perm === 'string' ? true : !!perm.can_edit;
+    } else {
+      cb.checked = false;
+    }
+  });
+  openModal('user-modal');
+}
+
+async function saveUser() {
+  const id    = document.getElementById('edit-user-id').value;
+  const name  = document.getElementById('u-name').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const pass  = document.getElementById('u-password').value;
+  const role  = document.getElementById('u-role').value;
+  const msg   = document.getElementById('user-msg');
+
+  // Build permissions array
+  const pages = ['blog','posters','events','video','pdfs'];
+  const permissions = pages.map(page => ({
+    page,
+    can_upload: document.querySelector(`input[data-page="${page}"][data-type="upload"]`)?.checked ? 1 : 0,
+    can_edit:   document.querySelector(`input[data-page="${page}"][data-type="edit"]`)?.checked   ? 1 : 0,
+  })).filter(p => p.can_upload || p.can_edit);
+
+  try {
+    if (id) {
+      const body = { name, role, permissions };
+      if (pass) body.password = pass;
+      const r = await fetch(`${API}/api/admin/users/${id}`, { method:'PUT', headers: auth(), body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      await fetch(`${API}/api/admin/users/${id}/permissions`, { method:'PUT', headers: auth(), body: JSON.stringify({ permissions }) });
+    } else {
+      if (!email || !pass) throw new Error('Email and password required');
+      const r = await fetch(`${API}/api/admin/users`, { method:'POST', headers: auth(), body: JSON.stringify({ email, name, password: pass, role, permissions }) });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+    }
+    msg.className = 'msg ok'; msg.textContent = 'Saved!';
+    setTimeout(() => { closeModal('user-modal'); loadUsers(); }, 700);
+  } catch(e) {
+    msg.className = 'msg err'; msg.textContent = e.message;
   }
+}
 
-  async function permanentDelete(table, id) {
-    if (!confirm('Permanently delete? This cannot be undone.')) return;
-    await fetch(`${API}/api/trash/permanent/${id}`, { method: 'DELETE', headers: auth(), body: JSON.stringify({ table, id }) });
-    loadTrash();
-  }
-
-  // ── SUBSCRIBERS ───────────────────────────────────────────────
-  async function loadSubscribers() {
-    const res  = await fetch(`${API}/api/subscribe`, { headers: auth() });
-    // TODO: add GET endpoint for subscribers
-    document.getElementById('subs-body').innerHTML = '<tr><td colspan="2" style="color:var(--muted);text-align:center;padding:2rem">Coming soon</td></tr>';
-  }
-
-  // ── UTILS ─────────────────────────────────────────────────────
-  function openModal(id)  { document.getElementById(id).classList.add('open'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  // Load initial tab
+async function toggleUser(id, active) {
+  await fetch(`${API}/api/admin/users/${id}`, { method:'PUT', headers: auth(), body: JSON.stringify({ active: active ? 0 : 1 }) });
   loadUsers();
+}
+
+// ── CONTENT ───────────────────────────────────────────────────────
+function setContentType(type, btn) {
+  currentContentType = type;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  loadContent();
+}
+
+async function loadContent() {
+  const search = document.getElementById('content-search')?.value || '';
+  const res    = await fetch(`${API}/api/${currentContentType}?search=${encodeURIComponent(search)}&limit=200`, { headers: auth() });
+  const data   = await res.json();
+  const tbody  = document.getElementById('content-body');
+  if (!data.items?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No items found</td></tr>'; return; }
+  tbody.innerHTML = data.items.map(item => `
+    <tr>
+      <td style="color:var(--muted);white-space:nowrap">${item.date||'—'}</td>
+      <td>${esc(item.title||item.parsha||'—')}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${esc((item.tags||'').split(',').slice(0,3).filter(Boolean).join(', '))}</td>
+      <td style="font-size:0.72rem;color:var(--muted);white-space:nowrap">${item.created_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick='openEditContent(${JSON.stringify(item)})'>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openEditContent(item) {
+  editingContentId = item.id;
+  const fields = {
+    posts:   [['date','Date'],['title','Title'],['body','Body'],['tags','Tags']],
+    posters: [['date','Date'],['parsha','Parsha']],
+    events:  [['date','Date'],['title','Title'],['location','Location'],['category','Category'],['description','Description'],['tags','Tags']],
+    videos:  [['date','Date'],['title','Title'],['location','Location'],['category','Category'],['description','Description'],['tags','Tags'],['video_url','Video URL']],
+    pdfs:    [['date','Date'],['title','Title'],['category','Category'],['language','Language'],['parsha','Parsha'],['year','Year'],['tags','Tags']],
+  };
+  document.getElementById('content-modal-title').textContent = `Edit ${currentContentType.slice(0,-1)}`;
+  document.getElementById('content-modal-body').innerHTML = (fields[currentContentType]||[]).map(([key,label]) => `
+    <div class="field">
+      <label>${label}</label>
+      ${key === 'body' || key === 'description'
+        ? `<textarea id="edit-${key}" rows="4">${esc(item[key]||'')}</textarea>`
+        : `<input type="text" id="edit-${key}" value="${esc(item[key]||'')}">`}
+    </div>
+  `).join('');
+  openModal('content-modal');
+}
+
+async function saveContent() {
+  const fields = { posts:['date','title','body','tags'], posters:['date','parsha'], events:['date','title','location','category','description','tags'], videos:['date','title','location','category','description','tags','video_url'], pdfs:['date','title','category','language','parsha','year','tags'] };
+  const body = {};
+  (fields[currentContentType]||[]).forEach(f => { const el = document.getElementById(`edit-${f}`); if(el) body[f] = el.value; });
+  const res = await fetch(`${API}/api/${currentContentType}/${editingContentId}`, { method:'PUT', headers: auth(), body: JSON.stringify(body) });
+  const d = await res.json();
+  if (d.error) { alert(d.error); return; }
+  closeModal('content-modal');
+  loadContent();
+}
+
+async function deleteItem(id) {
+  if (!confirm('Move to trash?')) return;
+  await fetch(`${API}/api/${currentContentType}/${id}`, { method:'DELETE', headers: auth() });
+  loadContent();
+}
+
+// ── TRASH ─────────────────────────────────────────────────────────
+async function loadTrash() {
+  const res  = await fetch(`${API}/api/trash`, { headers: auth() });
+  const data = await res.json();
+  const tbody = document.getElementById('trash-body');
+  if (!data.items?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Trash is empty</td></tr>'; return; }
+  tbody.innerHTML = data.items.map(item => `
+    <tr>
+      <td><span class="badge badge-user">${item._table}</span></td>
+      <td>${esc(item.title||item.parsha||item.date||'—')}</td>
+      <td style="color:var(--muted);font-size:0.78rem;white-space:nowrap">${item.deleted_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">Restore</button>
+        <button class="btn btn-danger btn-sm" onclick="permDelete('${item._table}',${item.id})">Delete Forever</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function restoreItem(table, id) {
+  await fetch(`${API}/api/trash/restore/${id}`, { method:'POST', headers: auth(), body: JSON.stringify({ table, id }) });
+  loadTrash();
+}
+
+async function permDelete(table, id) {
+  if (!confirm('Permanently delete? This cannot be undone.')) return;
+  await fetch(`${API}/api/trash/permanent/${id}`, { method:'DELETE', headers: auth(), body: JSON.stringify({ table, id }) });
+  loadTrash();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadTaxonomy();
+  loadDashboard();
+  // Init file zones
+  initFileZone('blog',    'image/*',              true,  false, false);
+  initFileZone('posters', 'image/*',              true,  false, false);
+  initFileZone('events',  'audio/*',              true,  true,  true);
+  initFileZone('video',   'video/*',              false, false, false);
+  initFileZone('pdfs',    '.pdf,application/pdf', true,  false, false);
+});
 </script>
 </body>
 </html>
