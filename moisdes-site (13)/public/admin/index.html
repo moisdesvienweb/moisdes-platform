@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — מאישדעס</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#180e05;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+      --border:rgba(255,255,255,0.11);--border2:rgba(255,255,255,0.18);
+      --text:#fff;--muted:rgba(255,255,255,0.52);--subtle:rgba(255,255,255,0.28);
+      --accent:#c8844a;--accent2:rgba(200,132,74,0.15);
+      --error:#ff6b6b;--success:#4ade80;
+    }
+    body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:ltr}
+
+    /* ── HEADER ── */
+    .hdr{position:sticky;top:0;z-index:200;background:rgba(15,8,2,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
+    .hdr img{height:38px}
+    .hdr-right{display:flex;align-items:center;gap:.75rem;margin-left:auto}
+    .hdr-user{font-size:.78rem;color:var(--muted)}
+    .btn-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.75rem;padding:.28rem .7rem;border-radius:2px;cursor:pointer;transition:all .15s}
+    .btn-logout:hover{color:var(--text);border-color:var(--border2)}
+
+    /* ── LAYOUT ── */
+    .layout{display:flex;min-height:calc(100vh - 58px)}
+
+    /* ── SIDEBAR ── */
+    .sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);padding:.75rem 0;background:rgba(0,0,0,0.2)}
+    .sb-section{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--subtle);padding:.9rem 1.2rem .3rem}
+    .sb-link{display:flex;align-items:center;gap:.55rem;padding:.48rem 1.2rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:all .12s;border-left:2px solid transparent;user-select:none}
+    .sb-link:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+    .sb-link.on{color:var(--text);border-right-color:var(--accent);background:rgba(200,132,74,0.07);font-weight:700}
+    .sb-icon{font-size:.88rem;width:18px;text-align:center;flex-shrink:0}
+
+    /* ── MAIN ── */
+    .main{flex:1;padding:1.75rem 2rem;overflow-y:auto}
+    .tab{display:none}.tab.on{display:block}
+    .pg-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+    h2{font-size:1.1rem;font-weight:900}
+
+    /* ── STAT CARDS ── */
+    .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.85rem;margin-bottom:2rem}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1rem 1.1rem}
+    .stat-n{font-size:2rem;font-weight:900;color:var(--accent);line-height:1}
+    .stat-l{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+
+    /* ── TABLE ── */
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.81rem}
+    th{text-align:left;padding:.5rem .7rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+    td{padding:.58rem .7rem;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,0.02)}
+    .empty td{color:var(--muted);text-align:center;padding:2.5rem;font-size:.85rem}
+
+    /* ── BADGES ── */
+    .badge{display:inline-block;font-size:.61rem;font-weight:700;padding:.12rem .45rem;border-radius:99px;white-space:nowrap}
+    .badge-superadmin{background:rgba(200,132,74,.28);color:#e8a46a}
+    .badge-admin{background:rgba(200,132,74,.14);color:var(--accent)}
+    .badge-user{background:rgba(255,255,255,.08);color:var(--muted)}
+    .badge-on{background:rgba(74,222,128,.14);color:#4ade80}
+    .badge-off{background:rgba(255,107,107,.14);color:#ff6b6b}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:.3rem;padding:.38rem .8rem;border-radius:2px;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;border:1px solid;transition:all .15s;white-space:nowrap}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn-primary{background:var(--accent2);border-color:rgba(200,132,74,.4);color:var(--accent)}
+    .btn-primary:hover:not(:disabled){background:rgba(200,132,74,.26)}
+    .btn-success{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.28);color:#4ade80}
+    .btn-success:hover:not(:disabled){background:rgba(74,222,128,.2)}
+    .btn-danger{background:rgba(255,107,107,.09);border-color:rgba(255,107,107,.24);color:#ff6b6b}
+    .btn-danger:hover:not(:disabled){background:rgba(255,107,107,.18)}
+    .btn-ghost{background:transparent;border-color:var(--border);color:var(--muted)}
+    .btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--border2)}
+    .btn-sm{padding:.22rem .55rem;font-size:.69rem}
+    .btn+.btn{margin-right:.35rem}
+    .btn-full{width:100%;justify-content:center;padding:.75rem}
+
+    /* ── MODAL ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+    .modal-bg.on{display:flex}
+    .modal{background:#1e1206;border:1px solid var(--border);border-radius:3px;width:100%;max-width:520px;margin:auto}
+    .modal-hdr{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .modal-title{font-size:.95rem;font-weight:700}
+    .modal-x{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.2rem}
+    .modal-x:hover{color:var(--text)}
+    .modal-body{padding:1.2rem}
+    .modal-ftr{padding:.9rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-start;gap:.5rem}
+
+    /* ── FORM ── */
+    .field{margin-bottom:1rem}
+    .field label{display:block;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.32rem}
+    .field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.88rem;padding:.58rem .8rem;outline:none;border-radius:2px;transition:border .15s;direction:rtl}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(255,255,255,.4)}
+    .field input::placeholder,.field textarea::placeholder{color:var(--subtle)}
+    .field select option{background:#1e1206}
+    .field textarea{resize:vertical;min-height:80px}
+    .field input[type=date]{direction:ltr;text-align:right}
+    .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem}
+    .field-hint{font-size:.64rem;color:var(--subtle);margin-top:.28rem}
+
+    /* ── HEBREW DATE ── */
+    .heb-date-wrap{margin-bottom:.4rem}
+    .heb-selects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.4rem}
+    .heb-selects select{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.85rem;padding:.5rem .7rem;outline:none;border-radius:2px;direction:rtl;-webkit-appearance:none;appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:left .6rem center;padding-left:1.8rem}
+    .heb-selects select:focus{border-color:rgba(255,255,255,.4)}
+    .heb-selects select option{background:#1e1206}
+    .heb-date-manual{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.88rem;padding:.58rem .8rem;outline:none;border-radius:2px;direction:ltr;text-align:right}
+    .heb-date-manual:focus{border-color:rgba(255,255,255,.4)}
+    .heb-date-manual::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+    .date-note{font-size:.72rem;color:var(--muted);margin-top:.3rem;min-height:1.1em;direction:ltr;text-align:right}
+    .date-divider{text-align:center;font-size:.65rem;color:var(--subtle);margin:.35rem 0}
+
+    /* ── TAGS WIDGET ── */
+    .tags-box{border:1px solid var(--border);border-radius:2px;background:rgba(255,255,255,0.05);padding:.5rem .75rem;min-height:42px;cursor:text;position:relative;transition:border .15s}
+    .tags-box:focus-within{border-color:rgba(255,255,255,.38)}
+    .tags-pills{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.3rem}
+    .t-pill{display:inline-flex;align-items:center;gap:.2rem;background:rgba(200,132,74,.15);border:1px solid rgba(200,132,74,.3);color:var(--accent);font-size:.69rem;padding:.1rem .45rem;border-radius:99px}
+    .t-pill-x{background:none;border:none;color:inherit;cursor:pointer;font-size:.75rem;padding:0;opacity:.7;line-height:1}
+    .t-pill-x:hover{opacity:1}
+    .t-input{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:.85rem;outline:none;width:100%;min-width:100px;direction:rtl}
+    .t-input::placeholder{color:var(--subtle)}
+    .t-dd{position:absolute;top:100%;right:0;left:0;z-index:300;background:#1a0e05;border:1px solid var(--border);border-radius:2px;max-height:160px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.6);margin-top:2px}
+    .t-dd.on{display:block}
+    .t-opt{padding:.4rem .75rem;font-size:.82rem;cursor:pointer;transition:background .1s;direction:rtl}
+    .t-opt:hover{background:rgba(255,255,255,.07)}
+    .t-opt.new{color:var(--subtle);font-style:italic}
+
+    /* ── UPLOAD ZONE ── */
+    .u-zone{border:1px dashed var(--border);border-radius:2px;padding:1.5rem 1rem;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all .15s;user-select:none}
+    .u-zone:hover,.u-zone.drag-over{border-color:var(--accent);background:rgba(200,132,74,.04)}
+    .u-zone-icon{font-size:1.5rem;color:var(--muted);margin-bottom:.3rem}
+    .u-zone-text{font-size:.82rem;color:var(--muted)}
+    .u-zone-sub{font-size:.67rem;color:var(--subtle);margin-top:.2rem}
+
+    /* ── FILE LIST ── */
+    .f-list{margin-top:.6rem;display:flex;flex-direction:column;gap:.3rem}
+    .f-item{display:flex;align-items:center;gap:.55rem;padding:.42rem .5rem;border-radius:2px;background:rgba(255,255,255,.04);border:1px solid var(--border);cursor:grab}
+    .f-item.dragging{opacity:.4}
+    .f-drag{color:var(--subtle);font-size:1rem;flex-shrink:0;cursor:grab}
+    .f-name{flex:1;color:var(--muted);font-size:.79rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+    .f-rename{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.79rem;outline:none;padding:.1rem 0;direction:rtl}
+    .f-rename:focus{border-bottom-color:var(--accent)}
+    .f-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;flex-shrink:0;padding:.15rem;line-height:1}
+    .f-rm:hover{color:var(--error)}
+
+    /* ── PROGRESS ── */
+    .prog{display:none;margin-top:1rem}
+    .prog.on{display:block}
+    .prog-hdr{display:flex;justify-content:space-between;margin-bottom:.35rem;font-size:.73rem;color:var(--muted)}
+    .prog-pct{font-weight:700;color:var(--text)}
+    .prog-track{height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+    .prog-bar{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:99px;transition:width .3s;width:0%;box-shadow:0 0 6px rgba(74,222,128,.4)}
+
+    /* ── STATUS ── */
+    .status{font-size:.8rem;margin-top:.7rem;padding:.55rem .85rem;border-radius:2px;display:none}
+    .status.on{display:block}
+    .status.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);color:#4ade80}
+    .status.err{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.22);color:#ff6b6b}
+    .status.ld{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted)}
+
+    /* ── CONTENT FILTERS ── */
+    .filters{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center}
+    .f-pill{padding:.26rem .78rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:.74rem;cursor:pointer;transition:all .12s}
+    .f-pill.on{border-color:var(--accent);color:var(--accent);background:rgba(200,132,74,.08)}
+    .search-box{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.81rem;padding:.38rem .78rem;border-radius:2px;outline:none;width:210px;direction:rtl}
+    .search-box:focus{border-color:var(--border2)}
+    .search-box::placeholder{color:var(--subtle)}
+
+    /* ── PERMISSIONS TABLE ── */
+    .perms-tbl{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.4rem}
+    .perms-tbl th{text-align:left;padding:.38rem .6rem;font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    .perms-tbl td{padding:.42rem .6rem;border-bottom:1px solid rgba(255,255,255,.04)}
+    .perms-tbl tr:last-child td{border-bottom:none}
+    .perms-tbl td:first-child{font-weight:600}
+    .pcheck{display:flex;align-items:center;gap:.4rem;cursor:pointer}
+    .pcheck input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+
+    /* ── MSG ── */
+    .msg{font-size:.77rem;min-height:1.1rem;margin-top:.45rem}
+    .msg.ok{color:var(--success)}.msg.err{color:var(--error)}
+
+    /* ── PDF META ── */
+    .pdf-meta-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:2px;padding:.9rem;margin-top:.65rem}
+    .pdf-meta-fname{font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.65rem;direction:ltr;text-align:right}
+
+    @media(max-width:768px){
+      .sidebar{display:none}
+      .main{padding:1rem}
+      .row2,.row3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="/"><img src="/logo.avif" alt="מאישדעס"></a>
+  <div class="hdr-right">
+    <span class="hdr-user" id="hdr-user"></span>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-section">כללי</div>
+    <div class="sb-link on" onclick="showTab('dash',this)"><span class="sb-icon">◈</span>Overview</div>
+
+    <div class="sb-section" id="sb-upload-title">העלאדן</div>
+    <div class="sb-link" id="sb-blog"    onclick="showTab('blog',this)"><span class="sb-icon">✎</span>Blog Post</div>
+    <div class="sb-link" id="sb-posters" onclick="showTab('posters',this)"><span class="sb-icon">◻</span>Posters</div>
+    <div class="sb-link" id="sb-events"  onclick="showTab('events',this)"><span class="sb-icon">♫</span>Events</div>
+    <div class="sb-link" id="sb-video"   onclick="showTab('video',this)"><span class="sb-icon">▶</span>Videos</div>
+    <div class="sb-link" id="sb-pdfs"    onclick="showTab('pdfs',this)"><span class="sb-icon">▤</span>PDFs</div>
+
+    <div class="sb-section">Manage</div>
+    <div class="sb-link" id="sb-content" onclick="showTab('content',this)"><span class="sb-icon">≡</span>Browse & Edit</div>
+    <div class="sb-link" id="sb-trash"   onclick="showTab('trash',this)"><span class="sb-icon">⊘</span>Trash</div>
+
+    <div class="sb-section" id="sb-admin-title">Admin</div>
+    <div class="sb-link" id="sb-users" onclick="showTab('users',this)"><span class="sb-icon">◉</span>Users</div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="tab on" id="tab-dash">
+      <h2 style="margin-bottom:1.5rem">Welcome</h2>
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="sn-posts">—</div><div class="stat-l">Blog Posts</div></div>
+        <div class="stat"><div class="stat-n" id="sn-events">—</div><div class="stat-l">Events</div></div>
+        <div class="stat"><div class="stat-n" id="sn-videos">—</div><div class="stat-l">Videos</div></div>
+        <div class="stat"><div class="stat-n" id="sn-pdfs">—</div><div class="stat-l">PDFs</div></div>
+        <div class="stat"><div class="stat-n" id="sn-posters">—</div><div class="stat-l">Posters</div></div>
+      </div>
+      <p style="color:var(--muted);font-size:.82rem">Use the sidebar to upload content or manage existing items.</p>
+    </div>
+
+    <!-- BLOG -->
+    <div class="tab" id="tab-blog">
+      <div class="pg-hdr"><h2>Upload Blog Post</h2></div>
+      <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-blog"></div></div>
+      <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="blog-title" placeholder="פאסט קעפל..."></div>
+      <div class="field"><label>Body</label><textarea id="blog-body" rows="6" placeholder="שרייב דעם טעקסט..."></textarea></div>
+      <div class="field"><label>Category</label><div class="tags-box" id="tb-blog-cat"><div class="tags-pills" id="tp-blog-cat"></div><input class="t-input" id="ti-blog-cat" placeholder="Category..."><div class="t-dd" id="td-blog-cat"></div></div></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-blog-tags"><div class="tags-pills" id="tp-blog-tags"></div><input class="t-input" id="ti-blog-tags" placeholder="Add tags..."><div class="t-dd" id="td-blog-tags"></div></div></div>
+      <div class="field"><label>בילדער</label><div class="u-zone" id="uz-blog"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag images here</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-blog"></div></div>
+      <div class="prog" id="pr-blog"><div class="prog-hdr"><span id="pl-blog">העלאָדט...</span><span class="prog-pct" id="pp-blog">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-blog"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('blog')" id="sub-blog">Submit Post</button>
+      <div class="status" id="st-blog"></div>
+    </div>
+
+    <!-- POSTERS -->
+    <div class="tab" id="tab-posters">
+      <div class="pg-hdr"><h2>Upload Posters</h2></div>
+      <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-posters"></div></div>
+      <div class="field"><label>Parsha</label><input type="text" id="posters-parsha" placeholder="ווערט אויטאמאטיש דעטעקטירט..."></div>
+      <div class="field"><label>בילדער <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-posters"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag images here</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-posters"></div></div>
+      <div class="prog" id="pr-posters"><div class="prog-hdr"><span id="pl-posters">העלאָדט...</span><span class="prog-pct" id="pp-posters">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-posters"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('posters')" id="sub-posters">Upload Posters</button>
+      <div class="status" id="st-posters"></div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="tab" id="tab-events">
+      <div class="pg-hdr"><h2>Upload Event Recording</h2></div>
+      <div class="row2">
+        <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-events"></div></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="events-title" placeholder="נאמען פון מעמד..."></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Location</label><input type="text" id="events-loc" placeholder="וואו..."></div>
+        <div class="field"><label>Category</label><div class="tags-box" id="tb-events-cat"><div class="tags-pills" id="tp-events-cat"></div><input class="t-input" id="ti-events-cat" placeholder="Category..."><div class="t-dd" id="td-events-cat"></div></div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="events-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-events-tags"><div class="tags-pills" id="tp-events-tags"></div><input class="t-input" id="ti-events-tags" placeholder="Add tags..."><div class="t-dd" id="td-events-tags"></div></div></div>
+      <div class="field"><label>טראַקס</label><div class="field-hint" style="margin-bottom:.4rem">Drag to reorder • Click to rename</div><div class="u-zone" id="uz-events"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag audio files here</div><div class="u-zone-sub">MP3, WAV, M4A</div></div><div class="f-list" id="fl-events"></div></div>
+      <div class="prog" id="pr-events"><div class="prog-hdr"><span id="pl-events">העלאָדט...</span><span class="prog-pct" id="pp-events">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-events"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('events')" id="sub-events">Upload Event</button>
+      <div class="status" id="st-events"></div>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="tab" id="tab-video">
+      <div class="pg-hdr"><h2>Upload Video</h2></div>
+      <div class="row2">
+        <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-video"></div></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="video-title" placeholder="ווידיאו טיטל..."></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Location</label><input type="text" id="video-loc" placeholder="וואו..."></div>
+        <div class="field"><label>Category</label><div class="tags-box" id="tb-video-cat"><div class="tags-pills" id="tp-video-cat"></div><input class="t-input" id="ti-video-cat" placeholder="Category..."><div class="t-dd" id="td-video-cat"></div></div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="video-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-video-tags"><div class="tags-pills" id="tp-video-tags"></div><input class="t-input" id="ti-video-tags" placeholder="Add tags..."><div class="t-dd" id="td-video-tags"></div></div></div>
+      <div class="field"><label>YouTube / Drive / Dropbox Link</label><input type="url" id="video-link" placeholder="https://..." style="direction:ltr;text-align:right"></div>
+      <div class="field"><label>Or upload a video file</label><div class="u-zone" id="uz-video"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag video here</div><div class="u-zone-sub">MP4, MOV, MKV</div></div><div class="f-list" id="fl-video"></div></div>
+      <div class="prog" id="pr-video"><div class="prog-hdr"><span id="pl-video">העלאָדט...</span><span class="prog-pct" id="pp-video">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-video"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('video')" id="sub-video">Upload Video</button>
+      <div class="status" id="st-video"></div>
+    </div>
+
+    <!-- PDFs -->
+    <div class="tab" id="tab-pdfs">
+      <div class="pg-hdr"><h2>Upload PDFs</h2></div>
+      <div class="field" style="max-width:260px"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-pdfs"></div></div>
+      <div class="field"><label>PDF Files <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-pdfs"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag PDFs here</div><div class="u-zone-sub">PDF only • Multiple allowed</div></div><div class="f-list" id="fl-pdfs"></div></div>
+      <div id="pdfs-meta"></div>
+      <div class="prog" id="pr-pdfs"><div class="prog-hdr"><span id="pl-pdfs">העלאָדט...</span><span class="prog-pct" id="pp-pdfs">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-pdfs"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('pdfs')" id="sub-pdfs">Upload PDFs</button>
+      <div class="status" id="st-pdfs"></div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="tab" id="tab-content">
+      <div class="pg-hdr"><h2>Browse & Edit</h2></div>
+      <div class="filters">
+        <button class="f-pill on" onclick="setCT('posts',this)">Blog</button>
+        <button class="f-pill" onclick="setCT('posters',this)">Posters</button>
+        <button class="f-pill" onclick="setCT('events',this)">Events</button>
+        <button class="f-pill" onclick="setCT('videos',this)">Videos</button>
+        <button class="f-pill" onclick="setCT('pdfs',this)">PDFs</button>
+        <input class="search-box" type="text" placeholder="Search..." id="ct-search" oninput="loadContent()">
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Title</th><th>Tags</th><th>Added</th><th>Actions</th></tr></thead><tbody id="ct-body"><tr class="empty"><td colspan="5">לאדט...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- TRASH -->
+    <div class="tab" id="tab-trash">
+      <div class="pg-hdr"><h2>Trash <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(30-day auto-delete)</span></h2></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Title</th><th>Deleted</th><th>Actions</th></tr></thead><tbody id="trash-body"><tr class="empty"><td colspan="4">לאדט...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="tab" id="tab-users">
+      <div class="pg-hdr"><h2>Users</h2><button class="btn btn-primary" onclick="openCreateUser()">+ New User</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody id="users-body"><tr class="empty"><td colspan="6">לאדט...</td></tr></tbody></table></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-bg" id="modal-user">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="modal-user-title">נייער Users</div><button class="modal-x" onclick="closeM('modal-user')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="u-id">
+      <div class="row2">
+        <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="פולן נאמען..."></div>
+        <div class="field"><label>Email <span style="color:var(--error)">*</span></label><input type="email" id="u-email" placeholder="user@email.com" style="direction:ltr;text-align:right"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Password <span id="pw-hint" style="color:var(--subtle);font-size:.62rem;display:none">(leave blank to keep)</span></label><input type="password" id="u-pass" placeholder="••••••••"></div>
+        <div class="field"><label>Role</label><select id="u-role"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option></select></div>
+      </div>
+      <div class="field">
+        <label>Page Permissions <span style="color:var(--subtle);font-size:.62rem">(admins have full access)</span></label>
+        <table class="perms-tbl">
+          <thead><tr><th>Page</th><th>Upload</th><th>Edit</th></tr></thead>
+          <tbody>
+            <tr><td>Blog</td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Posters</td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Events</td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Videos</td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>PDFs</td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="edit" checked> Allow</label></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="msg" id="u-msg"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-user')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT EDIT MODAL -->
+<div class="modal-bg" id="modal-ct">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">רעדאקטירן</div><button class="modal-x" onclick="closeM('modal-ct')">✕</button></div>
+    <div class="modal-body" id="ct-modal-body"></div>
+    <div class="modal-ftr">
+      <button class="btn btn-primary" onclick="saveContent()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-ct')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://moisdes-worker.moisdesvienweb.workers.dev';
+let token = localStorage.getItem('moisdes_token');
+let me    = JSON.parse(localStorage.getItem('moisdes_user')||'null');
+let perms = JSON.parse(localStorage.getItem('moisdes_perms')||'[]');
+
+if (!token || !me) location.href = '/login?redirect=/admin';
+document.getElementById('hdr-user').textContent = me?.name || me?.email || '';
+
+// Hide admin nav for non-superadmin
+if (me?.role !== 'superadmin') {
+  ['sb-admin-title','sb-users'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+}
+
+function ah() { return { Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }; }
+function logout() { fetch(`${API}/api/auth/logout`,{method:'POST',headers:ah()}).catch(()=>{}); localStorage.clear(); location.href='/login'; }
+function openM(id) { document.getElementById(id).classList.add('on'); }
+function closeM(id) { document.getElementById(id).classList.remove('on'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── TABS ──────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('on'));
+  document.getElementById(`tab-${name}`).classList.add('on');
+  if (el) el.classList.add('on');
+  if (name==='dash')    loadDash();
+  if (name==='content') loadContent();
+  if (name==='trash')   loadTrash();
+  if (name==='users')   loadUsers();
+}
+
+// ── HEBREW DATE PICKER ────────────────────────────────────────────
+const PARSHIYOT = ['בראשית','נח','לך לך','וירא','חיי שרה','תולדות','ויצא','וישלח','וישב','מקץ','ויגש','ויחי','שמות','וארא','בא','בשלח','יתרו','משפטים','תרומה','תצוה','כי תשא','ויקהל','פקודי','ויקרא','צו','שמיני','תזריע','מצורע','אחרי','קדושים','אמור','בהר','בחוקותי','במדבר','נשא','בהעלותך','שלח','קרח','חוקת','בלק','פינחס','מטות','מסעי','דברים','ואתחנן','עקב','ראה','שופטים','כי תצא','כי תבוא','נצבים','וילך','האזינו','וזאת הברכה'];
+const COMBINED  = {'ויקהל':'ויקהל-פקודי','תזריע':'תזריע-מצורע','אחרי':'אחרי-קדושים','בהר':'בהר-בחוקותי','מטות':'מטות-מסעי','נצבים':'נצבים-וילך'};
+const ANCHOR_DATE  = '2025-10-18';
+const ANCHOR_IDX   = 0;
+const SECOND_PAIR  = new Set(['פקודי','מצורע','קדושים','בחוקותי','מסעי','וילך']);
+const DOW_LABELS   = ['זונטאג','מאנטאג','דינסטאג','מיטוואך','דאנערשטאג','ערב שבת','מוצאי שבת'];
+const HEB_MONTHS   = ['ניסן','אייר','סיון','תמוז','אב','אלול','תשרי','חשון','כסלו','טבת','שבט','אדר','אדר א','אדר ב'];
+const HEB_DAYS     = Array.from({length:30},(_,i)=>{const n=i+1;const H=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];const T=['','י','כ','ל'];return n<=9?H[n]:n<=19?'י'+H[n-10]:n<=29?'כ'+H[n-20]:'ל';});
+
+function yearToHebrew(y) {
+  const n=y-5000,H=['','ק','ר','ש','ת'],T=['','י','כ','ל','מ','נ','ס','ע','פ','צ'],O=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];
+  let h=Math.floor(n/100),t=Math.floor((n%100)/10),o=n%10,r='';
+  if(h>4){r+='ת';h-=4;} r+=H[h]||'';
+  const to=t*10+o;
+  if(to===15)r+='ט"ו';else if(to===16)r+='ט"ז';else{r+=T[t]||'';r+=O[o]||'';}
+  return r.length===1?r+"'":r.slice(0,-1)+'"'+r.slice(-1);
+}
+function currentHY() { const n=new Date(),hy=n.getFullYear()+3760; return n.getMonth()>=8?hy+1:hy; }
+function hebrewToDate(hy,parsha,dow) {
+  const gy=hy-3760,msD=86400000,msW=7*msD;
+  const anchor=new Date(ANCHOR_DATE+'T12:00:00Z');
+  const rev={};for(const[b,d]of Object.entries(COMBINED))rev[d]=b;
+  const base=rev[parsha]||parsha;
+  const start=new Date(`${gy-1}-09-01T12:00:00Z`),end=new Date(`${gy+1}-10-01T12:00:00Z`);
+  const matches=[];let cur=new Date(start);
+  while(cur<=end){
+    if(cur.getUTCDay()===6){
+      const wk=Math.round((cur-anchor)/msW);
+      const idx=((ANCHOR_IDX+wk)%PARSHIYOT.length+PARSHIYOT.length)%PARSHIYOT.length;
+      const p=PARSHIYOT[idx];
+      if(p===base||(COMBINED[p]||p)===parsha)matches.push(new Date(cur));
+    }
+    cur=new Date(cur.getTime()+msD);
+  }
+  if(!matches.length)return null;
+  const mid=new Date(`${gy}-01-15T12:00:00Z`);
+  matches.sort((a,b)=>Math.abs(a-mid)-Math.abs(b-mid));
+  return new Date(matches[0].getTime()-(6-dow)*msD);
+}
+function dateToParsha(iso) {
+  const anchor=new Date(ANCHOR_DATE+'T12:00:00Z'),date=new Date(iso+'T12:00:00Z'),msW=7*86400000;
+  const dts=(6-date.getUTCDay()+7)%7;
+  const shab=new Date(date.getTime()+dts*86400000);
+  const wk=Math.round((shab-anchor)/msW);
+  const idx=((ANCHOR_IDX+wk)%PARSHIYOT.length+PARSHIYOT.length)%PARSHIYOT.length;
+  const p=PARSHIYOT[idx];return COMBINED[p]||p;
+}
+
+// Date pickers state: { selYear, selParsha, selDow, inputDate, noteEl }
+const dps = {};
+function initDatePicker(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const key = containerId.replace('dp-','');
+
+  // Build year options
+  const curHY = currentHY();
+  let yearOpts = '<option value="">שנה</option>';
+  for (let y=curHY; y>=5742; y--) yearOpts += `<option value="${y}">${yearToHebrew(y)}</option>`;
+
+  // Parsha options (skip second of combined)
+  let parshaOpts = '<option value="">פרשה</option>';
+  PARSHIYOT.filter(p=>!SECOND_PAIR.has(p)).forEach(p=>{ const d=COMBINED[p]||p; parshaOpts+=`<option value="${d}">${d}</option>`; });
+
+  let dowOpts = '<option value="">טאג</option>';
+  DOW_LABELS.forEach((l,i) => dowOpts+=`<option value="${i}">${l}</option>`);
+
+  // Yiddish day options (א through ל)
+  let dayOpts='<option value="">טאג</option>';
+  for(let d=1;d<=30;d++){const h=HEB_DAYS[d-1];dayOpts+=`<option value="${d}">${h}${d===1?'':''} (${d})</option>`;}
+  let monOpts='<option value="">חודש</option>';
+  HEB_MONTHS.forEach((m,i)=>monOpts+=`<option value="${i}">${m}</option>`);
+  let yidYrOpts='<option value="">שנה</option>';
+  for(let y=currentHY();y>=5742;y--)yidYrOpts+=`<option value="${y}">${yearToHebrew(y)}</option>`;
+
+  container.innerHTML = `
+    <div class="heb-date-wrap">
+      <div style="display:flex;gap:.4rem;margin-bottom:.4rem;border-bottom:1px solid var(--border);padding-bottom:.4rem">
+        <button type="button" class="dp-tab-btn on" id="dptab-parsha-${key}" onclick="switchDPTab('${key}','parsha')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">פרשה</button>
+        <button type="button" class="dp-tab-btn" id="dptab-yiddish-${key}" onclick="switchDPTab('${key}','yiddish')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">ייִד. דאטום</button>
+        <button type="button" class="dp-tab-btn" id="dptab-english-${key}" onclick="switchDPTab('${key}','english')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">English</button>
+      </div>
+      <div id="dppanel-parsha-${key}">
+        <div class="heb-selects">
+          <select id="dp-yr-${key}">${yearOpts}</select>
+          <select id="dp-pr-${key}">${parshaOpts}</select>
+          <select id="dp-dw-${key}">${dowOpts}</select>
+        </div>
+      </div>
+      <div id="dppanel-yiddish-${key}" style="display:none">
+        <div class="heb-selects">
+          <select id="dp-yd-${key}">${dayOpts}</select>
+          <select id="dp-ym-${key}">${monOpts}</select>
+          <select id="dp-yy-${key}">${yidYrOpts}</select>
+        </div>
+      </div>
+      <div id="dppanel-english-${key}" style="display:none">
+        <input type="date" class="heb-date-manual" id="dp-dt-${key}" style="width:100%">
+      </div>
+      <div class="date-note" id="dp-nt-${key}" style="margin-top:.35rem"></div>
+    </div>`;
+
+  const sY=document.getElementById(`dp-yr-${key}`);
+  const sP=document.getElementById(`dp-pr-${key}`);
+  const sD=document.getElementById(`dp-dw-${key}`);
+  const iD=document.getElementById(`dp-dt-${key}`);
+  const nE=document.getElementById(`dp-nt-${key}`);
+  dps[key]={sY,sP,sD,iD,nE};
+
+  function fromDropdowns() {
+    if(!sY.value||!sP.value||sD.value==='') return;
+    const d=hebrewToDate(+sY.value,sP.value,+sD.value);
+    if(!d){nE.textContent='דאטום נישט געפונען';return;}
+    iD.value=d.toISOString().split('T')[0];
+    nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    // Auto-fill parsha field if exists
+    const pf=document.getElementById(`${key==='blog'?'blog':key}-parsha`);
+    if(pf) pf.value=sP.value;
+  }
+  function fromManual() {
+    if(!iD.value){nE.textContent='';return;}
+    sY.value='';sP.value='';sD.value='';
+    const d=new Date(iD.value+'T12:00:00Z');
+    nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    // Auto-detect parsha
+    const parsha=dateToParsha(iD.value);
+    const pf=document.getElementById(`${key}-parsha`);
+    if(pf&&!pf.value) pf.value=parsha;
+  }
+  sY.addEventListener('change',fromDropdowns);
+  sP.addEventListener('change',fromDropdowns);
+  sD.addEventListener('change',fromDropdowns);
+  iD.addEventListener('change',fromManual);
+
+  // Wire Yiddish date selects
+  const yd=document.getElementById(`dp-yd-${key}`);
+  const ym=document.getElementById(`dp-ym-${key}`);
+  const yy=document.getElementById(`dp-yy-${key}`);
+  if(yd&&ym&&yy){
+    function fromYiddish(){
+      if(!yd.value||ym.value===''||!yy.value)return;
+      // Convert Hebrew calendar to Gregorian using HDate approximation
+      try{
+        const hYear=+yy.value,hMonth=+ym.value,hDay=+yd.value;
+        const gregDate=hebToGreg(hYear,hMonth,hDay);
+        if(gregDate){
+          iD.value=gregDate;
+          const d=new Date(gregDate+'T12:00:00Z');
+          nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+
+            ' ('+HEB_DAYS[hDay-1]+' '+HEB_MONTHS[hMonth]+' '+yearToHebrew(hYear)+')';
+        }
+      }catch(e){nE.textContent='Date conversion error';}
+    }
+    yd.addEventListener('change',fromYiddish);
+    ym.addEventListener('change',fromYiddish);
+    yy.addEventListener('change',fromYiddish);
+  }
+}
+
+function switchDPTab(key, tab) {
+  ['parsha','yiddish','english'].forEach(t=>{
+    const panel=document.getElementById(`dppanel-${t}-${key}`);
+    const btn=document.getElementById(`dptab-${t}-${key}`);
+    if(panel) panel.style.display = t===tab?'':'none';
+    if(btn){btn.style.color=t===tab?'var(--text)':'var(--muted)';btn.style.background=t===tab?'rgba(255,255,255,0.08)':'none';}
+  });
+}
+
+// Hebrew calendar to Gregorian conversion
+// Uses a simplified Molad-based calculation accurate to ±1 day
+function hebToGreg(hYear, hMonth, hDay) {
+  // hMonth: 0=ניסן,1=אייר,...,6=תשרי,...,11=אדר,12=אדרא,13=אדרב
+  // Convert month index to months-from-Tishri ordering
+  // Tishri=7(idx6), Cheshvan=8(idx7),..., Adar=12(idx11), Nisan=1(idx0)...
+  const monthsFromTishri = [7,8,9,10,11,12,13,1,2,3,4,5,6]; // maps idx to month number
+  // Simple approximation: use known epoch
+  // Julian Day Number of 1 Tishri hYear
+  function hebrewToJD(y,m,d){
+    // m here is 1-based month from Tishri (Tishri=1, Cheshvan=2, ... Elul=12, Adar in leap=13)
+    const elapsed = 234567 * (y-1) + Math.floor((7*(y+1))/19)*765433/25920;
+    const days=[0,30,29,30,29,30,29,30,29,30,29,30,29,30];
+    let jd = Math.floor(elapsed/25920) + d + 1715119;
+    for(let i=1;i<m;i++) jd+=days[i]||29;
+    return jd;
+  }
+  // Map our month index (0=Nisan) to month-from-Tishri
+  const mft = monthsFromTishri[hMonth] || 1;
+  // Check if leap year
+  const isLeap = ((7*hYear+1)%19) < 7;
+  // In non-leap years, Adar B doesn't exist; remap Adar A (idx12) to Adar (idx11)
+  const adjustedM = (!isLeap && hMonth === 13) ? 12 : hMonth;
+  const mft2 = monthsFromTishri[adjustedM] || 1;
+
+  try {
+    const jd = hebrewToJD(hYear, mft2, hDay);
+    // Convert JD to Gregorian
+    const l = jd + 68569;
+    const n = Math.floor(4*l/146097);
+    const l2 = l - Math.floor((146097*n+3)/4);
+    const i = Math.floor(4000*(l2+1)/1461001);
+    const l3 = l2 - Math.floor(1461*i/4) + 31;
+    const j = Math.floor(80*l3/2447);
+    const day = l3 - Math.floor(2447*j/80);
+    const l4 = Math.floor(j/11);
+    const month = j + 2 - 12*l4;
+    const year = 100*(n-49) + i + l4;
+    return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  } catch(e) { return null; }
+}
+
+function getDPValue(key) {
+  const dp=dps[key];if(!dp)return'';
+  const v=dp.iD.value;if(!v)return'';
+  const[y,m,d]=v.split('-');return`${m}/${d}/${y}`;
+}
+function getDPRaw(key) { return dps[key]?.iD.value||''; }
+function resetDP(key) { const dp=dps[key];if(!dp)return;dp.sY.value='';dp.sP.value='';dp.sD.value='';dp.iD.value='';dp.nE.textContent=''; }
+
+// ── TAGS WIDGET ───────────────────────────────────────────────────
+let allTags=[], allCats=[];
+const tState={};
+
+function initTW(id, srcFn, allowNew=true) {
+  tState[id]={sel:[],newItems:[]};
+  const box=document.getElementById(`tb-${id}`);
+  const pills=document.getElementById(`tp-${id}`);
+  const inp=document.getElementById(`ti-${id}`);
+  const dd=document.getElementById(`td-${id}`);
+  if(!box||!inp||!dd)return;
+  box.addEventListener('click',()=>inp.focus());
+  function renderPills(){
+    pills.innerHTML=tState[id].sel.map(t=>`<span class="t-pill">${esc(t)}<button class="t-pill-x" onmousedown="event.preventDefault();rmTag('${id}','${esc(t)}')">✕</button></span>`).join('');
+  }
+  function renderDD(q=''){
+    const list=srcFn().filter(t=>!tState[id].sel.includes(t)&&(!q||t.toLowerCase().includes(q.toLowerCase())));
+    let html=list.map(t=>`<div class="t-opt" onmousedown="event.preventDefault();addTag('${id}','${esc(t)}')">${esc(t)}</div>`).join('');
+    const typed=q.trim();
+    if(allowNew&&typed&&!srcFn().some(t=>t.toLowerCase()===typed.toLowerCase())&&!tState[id].sel.some(t=>t.toLowerCase()===typed.toLowerCase()))
+      html+=`<div class="t-opt new" onmousedown="event.preventDefault();addNewTag('${id}','${esc(typed)}')">+ הוספן: "${esc(typed)}"</div>`;
+    if(!html)html=`<div class="t-opt" style="color:var(--subtle);cursor:default">קיין רעזולטאטן</div>`;
+    dd.innerHTML=html;
+  }
+  inp.addEventListener('focus',()=>{renderDD(inp.value);dd.classList.add('on');});
+  inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('on'),150));
+  inp.addEventListener('input',()=>renderDD(inp.value));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();const v=inp.value.trim();if(!v)return;const m=srcFn().find(t=>t.toLowerCase()===v.toLowerCase());m?addTag(id,m):allowNew&&addNewTag(id,v);}
+    if(e.key==='Escape')dd.classList.remove('on');
+  });
+  renderPills();
+}
+
+function addTag(id,tag) {
+  if(!tState[id].sel.includes(tag))tState[id].sel.push(tag);
+  const inp=document.getElementById(`ti-${id}`);if(inp)inp.value='';
+  const pills=document.getElementById(`tp-${id}`);
+  if(pills)pills.innerHTML=tState[id].sel.map(t=>`<span class="t-pill">${esc(t)}<button class="t-pill-x" onmousedown="event.preventDefault();rmTag('${id}','${esc(t)}')">✕</button></span>`).join('');
+}
+function addNewTag(id,tag) {
+  if(id.endsWith('tags')){if(!allTags.includes(tag))allTags.push(tag);tState[id].newItems.push(tag);}
+  else{if(!allCats.includes(tag))allCats.push(tag);tState[id].newItems.push(tag);}
+  addTag(id,tag);
+}
+function rmTag(id,tag) {
+  tState[id].sel=tState[id].sel.filter(t=>t!==tag);
+  const pills=document.getElementById(`tp-${id}`);
+  if(pills)pills.innerHTML=tState[id].sel.map(t=>`<span class="t-pill">${esc(t)}<button class="t-pill-x" onmousedown="event.preventDefault();rmTag('${id}','${esc(t)}')">✕</button></span>`).join('');
+}
+function getTW(id){return tState[id]?.sel.join(', ')||'';}
+function getNewTW(id){return tState[id]?.newItems||[];}
+function resetTW(id){if(tState[id]){tState[id].sel=[];tState[id].newItems=[];}const p=document.getElementById(`tp-${id}`);if(p)p.innerHTML='';}
+
+async function loadTaxonomy() {
+  try {
+    const [tr,cr]=await Promise.all([
+      fetch(`${API}/api/tags`,{headers:ah()}).then(r=>r.json()),
+      fetch(`${API}/api/categories`,{headers:ah()}).then(r=>r.json()),
+    ]);
+    allTags=tr.tags||[];allCats=cr.categories||[];
+  } catch(e){allTags=[];allCats=[];}
+  initTW('blog-tags',()=>allTags);
+  initTW('blog-cat',()=>allCats);
+  initTW('events-tags',()=>allTags);
+  initTW('video-tags',()=>allTags);
+  initTW('events-cat',()=>allCats);
+  initTW('video-cat',()=>allCats);
+}
+
+// ── FILE ZONES ────────────────────────────────────────────────────
+const fStore={blog:[],posters:[],events:[],video:[],pdfs:[]};
+let dragSrc=null;
+
+function initZone(key,accept,multiple,reorder,named) {
+  const zone=document.getElementById(`uz-${key}`);if(!zone)return;
+  zone.addEventListener('click',()=>{
+    const inp=document.createElement('input');
+    inp.type='file';inp.accept=accept;inp.multiple=multiple;
+    inp.style.cssText='position:fixed;top:-9999px';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',e=>{addFiles(key,e.target.files,reorder,named);document.body.removeChild(inp);});
+    inp.click();
+  });
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');addFiles(key,e.dataTransfer.files,reorder,named);});
+}
+
+function addFiles(key,fileList,reorder,named) {
+  for(const f of fileList) fStore[key].push({id:Date.now()+Math.random(),file:f,name:f.name.replace(/\.[^.]+$/,'')});
+  renderFL(key,reorder,named);
+  if(key==='pdfs')renderPdfMeta();
+}
+
+function renderFL(key,reorder,named) {
+  const listEl=document.getElementById(`fl-${key}`);if(!listEl)return;
+  listEl.innerHTML=fStore[key].map((f,i)=>`
+    <div class="f-item" draggable="${reorder}" data-id="${f.id}"
+      ${reorder?`ondragstart="dragSrc=this;this.classList.add('dragging')" ondragend="this.classList.remove('dragging')" ondragover="event.preventDefault()" ondrop="dropFile(event,'${key}',${reorder},${named})"`:''}>
+      ${reorder?'<span class="f-drag">≡</span>':''}
+      ${named
+        ?`<input class="f-rename" value="${esc(f.name)}" onchange="renameF('${key}',${f.id},this.value)">`
+        :`<span class="f-name">${esc(f.file.name)}</span>`}
+      <button class="f-rm" onclick="removeF('${key}',${f.id})">✕</button>
+    </div>`).join('');
+}
+
+function dropFile(e,key,reorder,named) {
+  e.preventDefault();
+  if(!dragSrc)return;
+  const srcId=parseFloat(dragSrc.dataset.id);
+  const dstId=parseFloat(e.currentTarget.dataset.id);
+  if(srcId===dstId)return;
+  const si=fStore[key].findIndex(f=>f.id===srcId);
+  const di=fStore[key].findIndex(f=>f.id===dstId);
+  if(si<0||di<0)return;
+  const[moved]=fStore[key].splice(si,1);
+  fStore[key].splice(di,0,moved);
+  dragSrc=null;
+  renderFL(key,reorder,named);
+}
+
+function removeF(key,id) {
+  fStore[key]=fStore[key].filter(f=>f.id!==id);
+  const reorder=key==='events';const named=key==='events';
+  renderFL(key,reorder,named);
+  if(key==='pdfs')renderPdfMeta();
+}
+function renameF(key,id,name){const f=fStore[key].find(f=>f.id===id);if(f)f.name=name;}
+
+function renderPdfMeta() {
+  const el=document.getElementById('pdfs-meta');if(!el)return;
+  const files=fStore['pdfs'];
+  if(!files.length){el.innerHTML='';return;}
+  el.innerHTML=files.map((f,i)=>`
+    <div class="pdf-meta-card">
+      <div class="pdf-meta-fname">${esc(f.file.name)}</div>
+      <div class="row2">
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" class="pm-title" data-i="${i}" value="${esc(f.name)}" placeholder="טיטל..."></div>
+        <div class="field"><label>Language</label><select class="pm-lang" data-i="${i}"><option value="">—</option><option>ייִדיש</option><option>לשון הקודש</option><option>English</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Category</label><input type="text" class="pm-cat" data-i="${i}" placeholder="Category..."></div>
+        <div class="field"><label>Parsha / Occasion</label><input type="text" class="pm-parsha" data-i="${i}" placeholder="פּרשה..."></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Year</label><input type="text" class="pm-year" data-i="${i}" placeholder="ז.ב. תשפ״ה"></div>
+        <div class="field"><label>Tags</label><input type="text" class="pm-tags" data-i="${i}" placeholder="טאג1, טאג2..."></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── PROGRESS & STATUS ─────────────────────────────────────────────
+function setProg(key,pct,label) {
+  const w=document.getElementById(`pr-${key}`);if(!w)return;w.classList.add('on');
+  const b=document.getElementById(`pb-${key}`);if(b)b.style.width=pct+'%';
+  const p=document.getElementById(`pp-${key}`);if(p)p.textContent=Math.round(pct)+'%';
+  const l=document.getElementById(`pl-${key}`);if(l&&label)l.textContent=label;
+}
+function setSt(key,type,msg) {
+  const el=document.getElementById(`st-${key}`);if(!el)return;
+  el.className=`status ${type} on`;el.textContent=msg;
+  if(type==='ok')setTimeout(()=>el.classList.remove('on'),6000);
+}
+
+// ── R2 UPLOAD ─────────────────────────────────────────────────────
+async function r2Put(key,blob,mime,onProg) {
+  return new Promise((res,rej)=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',`${API}/api/upload/r2-put?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(mime)}`);
+    xhr.setRequestHeader('Authorization',`Bearer ${token}`);
+    xhr.upload.onprogress=e=>{if(e.lengthComputable&&onProg)onProg(e.loaded/e.total);};
+    xhr.onload=()=>{
+      if(xhr.status>=200&&xhr.status<300){const d=JSON.parse(xhr.responseText);res(d.key);}
+      else rej(new Error(`Upload ${xhr.status}: ${xhr.responseText.slice(0,80)}`));
+    };
+    xhr.onerror=()=>rej(new Error('Network error during R2 upload'));
+    xhr.send(blob);
+  });
+}
+
+function fmtDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${m}/${d}/${y}`;}
+
+// ── MAIN UPLOAD HANDLER ───────────────────────────────────────────
+async function doUpload(key) {
+  const btn=document.getElementById(`sub-${key}`);
+  btn.disabled=true;setSt(key,'ld','מכין...');setProg(key,5,'מכין...');
+  const r2Keys=[];
+  try {
+    const date=getDPValue(key);
+    if(!date) throw new Error('ביטע אנגעב א דאטום');
+
+    let payload={};
+
+    if(key==='blog'){
+      const title=document.getElementById('blog-title').value.trim();
+      if(!title)throw new Error('ביטע שרייב א קעפל');
+      const files=fStore['blog'];
+      const folder=`blog/${Date.now()}`;
+      for(let i=0;i<files.length;i++){
+        const f=files[i],ext=f.file.name.split('.').pop();
+        const k=`${folder}/${i+1}-${f.name}.${ext}`;
+        setProg(key,10+Math.round((i/Math.max(files.length,1))*65),`העלאָדט בילד ${i+1}/${files.length}...`);
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/Math.max(files.length,1))*65),`העלאָדט בילד ${i+1}/${files.length}...`));
+        r2Keys.push(k);
+      }
+      payload={date,title,body:document.getElementById('blog-body').value,category:getTW('blog-cat'),tags:getTW('blog-tags'),folder_url:r2Keys.length?`r2://blog/${Date.now()}`:'',r2_keys:r2Keys,newTags:getNewTW('blog-tags'),newCategories:getNewTW('blog-cat')};
+      setProg(key,80,'שפּאָרן...');
+      const r=await fetch(`${API}/api/upload/post`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+    }
+    else if(key==='posters'){
+      const files=fStore['posters'];if(!files.length)throw new Error('ביטע העלאד בילדער');
+      const folder=`posters/${Date.now()}`;
+      for(let i=0;i<files.length;i++){
+        const f=files[i],ext=f.file.name.split('.').pop(),k=`${folder}/${i+1}.${ext}`;
+        setProg(key,10+Math.round((i/files.length)*65),`העלאָדט בילד ${i+1}/${files.length}...`);
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/files.length)*65),`העלאָדט ${i+1}/${files.length}...`));
+        r2Keys.push(k);
+      }
+      const parsha=document.getElementById('posters-parsha').value||dateToParsha(getDPRaw('posters'));
+      payload={date,parsha,folder_url:`r2://${folder}`,r2_keys:r2Keys};
+      setProg(key,80,'שפּאָרן...');
+      const r=await fetch(`${API}/api/upload/poster`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+    }
+    else if(key==='events'){
+      const title=document.getElementById('events-title').value.trim();if(!title)throw new Error('ביטע שרייב א טיטל');
+      const files=fStore['events'];const folder=`events/${Date.now()}`;
+      for(let i=0;i<files.length;i++){
+        const f=files[i],ext=f.file.name.split('.').pop(),k=`${folder}/${String(i+1).padStart(2,'0')}-${f.name}.${ext}`;
+        setProg(key,10+Math.round((i/Math.max(files.length,1))*65),`העלאָדט טראַק ${i+1}/${files.length}: ${f.name}`);
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/Math.max(files.length,1))*65),`${f.name}`));
+        r2Keys.push(k);
+      }
+      payload={date,title,location:document.getElementById('events-loc').value,category:getTW('events-cat'),description:document.getElementById('events-desc').value,tags:getTW('events-tags'),folder_url:r2Keys.length?`r2://${folder}`:'',r2_keys:r2Keys,newTags:getNewTW('events-tags'),newCategories:getNewTW('events-cat')};
+      setProg(key,80,'שפּאָרן...');
+      const r=await fetch(`${API}/api/upload/event`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+    }
+    else if(key==='video'){
+      const title=document.getElementById('video-title').value.trim();if(!title)throw new Error('ביטע שרייב א טיטל');
+      const link=document.getElementById('video-link').value.trim();
+      let video_url=link;
+      if(!link&&fStore['video'].length){
+        const f=fStore['video'][0],ext=f.file.name.split('.').pop(),k=`video/${Date.now()}.${ext}`;
+        setProg(key,15,'העלאָדט ווידיאו...');
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,15+Math.round(p*60),'העלאָדט ווידיאו...'));
+        video_url=`r2://${k}`;r2Keys.push(k);
+      }
+      payload={date,title,location:document.getElementById('video-loc').value,category:getTW('video-cat'),description:document.getElementById('video-desc').value,tags:getTW('video-tags'),video_url,r2_keys:r2Keys,newTags:getNewTW('video-tags'),newCategories:getNewTW('video-cat')};
+      setProg(key,80,'שפּאָרן...');
+      const r=await fetch(`${API}/api/upload/video`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+    }
+    else if(key==='pdfs'){
+      const files=fStore['pdfs'];if(!files.length)throw new Error('ביטע העלאד PDF פֿײלן');
+      for(let i=0;i<files.length;i++){
+        const f=files[i],k=`pdfs/${Date.now()}-${i+1}.pdf`;
+        setProg(key,10+Math.round((i/files.length)*70),`העלאָדט PDF ${i+1}/${files.length}...`);
+        await r2Put(k,f.file,'application/pdf',p=>setProg(key,10+Math.round(((i+p)/files.length)*70),`PDF ${i+1}/${files.length}...`));
+        const ti=document.querySelector(`.pm-title[data-i="${i}"]`);
+        const li=document.querySelector(`.pm-lang[data-i="${i}"]`);
+        const ci=document.querySelector(`.pm-cat[data-i="${i}"]`);
+        const pi=document.querySelector(`.pm-parsha[data-i="${i}"]`);
+        const yi=document.querySelector(`.pm-year[data-i="${i}"]`);
+        const gi=document.querySelector(`.pm-tags[data-i="${i}"]`);
+        const row={date,title:ti?.value||f.name,language:li?.value||'',category:ci?.value||'',parsha:pi?.value||'',year:yi?.value||'',tags:gi?.value||'',pdf_url:`r2://${k}`,r2_keys:[k],newTags:[],newCategories:[]};
+        setProg(key,82+Math.round((i/files.length)*10),'שפּאָרן אין דאטאבאנק...');
+        const r=await fetch(`${API}/api/upload/pdf`,{method:'POST',headers:ah(),body:JSON.stringify(row)});
+        const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+      }
+    }
+
+    setProg(key,100,'פארטיק!');
+    setSt(key,'ok','✓ אריינגעשיקט! יישר כח.');
+    resetUpload(key);
+  } catch(e){
+    setSt(key,'err','⚠ '+e.message);
+    console.error('[Upload]',e);
+  }
+  btn.disabled=false;
+}
+
+function resetUpload(key) {
+  fStore[key]=[];renderFL(key,key==='events',key==='events');
+  const dp=dps[key];if(dp){dp.sY.value='';dp.sP.value='';dp.sD.value='';dp.iD.value='';dp.nE.textContent='';}
+  ['blog-tags','blog-cat','events-tags','events-cat','video-tags','video-cat'].forEach(k=>{if(tState[k])resetTW(k);});
+  ['blog-title','blog-body','events-title','events-loc','events-desc','video-title','video-loc','video-desc','video-link','posters-parsha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const pm=document.getElementById('pdfs-meta');if(pm)pm.innerHTML='';
+  const pw=document.getElementById(`pr-${key}`);if(pw)pw.classList.remove('on');
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDash() {
+  for(const t of['posts','events','videos','pdfs','posters']){
+    fetch(`${API}/api/${t}?limit=999`,{headers:ah()}).then(r=>r.json()).then(d=>{
+      const el=document.getElementById(`sn-${t}`);if(el)el.textContent=d.items?.length||0;
+    }).catch(()=>{});
+  }
+}
+
+// ── USERS ─────────────────────────────────────────────────────────
+async function loadUsers() {
+  const r=await fetch(`${API}/api/admin/users`,{headers:ah()});
+  const d=await r.json();
+  const tbody=document.getElementById('users-body');
+  if(!d.users?.length){tbody.innerHTML='<tr class="empty"><td colspan="6">קיין באַניצער</td></tr>';return;}
+  tbody.innerHTML=d.users.map(u=>`
+    <tr>
+      <td>${esc(u.name||'—')}</td>
+      <td style="color:var(--muted);direction:ltr;text-align:right">${esc(u.email)}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td><span class="badge badge-${u.active?'on':'off'}">${u.active?'אַקטיוו':'דיזייבלד'}</span></td>
+      <td style="font-size:.7rem;color:var(--muted)">${fmtPerms(u.permissions,u.role)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>רעדאקטירן</button>
+        ${u.role!=='superadmin'?`<button class="btn btn-danger btn-sm" onclick="toggleUser(${u.id},${u.active})">${u.active?'דיזייבלן':'ענייבלן'}</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function fmtPerms(perms,role){
+  if(role==='superadmin'||role==='admin')return'אַלץ';
+  if(!perms?.length)return'—';
+  return perms.map(p=>{const page=typeof p==='string'?p:p.page,up=typeof p==='string'?1:p.can_upload,ed=typeof p==='string'?1:p.can_edit;return`${page}(${up?'U':''}${ed?'E':''})`;}).join(', ');
+}
+
+function openCreateUser(){
+  document.getElementById('u-id').value='';
+  ['u-name','u-email','u-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('u-role').value='user';
+  document.getElementById('pw-hint').style.display='none';
+  document.getElementById('modal-user-title').textContent='נייער באַניצער';
+  document.getElementById('u-msg').textContent='';
+  document.querySelectorAll('.pcheck input[type=checkbox]').forEach(cb=>cb.checked=true);
+  openM('modal-user');
+}
+
+function openEditUser(u){
+  document.getElementById('u-id').value=u.id;
+  document.getElementById('u-name').value=u.name||'';
+  document.getElementById('u-email').value=u.email;
+  document.getElementById('u-pass').value='';
+  document.getElementById('u-role').value=u.role;
+  document.getElementById('pw-hint').style.display='';
+  document.getElementById('modal-user-title').textContent='רעדאקטירן באַניצער';
+  document.getElementById('u-msg').textContent='';
+  const pp=u.permissions||[];
+  document.querySelectorAll('.pcheck input[type=checkbox]').forEach(cb=>{
+    const page=cb.dataset.page,type=cb.dataset.type;
+    const perm=pp.find(p=>(typeof p==='string'?p===page:p.page===page));
+    if(perm){cb.checked=type==='upload'?(typeof perm==='string'?true:!!perm.can_upload):(typeof perm==='string'?true:!!perm.can_edit);}
+    else cb.checked=false;
+  });
+  openM('modal-user');
+}
+
+async function saveUser(){
+  const id=document.getElementById('u-id').value;
+  const name=document.getElementById('u-name').value.trim();
+  const email=document.getElementById('u-email').value.trim();
+  const pass=document.getElementById('u-pass').value;
+  const role=document.getElementById('u-role').value;
+  const msg=document.getElementById('u-msg');
+  const pages=['blog','posters','events','video','pdfs'];
+  const permissions=pages.map(page=>({page,can_upload:document.querySelector(`input[data-page="${page}"][data-type="upload"]`)?.checked?1:0,can_edit:document.querySelector(`input[data-page="${page}"][data-type="edit"]`)?.checked?1:0})).filter(p=>p.can_upload||p.can_edit);
+  try{
+    if(id){
+      const body={name,role,permissions};if(pass)body.password=pass;
+      const r=await fetch(`${API}/api/admin/users/${id}`,{method:'PUT',headers:ah(),body:JSON.stringify(body)});
+      const d=await r.json();if(d.error)throw new Error(d.error);
+      await fetch(`${API}/api/admin/users/${id}/permissions`,{method:'PUT',headers:ah(),body:JSON.stringify({permissions})});
+    }else{
+      if(!email||!pass)throw new Error('אימעיל און פּאַסווארט זיינען פארלאנגט');
+      const r=await fetch(`${API}/api/admin/users`,{method:'POST',headers:ah(),body:JSON.stringify({email,name,password:pass,role,permissions})});
+      const d=await r.json();if(d.error)throw new Error(d.error);
+    }
+    msg.className='msg ok';msg.textContent='גהאלטן!';
+    setTimeout(()=>{closeM('modal-user');loadUsers();},700);
+  }catch(e){msg.className='msg err';msg.textContent=e.message;}
+}
+
+async function toggleUser(id,active){
+  await fetch(`${API}/api/admin/users/${id}`,{method:'PUT',headers:ah(),body:JSON.stringify({active:active?0:1})});
+  loadUsers();
+}
+
+// ── CONTENT ───────────────────────────────────────────────────────
+let curCT='posts', editCTId=null;
+function setCT(type,btn){curCT=type;document.querySelectorAll('.f-pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');loadContent();}
+
+async function loadContent(){
+  const q=document.getElementById('ct-search')?.value||'';
+  const r=await fetch(`${API}/api/${curCT}?search=${encodeURIComponent(q)}&limit=200`,{headers:ah()});
+  const d=await r.json();
+  const tbody=document.getElementById('ct-body');
+  if(!d.items?.length){tbody.innerHTML='<tr class="empty"><td colspan="5">קיין אייטעמס</td></tr>';return;}
+  tbody.innerHTML=d.items.map(item=>`
+    <tr>
+      <td style="color:var(--muted);white-space:nowrap">${item.date||'—'}</td>
+      <td>${esc(item.title||item.parsha||'—')}</td>
+      <td style="font-size:.7rem;color:var(--muted)">${esc((item.tags||'').split(',').slice(0,3).filter(Boolean).join(', '))}</td>
+      <td style="font-size:.7rem;color:var(--muted);white-space:nowrap">${item.created_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick='openEditCT(${JSON.stringify(item)})'>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCT(${item.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openEditCT(item){
+  editCTId=item.id;
+  const fields={posts:[['date','דאטום'],['title','טיטל'],['body','טעקסט'],['tags','טאגן']],posters:[['date','דאטום'],['parsha','פרשה']],events:[['date','דאטום'],['title','טיטל'],['location','אָרט'],['category','קאטעגאריע'],['description','באשרייבונג'],['tags','טאגן']],videos:[['date','דאטום'],['title','טיטל'],['location','אָרט'],['category','קאטעגאריע'],['description','באשרייבונג'],['tags','טאגן'],['video_url','ווידיאו לינק']],pdfs:[['date','דאטום'],['title','טיטל'],['category','קאטעגאריע'],['language','שפּראך'],['parsha','פרשה'],['year','יאָר'],['tags','טאגן']]};
+  document.getElementById('ct-modal-body').innerHTML=(fields[curCT]||[]).map(([k,l])=>`
+    <div class="field"><label>${l}</label>
+      ${k==='body'||k==='description'?`<textarea id="ec-${k}" rows="4">${esc(item[k]||'')}</textarea>`:`<input type="text" id="ec-${k}" value="${esc(item[k]||'')}">` }
+    </div>`).join('');
+  openM('modal-ct');
+}
+
+async function saveContent(){
+  const fields={posts:['date','title','body','tags'],posters:['date','parsha'],events:['date','title','location','category','description','tags'],videos:['date','title','location','category','description','tags','video_url'],pdfs:['date','title','category','language','parsha','year','tags']};
+  const body={};(fields[curCT]||[]).forEach(f=>{const el=document.getElementById(`ec-${f}`);if(el)body[f]=el.value;});
+  const r=await fetch(`${API}/api/${curCT}/${editCTId}`,{method:'PUT',headers:ah(),body:JSON.stringify(body)});
+  const d=await r.json();if(d.error){alert(d.error);return;}
+  closeM('modal-ct');loadContent();
+}
+
+async function deleteCT(id){
+  if(!confirm('אויסמעקן? (גייט אין אָפּפֿאַלגרוב)'))return;
+  await fetch(`${API}/api/${curCT}/${id}`,{method:'DELETE',headers:ah()});
+  loadContent();
+}
+
+// ── TRASH ─────────────────────────────────────────────────────────
+async function loadTrash(){
+  const r=await fetch(`${API}/api/trash`,{headers:ah()});
+  const d=await r.json();
+  const tbody=document.getElementById('trash-body');
+  if(!d.items?.length){tbody.innerHTML='<tr class="empty"><td colspan="4">אָפּפֿאַלגרוב איז ליידיג</td></tr>';return;}
+  tbody.innerHTML=d.items.map(item=>`
+    <tr>
+      <td><span class="badge badge-user">${item._table}</span></td>
+      <td>${esc(item.title||item.parsha||item.date||'—')}</td>
+      <td style="color:var(--muted);font-size:.77rem;white-space:nowrap">${item.deleted_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">Restore</button>
+        <button class="btn btn-danger btn-sm" onclick="permDel('${item._table}',${item.id})">פאר אייביג Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function restoreItem(table,id){await fetch(`${API}/api/trash/restore/${id}`,{method:'POST',headers:ah(),body:JSON.stringify({table,id})});loadTrash();}
+async function permDel(table,id){if(!confirm('פאר אייביג מעקן? קען נישט אומגעקערט ווערן.'))return;await fetch(`${API}/api/trash/permanent/${id}`,{method:'DELETE',headers:ah(),body:JSON.stringify({table,id})});loadTrash();}
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  loadTaxonomy();
+  loadDash();
+  ['blog','posters','events','video','pdfs'].forEach(k=>initDatePicker(`dp-${k}`));
+  initZone('blog',   'image/*',              true, false, false);
+  initZone('posters','image/*',              true, false, false);
+  initZone('events', 'audio/*',              true, true,  true);
+  initZone('video',  'video/*',              false,false, false);
+  initZone('pdfs',   '.pdf,application/pdf', true, false, false);
+});
+</script>
+</body>
+</html>
