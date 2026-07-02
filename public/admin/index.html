@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — מאישדעס</title>
+  <link rel="icon" href="/logo.avif" type="image/avif">
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -508,7 +509,7 @@ function initDatePicker(containerId) {
     <div class="heb-date-wrap">
       <div style="display:flex;gap:.4rem;margin-bottom:.4rem;border-bottom:1px solid var(--border);padding-bottom:.4rem">
         <button type="button" class="dp-tab-btn on" id="dptab-parsha-${key}" onclick="switchDPTab('${key}','parsha')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">פרשה</button>
-        <button type="button" class="dp-tab-btn" id="dptab-yiddish-${key}" onclick="switchDPTab('${key}','yiddish')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">ייִד. דאטום</button>
+        <button type="button" class="dp-tab-btn" id="dptab-yiddish-${key}" onclick="switchDPTab('${key}','yiddish')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">אידיש</button>
         <button type="button" class="dp-tab-btn" id="dptab-english-${key}" onclick="switchDPTab('${key}','english')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">English</button>
       </div>
       <div id="dppanel-parsha-${key}">
@@ -552,9 +553,11 @@ function initDatePicker(containerId) {
     if(!iD.value){nE.textContent='';return;}
     sY.value='';sP.value='';sD.value='';
     const d=new Date(iD.value+'T12:00:00Z');
-    nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-    // Auto-detect parsha
     const parsha=dateToParsha(iD.value);
+    const [y,mo]=iD.value.split('-');
+    const hy=+mo>=9?+y+3761:+y+3760;
+    const engStr=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    nE.textContent=engStr+' ('+parsha+' '+yearToHebrew(hy)+')';
     const pf=document.getElementById(`${key}-parsha`);
     if(pf&&!pf.value) pf.value=parsha;
   }
@@ -577,8 +580,11 @@ function initDatePicker(containerId) {
         if(gregDate){
           iD.value=gregDate;
           const d=new Date(gregDate+'T12:00:00Z');
-          nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+
-            ' ('+HEB_DAYS[hDay-1]+' '+HEB_MONTHS[hMonth]+' '+yearToHebrew(hYear)+')';
+          const engDate=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+          const yidDate=HEB_DAYS[hDay-1]+' '+HEB_MONTHS[hMonth]+' '+yearToHebrew(hYear);
+          nE.textContent=yidDate+' = '+engDate;
+        } else {
+          nE.textContent='Could not convert date — please check values';
         }
       }catch(e){nE.textContent='Date conversion error';}
     }
@@ -597,46 +603,68 @@ function switchDPTab(key, tab) {
   });
 }
 
-// Hebrew calendar to Gregorian conversion
-// Uses a simplified Molad-based calculation accurate to ±1 day
-function hebToGreg(hYear, hMonth, hDay) {
-  // hMonth: 0=ניסן,1=אייר,...,6=תשרי,...,11=אדר,12=אדרא,13=אדרב
-  // Convert month index to months-from-Tishri ordering
-  // Tishri=7(idx6), Cheshvan=8(idx7),..., Adar=12(idx11), Nisan=1(idx0)...
-  const monthsFromTishri = [7,8,9,10,11,12,13,1,2,3,4,5,6]; // maps idx to month number
-  // Simple approximation: use known epoch
-  // Julian Day Number of 1 Tishri hYear
-  function hebrewToJD(y,m,d){
-    // m here is 1-based month from Tishri (Tishri=1, Cheshvan=2, ... Elul=12, Adar in leap=13)
-    const elapsed = 234567 * (y-1) + Math.floor((7*(y+1))/19)*765433/25920;
-    const days=[0,30,29,30,29,30,29,30,29,30,29,30,29,30];
-    let jd = Math.floor(elapsed/25920) + d + 1715119;
-    for(let i=1;i<m;i++) jd+=days[i]||29;
-    return jd;
-  }
-  // Map our month index (0=Nisan) to month-from-Tishri
-  const mft = monthsFromTishri[hMonth] || 1;
-  // Check if leap year
+// Hebrew calendar → Gregorian using proper astronomical algorithm
+function hebToGreg(hYear, hMonthIdx, hDay) {
+  // hMonthIdx: 0=ניסן,1=אייר,2=סיון,3=תמוז,4=אב,5=אלול,
+  //            6=תשרי,7=חשון,8=כסלו,9=טבת,10=שבט,11=אדר,12=אדר א,13=אדר ב
+  // Convert to month number from Tishri (1-based)
+  // Tishri=1, Cheshvan=2, Kislev=3, Tevet=4, Shvat=5,
+  // Adar/AdarA=6, AdarB=7(leap only), Nisan=7or8, Iyar=8or9...
   const isLeap = ((7*hYear+1)%19) < 7;
-  // In non-leap years, Adar B doesn't exist; remap Adar A (idx12) to Adar (idx11)
-  const adjustedM = (!isLeap && hMonth === 13) ? 12 : hMonth;
-  const mft2 = monthsFromTishri[adjustedM] || 1;
+  // Map from our 0-based index (Nisan=0) to month number from Tishri
+  // Non-leap: Nisan=7,Iyar=8,Sivan=9,Tamuz=10,Av=11,Elul=12,Tishri=1,...,Adar=6
+  // Leap:     Nisan=8,Iyar=9,...,AdarA=6,AdarB=7
+  const nonLeapMap = [7,8,9,10,11,12,1,2,3,4,5,6,6,6];
+  const leapMap    = [8,9,10,11,12,13,1,2,3,4,5,6,6,7];
+  const monthMap   = isLeap ? leapMap : nonLeapMap;
+  const m          = monthMap[hMonthIdx] || 1;
 
-  try {
-    const jd = hebrewToJD(hYear, mft2, hDay);
-    // Convert JD to Gregorian
-    const l = jd + 68569;
-    const n = Math.floor(4*l/146097);
-    const l2 = l - Math.floor((146097*n+3)/4);
-    const i = Math.floor(4000*(l2+1)/1461001);
-    const l3 = l2 - Math.floor(1461*i/4) + 31;
-    const j = Math.floor(80*l3/2447);
-    const day = l3 - Math.floor(2447*j/80);
-    const l4 = Math.floor(j/11);
-    const month = j + 2 - 12*l4;
-    const year = 100*(n-49) + i + l4;
-    return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-  } catch(e) { return null; }
+  // Number of days from Hebrew epoch to 1 Tishri of year hYear
+  function elapsedDays(y) {
+    const monthsElapsed = Math.floor((235*y - 234) / 19);
+    const parts = 12084 + 13753 * monthsElapsed;
+    let day = monthsElapsed * 29 + Math.floor(parts / 25920);
+    if ((3*(day+1)) % 7 < 3) day++;
+    return day;
+  }
+
+  function daysInYear(y) { return elapsedDays(y+1) - elapsedDays(y); }
+  function isLongCheshvan(y) { return daysInYear(y) % 10 === 5; }
+  function isShortKislev(y)  { return daysInYear(y) % 10 === 3; }
+
+  const monthLengths = (y) => {
+    const leap = ((7*y+1)%19) < 7;
+    return [0,30,29,leap?30:29,29,30,29,30,29,30,29,30,29,leap?29:0,leap?29:0]
+      .map((v,i)=>{
+        if(i===2&&isLongCheshvan(y)) return 30;
+        if(i===3&&isShortKislev(y))  return 29;
+        return v;
+      });
+  };
+
+  // Days from epoch to 1 Tishri hYear + offset for months + day
+  let totalDays = elapsedDays(hYear);
+  const lens = monthLengths(hYear);
+  for(let i=1; i<m; i++) totalDays += lens[i] || 0;
+  totalDays += hDay - 1;
+
+  // Convert to Julian Day Number (Hebrew epoch = JD 347996.5 ≈ JD 347997)
+  const jd = totalDays + 347996;
+
+  // JD to Gregorian
+  const l  = jd + 68569;
+  const n  = Math.floor(4*l/146097);
+  const l2 = l - Math.floor((146097*n+3)/4);
+  const ii = Math.floor(4000*(l2+1)/1461001);
+  const l3 = l2 - Math.floor(1461*ii/4) + 31;
+  const j  = Math.floor(80*l3/2447);
+  const dd = l3 - Math.floor(2447*j/80);
+  const l4 = Math.floor(j/11);
+  const mm = j + 2 - 12*l4;
+  const yy = 100*(n-49) + ii + l4;
+
+  if(yy<1800||yy>2200) return null;
+  return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
 }
 
 function getDPValue(key) {
@@ -819,12 +847,15 @@ async function r2Put(key,blob,mime,onProg) {
     const xhr=new XMLHttpRequest();
     xhr.open('POST',`${API}/api/upload/r2-put?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(mime)}`);
     xhr.setRequestHeader('Authorization',`Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', mime || 'application/octet-stream');
     xhr.upload.onprogress=e=>{if(e.lengthComputable&&onProg)onProg(e.loaded/e.total);};
     xhr.onload=()=>{
-      if(xhr.status>=200&&xhr.status<300){const d=JSON.parse(xhr.responseText);res(d.key);}
-      else rej(new Error(`Upload ${xhr.status}: ${xhr.responseText.slice(0,80)}`));
+      if(xhr.status>=200&&xhr.status<300){
+        try{const d=JSON.parse(xhr.responseText);res(d.key);}
+        catch(e){rej(new Error('Invalid response from server: '+xhr.responseText.slice(0,80)));}
+      } else rej(new Error(`Upload failed ${xhr.status}: ${xhr.responseText.slice(0,120)}`));
     };
-    xhr.onerror=()=>rej(new Error('Network error during R2 upload'));
+    xhr.onerror=()=>rej(new Error('Network error — check that the Worker is deployed and CORS headers are set'));
     xhr.send(blob);
   });
 }
