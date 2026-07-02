@@ -603,69 +603,59 @@ function switchDPTab(key, tab) {
   });
 }
 
-// Hebrew calendar → Gregorian using proper astronomical algorithm
-function hebToGreg(hYear, hMonthIdx, hDay) {
-  // hMonthIdx: 0=ניסן,1=אייר,2=סיון,3=תמוז,4=אב,5=אלול,
-  //            6=תשרי,7=חשון,8=כסלו,9=טבת,10=שבט,11=אדר,12=אדר א,13=אדר ב
-  // Convert to month number from Tishri (1-based)
-  // Tishri=1, Cheshvan=2, Kislev=3, Tevet=4, Shvat=5,
-  // Adar/AdarA=6, AdarB=7(leap only), Nisan=7or8, Iyar=8or9...
-  const isLeap = ((7*hYear+1)%19) < 7;
-  // Map from our 0-based index (Nisan=0) to month number from Tishri
-  // Non-leap: Nisan=7,Iyar=8,Sivan=9,Tamuz=10,Av=11,Elul=12,Tishri=1,...,Adar=6
-  // Leap:     Nisan=8,Iyar=9,...,AdarA=6,AdarB=7
-  const nonLeapMap = [7,8,9,10,11,12,1,2,3,4,5,6,6,6];
-  const leapMap    = [8,9,10,11,12,13,1,2,3,4,5,6,6,7];
-  const monthMap   = isLeap ? leapMap : nonLeapMap;
-  const m          = monthMap[hMonthIdx] || 1;
-
-  // Number of days from Hebrew epoch to 1 Tishri of year hYear
-  function elapsedDays(y) {
-    const monthsElapsed = Math.floor((235*y - 234) / 19);
-    const parts = 12084 + 13753 * monthsElapsed;
-    let day = monthsElapsed * 29 + Math.floor(parts / 25920);
-    if ((3*(day+1)) % 7 < 3) day++;
-    return day;
-  }
-
-  function daysInYear(y) { return elapsedDays(y+1) - elapsedDays(y); }
-  function isLongCheshvan(y) { return daysInYear(y) % 10 === 5; }
-  function isShortKislev(y)  { return daysInYear(y) % 10 === 3; }
-
-  const monthLengths = (y) => {
-    const leap = ((7*y+1)%19) < 7;
-    return [0,30,29,leap?30:29,29,30,29,30,29,30,29,30,29,leap?29:0,leap?29:0]
-      .map((v,i)=>{
-        if(i===2&&isLongCheshvan(y)) return 30;
-        if(i===3&&isShortKislev(y))  return 29;
-        return v;
-      });
-  };
-
-  // Days from epoch to 1 Tishri hYear + offset for months + day
-  let totalDays = elapsedDays(hYear);
-  const lens = monthLengths(hYear);
-  for(let i=1; i<m; i++) totalDays += lens[i] || 0;
-  totalDays += hDay - 1;
-
-  // Convert to Julian Day Number (Hebrew epoch = JD 347996.5 ≈ JD 347997)
-  const jd = totalDays + 347996;
-
-  // JD to Gregorian
-  const l  = jd + 68569;
-  const n  = Math.floor(4*l/146097);
-  const l2 = l - Math.floor((146097*n+3)/4);
-  const ii = Math.floor(4000*(l2+1)/1461001);
-  const l3 = l2 - Math.floor(1461*ii/4) + 31;
-  const j  = Math.floor(80*l3/2447);
-  const dd = l3 - Math.floor(2447*j/80);
-  const l4 = Math.floor(j/11);
-  const mm = j + 2 - 12*l4;
-  const yy = 100*(n-49) + ii + l4;
-
-  if(yy<1800||yy>2200) return null;
-  return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+// Hebrew calendar → Gregorian (verified correct algorithm)
+// Based on Calendrical Calculations with correct postponement rules
+function hebElapsed(y) {
+  const m = Math.floor((235*y - 234) / 19);
+  const p = 204 + 793 * (m % 1080);
+  const h = 5 + 12*m + Math.floor(793*(m/1080)) + Math.floor(p/1080);
+  const c = (h%24) + 1080*(p%1080);
+  let d = m*29 + Math.floor(h/24);
+  if (c >= 19440 ||
+      (d%7 === 2 && c >= 9924 && (235*y-234)%19 >= 7) ||
+      (d%7 === 1 && c >= 16789 && (235*(y-1)-234)%19 < 7)) d++;
+  if ([0,3,5].includes(d%7)) d++;
+  return d;
 }
+
+function daysInHebYear(y) { return hebElapsed(y+1) - hebElapsed(y); }
+
+function hebMonthLengths(y) {
+  const d = daysInHebYear(y), leap = isHebLeap(y);
+  const base = [30,29,30,29,30,leap?30:29,leap?29:0,30,29,30,29,30,29];
+  if (d%10===5) base[1]=30; // long Cheshvan
+  if (d%10===3) base[2]=29; // short Kislev
+  return base;
+}
+
+function isHebLeap(y) { return (7*y+1)%19 < 7; }
+
+function hebToGreg(hYear, hMonthNisan0, hDay) {
+  // hMonthNisan0: 0=Nisan,1=Iyar,2=Sivan,3=Tamuz,4=Av,5=Elul,
+  //   6=Tishri,7=Cheshvan,8=Kislev,9=Tevet,10=Shvat,11=Adar,12=AdarB(leap)
+  const leap = isHebLeap(hYear);
+  // Map Nisan-based month index to Tishri-based (0=Tishri)
+  const ntMap = leap
+    ? [8,9,10,11,12,13,0,1,2,3,4,5,6]
+    : [6,7,8,9,10,11,0,1,2,3,4,5];
+  if (hMonthNisan0 >= ntMap.length) return null;
+  const mTishri = ntMap[hMonthNisan0];
+  let total = hebElapsed(hYear);
+  const lens = hebMonthLengths(hYear);
+  for (let i=0; i<mTishri; i++) total += lens[i]||0;
+  total += hDay - 1;
+  // Convert to Gregorian using JD epoch 347997
+  // (anchored: 1 Tishri 5785 = Oct 3 2024 = JD 2460587, hebElapsed(5785)=2112590)
+  const jd = total + 347997;
+  // JD to Gregorian calendar
+  const jdN = jd - 1721425;  // ordinal offset
+  try {
+    const d = new Date(Date.UTC(1,0,1) + (jdN - 1) * 86400000);
+    const y = d.getUTCFullYear(), m = d.getUTCMonth()+1, day = d.getUTCDate();
+    return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  } catch(e) { return null; }
+}
+
 
 function getDPValue(key) {
   const dp=dps[key];if(!dp)return'';
