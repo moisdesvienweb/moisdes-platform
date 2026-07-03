@@ -832,22 +832,25 @@ function setSt(key,type,msg) {
 }
 
 // ── R2 UPLOAD ─────────────────────────────────────────────────────
-async function r2Put(key,blob,mime,onProg) {
-  return new Promise((res,rej)=>{
-    const xhr=new XMLHttpRequest();
-    xhr.open('POST',`${API}/api/upload/r2-put?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(mime)}`);
-    xhr.setRequestHeader('Authorization',`Bearer ${token}`);
-    xhr.setRequestHeader('Content-Type', mime || 'application/octet-stream');
-    xhr.upload.onprogress=e=>{if(e.lengthComputable&&onProg)onProg(e.loaded/e.total);};
-    xhr.onload=()=>{
-      if(xhr.status>=200&&xhr.status<300){
-        try{const d=JSON.parse(xhr.responseText);res(d.key);}
-        catch(e){rej(new Error('Invalid response from server: '+xhr.responseText.slice(0,80)));}
-      } else rej(new Error(`Upload failed ${xhr.status}: ${xhr.responseText.slice(0,120)}`));
-    };
-    xhr.onerror=()=>rej(new Error('Network error — check that the Worker is deployed and CORS headers are set'));
-    xhr.send(blob);
+async function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(blob);
   });
+}
+
+// r2Put now converts to base64 and stores for batch submission
+// Actual upload happens in submitToNetlify()
+async function r2Put(key, blob, mime, onProg) {
+  if (onProg) onProg(0.1);
+  const data = await blobToBase64(blob);
+  if (onProg) onProg(1);
+  // Store in pending files - actual upload done via Netlify function
+  window._pendingFiles = window._pendingFiles || [];
+  window._pendingFiles.push({ key, data, mimeType: mime, name: key.split('/').pop() });
+  return key;
 }
 
 function fmtDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${m}/${d}/${y}`;}
@@ -857,9 +860,10 @@ async function doUpload(key) {
   const btn=document.getElementById(`sub-${key}`);
   btn.disabled=true;setSt(key,'ld','מכין...');setProg(key,5,'מכין...');
   const r2Keys=[];
+  window._pendingFiles=[];
   try {
     const date=getDPValue(key);
-    if(!date) throw new Error('ביטע אנגעב א דאטום');
+    if(!date) throw new Error('Please enter a date');
 
     let payload={};
 
@@ -876,8 +880,10 @@ async function doUpload(key) {
         r2Keys.push(k);
       }
       payload={date,title,body:document.getElementById('blog-body').value,category:getTW('blog-cat'),tags:getTW('blog-tags'),folder_url:r2Keys.length?`r2://blog/${Date.now()}`:'',r2_keys:r2Keys,newTags:getNewTW('blog-tags'),newCategories:getNewTW('blog-cat')};
-      setProg(key,80,'שפּאָרן...');
-      const r=await fetch(`${API}/api/upload/post`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      setProg(key,80,'Saving...');
+      payload._files = (window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
+      window._pendingFiles=[];
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'blog',...payload})});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
     }
     else if(key==='posters'){
@@ -890,9 +896,11 @@ async function doUpload(key) {
         r2Keys.push(k);
       }
       const parsha=document.getElementById('posters-parsha').value||dateToParsha(getDPRaw('posters'));
-      payload={date,parsha,folder_url:`r2://${folder}`,r2_keys:r2Keys};
-      setProg(key,80,'שפּאָרן...');
-      const r=await fetch(`${API}/api/upload/poster`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      payload={date,parsha};
+      setProg(key,80,'Saving...');
+      payload._files=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
+      window._pendingFiles=[];
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'poster',...payload})});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
     }
     else if(key==='events'){
@@ -904,9 +912,11 @@ async function doUpload(key) {
         await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/Math.max(files.length,1))*65),`${f.name}`));
         r2Keys.push(k);
       }
-      payload={date,title,location:document.getElementById('events-loc').value,category:getTW('events-cat'),description:document.getElementById('events-desc').value,tags:getTW('events-tags'),folder_url:r2Keys.length?`r2://${folder}`:'',r2_keys:r2Keys,newTags:getNewTW('events-tags'),newCategories:getNewTW('events-cat')};
-      setProg(key,80,'שפּאָרן...');
-      const r=await fetch(`${API}/api/upload/event`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      payload={date,title,location:document.getElementById('events-loc').value,category:getTW('events-cat'),description:document.getElementById('events-desc').value,tags:getTW('events-tags'),newTags:getNewTW('events-tags'),newCategories:getNewTW('events-cat')};
+      setProg(key,80,'Saving...');
+      payload._files=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
+      window._pendingFiles=[];
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'event',...payload})});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
     }
     else if(key==='video'){
@@ -919,9 +929,11 @@ async function doUpload(key) {
         await r2Put(k,f.file,f.file.type,p=>setProg(key,15+Math.round(p*60),'העלאָדט ווידיאו...'));
         video_url=`r2://${k}`;r2Keys.push(k);
       }
-      payload={date,title,location:document.getElementById('video-loc').value,category:getTW('video-cat'),description:document.getElementById('video-desc').value,tags:getTW('video-tags'),video_url,r2_keys:r2Keys,newTags:getNewTW('video-tags'),newCategories:getNewTW('video-cat')};
-      setProg(key,80,'שפּאָרן...');
-      const r=await fetch(`${API}/api/upload/video`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
+      payload={date,title,location:document.getElementById('video-loc').value,category:getTW('video-cat'),description:document.getElementById('video-desc').value,tags:getTW('video-tags'),video_url,newTags:getNewTW('video-tags'),newCategories:getNewTW('video-cat')};
+      setProg(key,80,'Saving...');
+      payload._files=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
+      window._pendingFiles=[];
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'video',...payload})});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
     }
     else if(key==='pdfs'){
@@ -937,8 +949,11 @@ async function doUpload(key) {
         const yi=document.querySelector(`.pm-year[data-i="${i}"]`);
         const gi=document.querySelector(`.pm-tags[data-i="${i}"]`);
         const row={date,title:ti?.value||f.name,language:li?.value||'',category:ci?.value||'',parsha:pi?.value||'',year:yi?.value||'',tags:gi?.value||'',pdf_url:`r2://${k}`,r2_keys:[k],newTags:[],newCategories:[]};
-        setProg(key,82+Math.round((i/files.length)*10),'שפּאָרן אין דאטאבאנק...');
-        const r=await fetch(`${API}/api/upload/pdf`,{method:'POST',headers:ah(),body:JSON.stringify(row)});
+        setProg(key,82+Math.round((i/files.length)*10),'Saving to database...');
+        const pdfFiles=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
+        window._pendingFiles=[];
+        row._files=pdfFiles;
+        const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'pdf',...row})});
         const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
       }
     }
