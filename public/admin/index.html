@@ -226,6 +226,12 @@
     <div class="sb-link" id="sb-content" onclick="showTab('content',this)"><span class="sb-icon">≡</span>Browse & Edit</div>
     <div class="sb-link" id="sb-trash"   onclick="showTab('trash',this)"><span class="sb-icon">⊘</span>Trash</div>
 
+    <div class="sb-section">Forms</div>
+    <div class="sb-link" id="sb-forms"    onclick="showTab('forms',this)"><span class="sb-icon">⊞</span>All Forms</div>
+    <div class="sb-link" id="sb-formbuild" onclick="showTab('formbuild',this)" style="display:none"><span class="sb-icon">✏</span>Builder</div>
+    <div class="sb-link" id="sb-formresp"  onclick="showTab('formresp',this)"  style="display:none"><span class="sb-icon">📋</span>Responses</div>
+    <div class="sb-link" id="sb-formstats" onclick="showTab('formstats',this)" style="display:none"><span class="sb-icon">📊</span>Stats</div>
+
     <div class="sb-section" id="sb-admin-title">Admin</div>
     <div class="sb-link" id="sb-users" onclick="showTab('users',this)"><span class="sb-icon">◉</span>Users</div>
   </nav>
@@ -340,6 +346,140 @@
       <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Title</th><th>Deleted</th><th>Actions</th></tr></thead><tbody id="trash-body"><tr class="empty"><td colspan="4">לאדט...</td></tr></tbody></table></div>
     </div>
 
+    <!-- FORMS LIST -->
+    <div class="tab" id="tab-forms">
+      <div class="pg-hdr"><h2>Forms</h2><button class="btn btn-primary" onclick="newForm()">+ New Form</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Title</th><th>Slug / URL</th><th>Responses</th><th>Created</th><th>Actions</th></tr></thead><tbody id="forms-body"><tr class="empty"><td colspan="5">Loading...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- FORM BUILDER -->
+    <div class="tab" id="tab-formbuild">
+      <div class="pg-hdr">
+        <div>
+          <h2 id="fb-title">Form Builder</h2>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Public URL: <span id="fb-url" style="color:var(--accent)"></span></div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-ghost" onclick="showFormSettings()">⚙ Settings</button>
+          <button class="btn btn-primary" onclick="saveForm()">Save</button>
+          <button class="btn btn-ghost" id="fb-preview-btn" onclick="previewForm()" target="_blank">Preview ↗</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start">
+        <!-- Field palette -->
+        <div>
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.6rem">Add Field</div>
+          <div id="field-palette" style="display:flex;flex-direction:column;gap:.3rem"></div>
+        </div>
+        <!-- Canvas -->
+        <div>
+          <div id="fb-canvas" style="min-height:200px;border:1px dashed var(--border);border-radius:3px;padding:1rem;background:rgba(255,255,255,.02)">
+            <div id="fb-empty" style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Add fields from the left panel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM SETTINGS MODAL -->
+    <div class="modal-bg" id="modal-formsettings">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-hdr"><div class="modal-title">Form Settings</div><button class="modal-x" onclick="closeM('modal-formsettings')">✕</button></div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+          <!-- Tabs -->
+          <div style="display:flex;gap:.25rem;margin-bottom:1.25rem;border-bottom:1px solid var(--border);padding-bottom:.75rem">
+            <button class="f-pill on" onclick="fsTab('general',this)">General</button>
+            <button class="f-pill" onclick="fsTab('style',this)">Style</button>
+            <button class="f-pill" onclick="fsTab('access',this)">Access</button>
+            <button class="f-pill" onclick="fsTab('schedule',this)">Schedule</button>
+            <button class="f-pill" onclick="fsTab('notify',this)">Notifications</button>
+          </div>
+          <!-- General -->
+          <div id="fst-general">
+            <div class="field"><label>Form Title</label><input type="text" id="fs-title" placeholder="My Form"></div>
+            <div class="field"><label>Slug (URL)</label><input type="text" id="fs-slug" placeholder="my-form" style="direction:ltr"></div>
+            <div class="field"><label>Description</label><textarea id="fs-desc" rows="3" placeholder="Optional description..."></textarea></div>
+            <div class="field"><label>Confirmation Message</label><input type="text" id="fs-confirm" placeholder="Thank you for your submission!"></div>
+            <div class="field"><label>Submit Button Text</label><input type="text" id="fs-submit-label" placeholder="Submit"></div>
+          </div>
+          <!-- Style -->
+          <div id="fst-style" style="display:none">
+            <div class="row2">
+              <div class="field"><label>Background Color</label><input type="color" id="fs-bg" value="#7a4a1e" style="height:42px;padding:.2rem"></div>
+              <div class="field"><label>Text Color</label><input type="color" id="fs-text" value="#ffffff" style="height:42px;padding:.2rem"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label>Accent / Button Color</label><input type="color" id="fs-accent" value="#c8844a" style="height:42px;padding:.2rem"></div>
+              <div class="field"><label>Button Text Color</label><input type="color" id="fs-btntext" value="#ffffff" style="height:42px;padding:.2rem"></div>
+            </div>
+            <div class="field"><label>Font</label><select id="fs-font"><option value="Heebo">Heebo (Default)</option><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Playfair Display">Playfair Display</option><option value="Frank Ruhl Libre">Frank Ruhl Libre</option><option value="Noto Serif Hebrew">Noto Serif Hebrew</option></select></div>
+            <div class="field"><label>Direction</label><select id="fs-dir"><option value="ltr">LTR (English)</option><option value="rtl">RTL (Hebrew/Yiddish)</option></select></div>
+            <div class="field"><label>Logo Image URL</label><input type="url" id="fs-logo" placeholder="https://..." style="direction:ltr"></div>
+            <div class="field"><label>Banner Image URL</label><input type="url" id="fs-banner" placeholder="https://..." style="direction:ltr"></div>
+          </div>
+          <!-- Access -->
+          <div id="fst-access" style="display:none">
+            <div class="field"><label>Access Type</label><select id="fs-access"><option value="public">Public (anyone)</option><option value="password">Password Protected</option><option value="login">Login Required</option></select></div>
+            <div class="field" id="fs-pw-field"><label>Password</label><input type="text" id="fs-password" placeholder="Enter password..."></div>
+            <div class="field"><label>CAPTCHA</label><select id="fs-captcha"><option value="">None</option><option value="simple">Simple math question</option></select></div>
+          </div>
+          <!-- Schedule -->
+          <div id="fst-schedule" style="display:none">
+            <div class="row2">
+              <div class="field"><label>Open Date & Time</label><input type="datetime-local" id="fs-open" style="direction:ltr"></div>
+              <div class="field"><label>Close Date & Time</label><input type="datetime-local" id="fs-close" style="direction:ltr"></div>
+            </div>
+            <div class="field"><label>Max Responses</label><input type="number" id="fs-maxresp" placeholder="Unlimited" min="1" style="direction:ltr"></div>
+            <div class="field"><label>Closed Message</label><input type="text" id="fs-closed-msg" placeholder="This form is now closed."></div>
+            <div class="field"><label>Not Yet Open Message</label><input type="text" id="fs-notopen-msg" placeholder="This form is not yet open."></div>
+          </div>
+          <!-- Notifications -->
+          <div id="fst-notify" style="display:none">
+            <div class="field"><label>Notify Email (on each submission)</label><input type="email" id="fs-notify-email" placeholder="admin@email.com" style="direction:ltr"></div>
+            <div class="field"><label>Notification Type</label><select id="fs-notify-type"><option value="">Off</option><option value="instant">Every submission</option><option value="digest">Daily digest</option></select></div>
+            <div class="field"><label>Send Confirmation to Submitter?</label><select id="fs-confirm-email"><option value="">No</option><option value="yes">Yes (requires email field in form)</option></select></div>
+            <div class="field"><label>Confirmation Email Subject</label><input type="text" id="fs-confirm-subj" placeholder="Thank you for your submission"></div>
+            <div class="field"><label>Confirmation Email Body</label><textarea id="fs-confirm-body" rows="3" placeholder="Thank you for submitting..."></textarea></div>
+          </div>
+        </div>
+        <div class="modal-ftr">
+          <button class="btn btn-primary" onclick="saveFormSettings()">Save Settings</button>
+          <button class="btn btn-ghost" onclick="closeM('modal-formsettings')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIELD SETTINGS MODAL -->
+    <div class="modal-bg" id="modal-fieldsettings">
+      <div class="modal">
+        <div class="modal-hdr"><div class="modal-title" id="fld-modal-title">Field Settings</div><button class="modal-x" onclick="closeM('modal-fieldsettings')">✕</button></div>
+        <div class="modal-body" id="fld-modal-body"></div>
+        <div class="modal-ftr">
+          <button class="btn btn-primary" onclick="saveFieldSettings()">Save</button>
+          <button class="btn btn-ghost" onclick="closeM('modal-fieldsettings')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM RESPONSES -->
+    <div class="tab" id="tab-formresp">
+      <div class="pg-hdr">
+        <h2 id="resp-title">Responses</h2>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-ghost" onclick="exportExcel()">⬇ Export Excel</button>
+          <button class="btn btn-ghost" onclick="loadResponses()">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem" id="resp-count"></div>
+      <div class="tbl-wrap" id="resp-table-wrap"><table><thead id="resp-thead"></thead><tbody id="resp-tbody"><tr class="empty"><td colspan="3">Loading...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- FORM STATS -->
+    <div class="tab" id="tab-formstats">
+      <div class="pg-hdr"><h2 id="stats-title">Stats</h2></div>
+      <div id="stats-content" style="color:var(--muted)">Loading...</div>
+    </div>
+
     <!-- USERS -->
     <div class="tab" id="tab-users">
       <div class="pg-hdr"><h2>Users</h2><button class="btn btn-primary" onclick="openCreateUser()">+ New User</button></div>
@@ -427,6 +567,8 @@ function showTab(name, el) {
   if (name==='content') loadContent();
   if (name==='trash')   loadTrash();
   if (name==='users')   loadUsers();
+  if (name==='forms')   loadForms();
+  if (name==='formresp') loadResponses();
 }
 
 // ── HEBREW DATE PICKER ────────────────────────────────────────────
@@ -832,25 +974,30 @@ function setSt(key,type,msg) {
 }
 
 // ── R2 UPLOAD ─────────────────────────────────────────────────────
-async function blobToBase64(blob) {
-  return new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = e => res(e.target.result.split(',')[1]);
-    reader.onerror = rej;
-    reader.readAsDataURL(blob);
-  });
-}
-
-// r2Put now converts to base64 and stores for batch submission
-// Actual upload happens in submitToNetlify()
+// Upload file directly to R2 via presigned URL (no size limit, no CORS issues)
 async function r2Put(key, blob, mime, onProg) {
-  if (onProg) onProg(0.1);
-  const data = await blobToBase64(blob);
-  if (onProg) onProg(1);
-  // Store in pending files - actual upload done via Netlify function
-  window._pendingFiles = window._pendingFiles || [];
-  window._pendingFiles.push({ key, data, mimeType: mime, name: key.split('/').pop() });
-  return key;
+  // Step 1: get presigned URL from Netlify function (tiny request)
+  const signRes = await fetch('/.netlify/functions/r2sign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, mimeType: mime }),
+  });
+  const signData = await signRes.json();
+  if (signData.error) throw new Error('Presign failed: ' + signData.error);
+
+  // Step 2: upload directly to R2 with XHR for progress
+  return new Promise((res, rej) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', signData.url);
+    xhr.setRequestHeader('Content-Type', mime || 'application/octet-stream');
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProg) onProg(e.loaded / e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) res(key);
+      else rej(new Error(`R2 upload failed: ${xhr.status} ${xhr.responseText.slice(0,100)}`));
+    };
+    xhr.onerror = () => rej(new Error('R2 upload network error'));
+    xhr.send(blob);
+  });
 }
 
 function fmtDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${m}/${d}/${y}`;}
@@ -860,7 +1007,6 @@ async function doUpload(key) {
   const btn=document.getElementById(`sub-${key}`);
   btn.disabled=true;setSt(key,'ld','מכין...');setProg(key,5,'מכין...');
   const r2Keys=[];
-  window._pendingFiles=[];
   try {
     const date=getDPValue(key);
     if(!date) throw new Error('Please enter a date');
@@ -881,10 +1027,10 @@ async function doUpload(key) {
       }
       payload={date,title,body:document.getElementById('blog-body').value,category:getTW('blog-cat'),tags:getTW('blog-tags'),folder_url:r2Keys.length?`r2://blog/${Date.now()}`:'',r2_keys:r2Keys,newTags:getNewTW('blog-tags'),newCategories:getNewTW('blog-cat')};
       setProg(key,80,'Saving...');
-      payload._files = (window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
-      window._pendingFiles=[];
+      payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
+      payload.r2_keys = r2Keys;
       const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'blog',...payload})});
-      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='posters'){
       const files=fStore['posters'];if(!files.length)throw new Error('ביטע העלאד בילדער');
@@ -898,10 +1044,10 @@ async function doUpload(key) {
       const parsha=document.getElementById('posters-parsha').value||dateToParsha(getDPRaw('posters'));
       payload={date,parsha};
       setProg(key,80,'Saving...');
-      payload._files=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
-      window._pendingFiles=[];
+      payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
+      payload.r2_keys = r2Keys;
       const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'poster',...payload})});
-      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='events'){
       const title=document.getElementById('events-title').value.trim();if(!title)throw new Error('ביטע שרייב א טיטל');
@@ -914,10 +1060,10 @@ async function doUpload(key) {
       }
       payload={date,title,location:document.getElementById('events-loc').value,category:getTW('events-cat'),description:document.getElementById('events-desc').value,tags:getTW('events-tags'),newTags:getNewTW('events-tags'),newCategories:getNewTW('events-cat')};
       setProg(key,80,'Saving...');
-      payload._files=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
-      window._pendingFiles=[];
+      payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
+      payload.r2_keys = r2Keys;
       const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'event',...payload})});
-      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='video'){
       const title=document.getElementById('video-title').value.trim();if(!title)throw new Error('ביטע שרייב א טיטל');
@@ -931,10 +1077,9 @@ async function doUpload(key) {
       }
       payload={date,title,location:document.getElementById('video-loc').value,category:getTW('video-cat'),description:document.getElementById('video-desc').value,tags:getTW('video-tags'),video_url,newTags:getNewTW('video-tags'),newCategories:getNewTW('video-cat')};
       setProg(key,80,'Saving...');
-      payload._files=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
-      window._pendingFiles=[];
+      payload.r2_keys = r2Keys;
       const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'video',...payload})});
-      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='pdfs'){
       const files=fStore['pdfs'];if(!files.length)throw new Error('ביטע העלאד PDF פֿײלן');
@@ -950,11 +1095,8 @@ async function doUpload(key) {
         const gi=document.querySelector(`.pm-tags[data-i="${i}"]`);
         const row={date,title:ti?.value||f.name,language:li?.value||'',category:ci?.value||'',parsha:pi?.value||'',year:yi?.value||'',tags:gi?.value||'',pdf_url:`r2://${k}`,r2_keys:[k],newTags:[],newCategories:[]};
         setProg(key,82+Math.round((i/files.length)*10),'Saving to database...');
-        const pdfFiles=(window._pendingFiles||[]).map(f=>({name:f.name,data:f.data,mimeType:f.mimeType}));
-        window._pendingFiles=[];
-        row._files=pdfFiles;
         const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'pdf',...row})});
-        const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Failed');
+        const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
       }
     }
 
@@ -1151,6 +1293,462 @@ document.addEventListener('DOMContentLoaded',()=>{
   initZone('video',  'video/*',              false,false, false);
   initZone('pdfs',   '.pdf,application/pdf', true, false, false);
 });
+// ══════════════════════════════════════════════════════════════════
+// FORM BUILDER
+// ══════════════════════════════════════════════════════════════════
+
+const FIELD_TYPES = [
+  { type:'text',       label:'Short Text',    icon:'Aa' },
+  { type:'textarea',   label:'Long Text',     icon:'¶'  },
+  { type:'email',      label:'Email',         icon:'@'  },
+  { type:'phone',      label:'Phone',         icon:'☎'  },
+  { type:'number',     label:'Number',        icon:'#'  },
+  { type:'date',       label:'Date',          icon:'📅' },
+  { type:'dropdown',   label:'Dropdown',      icon:'▾'  },
+  { type:'radio',      label:'Radio',         icon:'◉'  },
+  { type:'checkboxes', label:'Checkboxes',    icon:'☑'  },
+  { type:'rating',     label:'Rating Stars',  icon:'★'  },
+  { type:'file',       label:'File Upload',   icon:'📎' },
+  { type:'signature',  label:'Signature',     icon:'✍'  },
+  { type:'header',     label:'Section Header',icon:'H'  },
+  { type:'divider',    label:'Divider',       icon:'—'  },
+  { type:'page_break', label:'Page Break',    icon:'⊟'  },
+];
+
+let currentFormId   = null;
+let currentFormSlug = '';
+let formFields      = [];  // [{id,type,label,placeholder,options,required,conditional,settings}]
+let formSettings    = {};
+let editingFieldIdx = null;
+let autoSaveTimer   = null;
+
+// ── FORMS LIST ────────────────────────────────────────────────────
+async function loadForms() {
+  const r = await fetch(`${API}/api/forms`, { headers: ah() });
+  const d = await r.json();
+  const tbody = document.getElementById('forms-body');
+  if (!d.forms?.length) { tbody.innerHTML = '<tr class="empty"><td colspan="5">No forms yet — click + New Form</td></tr>'; return; }
+  tbody.innerHTML = d.forms.map(f => {
+    const s = JSON.parse(f.settings||'{}');
+    const url = `${location.origin}/form/${f.slug}`;
+    return `<tr>
+      <td><strong>${esc(f.title)}</strong></td>
+      <td style="font-size:.72rem"><a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none">/form/${esc(f.slug)}</a></td>
+      <td style="color:var(--muted)">—</td>
+      <td style="font-size:.72rem;color:var(--muted)">${f.created_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openFormBuilder(${f.id})">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openFormResponses(${f.id},'${esc(f.title)}')">Responses</button>
+        <button class="btn btn-ghost btn-sm" onclick="openFormStats(${f.id},'${esc(f.title)}')">Stats</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFormConfirm(${f.id})">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function newForm() {
+  const title = prompt('Form title:');
+  if (!title) return;
+  const r = await fetch(`${API}/api/forms`, { method:'POST', headers:ah(), body:JSON.stringify({ title, settings:{} }) });
+  const d = await r.json();
+  if (d.error) { alert(d.error); return; }
+  currentFormId   = d.id;
+  currentFormSlug = d.slug;
+  formFields      = [];
+  formSettings    = { bgColor:'#7a4a1e', textColor:'#ffffff', accentColor:'#c8844a', btnTextColor:'#ffffff', font:'Heebo', direction:'ltr', submitLabel:'Submit', confirmMessage:'Thank you for your submission!' };
+  openFormBuilder(d.id);
+}
+
+async function openFormBuilder(formId) {
+  const r = await fetch(`${API}/api/forms/${formId}`, { headers:ah() });
+  const d = await r.json();
+  if (d.error) { alert(d.error); return; }
+  currentFormId   = formId;
+  currentFormSlug = d.form.slug;
+  formFields      = d.fields.map(f => ({ ...f, options: f.options ? JSON.parse(f.options) : [], conditional: f.conditional ? JSON.parse(f.conditional) : null, settings: f.settings ? JSON.parse(f.settings) : {} }));
+  formSettings    = JSON.parse(d.form.settings || '{}');
+
+  document.getElementById('fb-title').textContent = d.form.title;
+  document.getElementById('fb-url').textContent = `${location.origin}/form/${currentFormSlug}`;
+  document.getElementById('sb-formbuild').style.display = '';
+  document.getElementById('sb-formresp').style.display  = '';
+  document.getElementById('sb-formstats').style.display = '';
+  showTab('formbuild', document.getElementById('sb-formbuild'));
+  renderPalette();
+  renderCanvas();
+}
+
+async function deleteFormConfirm(formId) {
+  if (!confirm('Delete this form? All responses will be lost.')) return;
+  await fetch(`${API}/api/forms/${formId}`, { method:'DELETE', headers:ah() });
+  loadForms();
+}
+
+// ── PALETTE ───────────────────────────────────────────────────────
+function renderPalette() {
+  const el = document.getElementById('field-palette');
+  el.innerHTML = FIELD_TYPES.map(ft => `
+    <button onclick="addField('${ft.type}')" style="display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.78rem;border-radius:2px;cursor:pointer;text-align:left;transition:all .12s;width:100%" onmouseover="this.style.color='#fff';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='';this.style.borderColor=''">
+      <span style="width:18px;text-align:center;font-size:.82rem;flex-shrink:0">${ft.icon}</span>${ft.label}
+    </button>`).join('');
+}
+
+// ── CANVAS ────────────────────────────────────────────────────────
+function renderCanvas() {
+  const canvas = document.getElementById('fb-canvas');
+  const empty  = document.getElementById('fb-empty');
+  if (!formFields.length) { if(empty)empty.style.display=''; canvas.innerHTML = '<div id="fb-empty" style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Add fields from the left panel</div>'; return; }
+  if (empty) empty.style.display = 'none';
+  canvas.innerHTML = formFields.map((f,i) => `
+    <div class="fb-field" data-idx="${i}" style="display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:2px;margin-bottom:.4rem;cursor:grab" draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event)" ondrop="fbDrop(event,${i})">
+      <span style="color:var(--subtle);cursor:grab;flex-shrink:0">≡</span>
+      <span style="font-size:.72rem;color:var(--muted);flex-shrink:0;width:80px">${FIELD_TYPES.find(t=>t.type===f.type)?.label||f.type}</span>
+      <span style="flex:1;font-size:.85rem;font-weight:${f.type==='header'?'700':'400'}">${esc(f.label)||'<span style="color:var(--subtle)">Untitled</span>'}</span>
+      ${f.required ? '<span style="font-size:.65rem;background:rgba(255,107,107,.15);color:#ff6b6b;padding:.1rem .4rem;border-radius:99px">Required</span>' : ''}
+      <button onclick="editField(${i})" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.7rem;padding:.2rem .5rem;border-radius:2px;cursor:pointer">Edit</button>
+      <button onclick="removeField(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:.1rem">✕</button>
+    </div>`).join('');
+}
+
+let fbDragIdx = null;
+function fbDragStart(e, idx) { fbDragIdx=idx; e.dataTransfer.effectAllowed='move'; }
+function fbDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function fbDrop(e, idx) {
+  e.preventDefault();
+  if (fbDragIdx===null||fbDragIdx===idx) return;
+  const moved = formFields.splice(fbDragIdx,1)[0];
+  formFields.splice(idx,0,moved);
+  fbDragIdx=null;
+  renderCanvas();
+}
+
+function addField(type) {
+  const defaults = { type, label: FIELD_TYPES.find(t=>t.type===type)?.label || type, placeholder:'', options: ['dropdown','radio','checkboxes'].includes(type)?['Option 1','Option 2']:[], required:false, conditional:null, settings:{} };
+  formFields.push(defaults);
+  renderCanvas();
+}
+
+function removeField(idx) {
+  formFields.splice(idx,1);
+  renderCanvas();
+}
+
+// ── FIELD SETTINGS ────────────────────────────────────────────────
+function editField(idx) {
+  editingFieldIdx = idx;
+  const f = formFields[idx];
+  document.getElementById('fld-modal-title').textContent = `Edit: ${FIELD_TYPES.find(t=>t.type===f.type)?.label||f.type}`;
+  const hasOptions = ['dropdown','radio','checkboxes'].includes(f.type);
+  const hasCond    = formFields.some((ff,i) => i!==idx && ['dropdown','radio','checkboxes'].includes(ff.type));
+  const condFields = formFields.filter((ff,i) => i!==idx && ['dropdown','radio','checkboxes'].includes(ff.type));
+
+  let html = '';
+  if (f.type !== 'header' && f.type !== 'divider' && f.type !== 'page_break') {
+    html += `<div class="field"><label>Label</label><input type="text" id="fld-label" value="${esc(f.label)}"></div>`;
+    if (f.type !== 'rating' && f.type !== 'signature' && f.type !== 'file') {
+      html += `<div class="field"><label>Placeholder</label><input type="text" id="fld-ph" value="${esc(f.placeholder||'')}"></div>`;
+    }
+    html += `<div class="field"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer"><input type="checkbox" id="fld-req" ${f.required?'checked':''} style="width:16px;height:16px;accent-color:var(--accent)"> Required</label></div>`;
+  } else {
+    html += `<div class="field"><label>Label / Text</label><input type="text" id="fld-label" value="${esc(f.label)}"></div>`;
+  }
+
+  if (hasOptions) {
+    const opts = Array.isArray(f.options) ? f.options : [];
+    html += `<div class="field"><label>Options (one per line)</label><textarea id="fld-opts" rows="6" style="direction:ltr">${esc(opts.join('\n'))}</textarea></div>`;
+  }
+
+  if (f.type === 'file') {
+    html += `<div class="field"><label>Allowed File Types</label><input type="text" id="fld-filetypes" value="${esc(f.settings?.allowedTypes||'')}" placeholder="e.g. image/*,.pdf (leave blank for all)"></div>`;
+    html += `<div class="field"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer"><input type="checkbox" id="fld-multifile" ${f.settings?.multiFile?'checked':''} style="width:16px;height:16px;accent-color:var(--accent)"> Allow multiple files</label></div>`;
+  }
+
+  if (hasCond) {
+    html += `<div class="field"><label>Show only if...</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+      <select id="fld-cond-field"><option value="">— No condition —</option>${condFields.map(ff=>`<option value="${ff.id||ff._tempId}" ${f.conditional?.fieldId===(ff.id||ff._tempId)?'selected':''}>${esc(ff.label)}</option>`).join('')}</select>
+      <input type="text" id="fld-cond-val" value="${esc(f.conditional?.value||'')}" placeholder="equals value...">
+    </div></div>`;
+  }
+
+  document.getElementById('fld-modal-body').innerHTML = html;
+  openM('modal-fieldsettings');
+}
+
+function saveFieldSettings() {
+  const f    = formFields[editingFieldIdx];
+  const lbl  = document.getElementById('fld-label');
+  const ph   = document.getElementById('fld-ph');
+  const req  = document.getElementById('fld-req');
+  const opts = document.getElementById('fld-opts');
+  const cf   = document.getElementById('fld-cond-field');
+  const cv   = document.getElementById('fld-cond-val');
+
+  if (lbl) f.label       = lbl.value;
+  if (ph)  f.placeholder = ph.value;
+  if (req) f.required    = req.checked;
+  if (opts) f.options    = opts.value.split('\n').map(s=>s.trim()).filter(Boolean);
+
+  const ft = document.getElementById('fld-filetypes');
+  const fm = document.getElementById('fld-multifile');
+  if (ft||fm) { f.settings = f.settings||{}; if(ft)f.settings.allowedTypes=ft.value; if(fm)f.settings.multiFile=fm.checked; }
+
+  if (cf && cv) {
+    const fid = cf.value;
+    const val = cv.value.trim();
+    f.conditional = fid && val ? { fieldId: fid, value: val } : null;
+  }
+
+  renderCanvas();
+  closeM('modal-fieldsettings');
+}
+
+// ── FORM SETTINGS ─────────────────────────────────────────────────
+function showFormSettings() {
+  const s = formSettings;
+  const setVal = (id, val) => { const el=document.getElementById(id); if(el&&val!==undefined)el.value=val; };
+  setVal('fs-title',        document.getElementById('fb-title').textContent);
+  setVal('fs-slug',         currentFormSlug);
+  setVal('fs-desc',         s.description||'');
+  setVal('fs-confirm',      s.confirmMessage||'Thank you for your submission!');
+  setVal('fs-submit-label', s.submitLabel||'Submit');
+  setVal('fs-bg',           s.bgColor||'#7a4a1e');
+  setVal('fs-text',         s.textColor||'#ffffff');
+  setVal('fs-accent',       s.accentColor||'#c8844a');
+  setVal('fs-btntext',      s.btnTextColor||'#ffffff');
+  setVal('fs-font',         s.font||'Heebo');
+  setVal('fs-dir',          s.direction||'ltr');
+  setVal('fs-logo',         s.logoImage||'');
+  setVal('fs-banner',       s.bannerImage||'');
+  setVal('fs-access',       s.accessType||'public');
+  setVal('fs-password',     s.password||'');
+  setVal('fs-captcha',      s.captcha||'');
+  setVal('fs-open',         s.openAt||'');
+  setVal('fs-close',        s.closeAt||'');
+  setVal('fs-maxresp',      s.maxResponses||'');
+  setVal('fs-closed-msg',   s.closedMessage||'');
+  setVal('fs-notopen-msg',  s.notOpenMessage||'');
+  setVal('fs-notify-email', s.notifyEmail||'');
+  setVal('fs-notify-type',  s.notifyType||'');
+  setVal('fs-confirm-email',s.confirmEmail||'');
+  setVal('fs-confirm-subj', s.confirmSubject||'');
+  setVal('fs-confirm-body', s.confirmBody||'');
+  openM('modal-formsettings');
+}
+
+function fsTab(name, btn) {
+  ['general','style','access','schedule','notify'].forEach(t => {
+    const el=document.getElementById(`fst-${t}`); if(el)el.style.display=t===name?'':'none';
+  });
+  document.querySelectorAll('#modal-formsettings .f-pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function saveFormSettings() {
+  const g = id => document.getElementById(id)?.value || '';
+  formSettings = {
+    ...formSettings,
+    description:    g('fs-desc'),
+    confirmMessage: g('fs-confirm'),
+    submitLabel:    g('fs-submit-label'),
+    bgColor:        g('fs-bg'),
+    textColor:      g('fs-text'),
+    accentColor:    g('fs-accent'),
+    btnTextColor:   g('fs-btntext'),
+    font:           g('fs-font'),
+    direction:      g('fs-dir'),
+    logoImage:      g('fs-logo'),
+    bannerImage:    g('fs-banner'),
+    accessType:     g('fs-access'),
+    password:       g('fs-password'),
+    captcha:        g('fs-captcha'),
+    openAt:         g('fs-open'),
+    closeAt:        g('fs-close'),
+    maxResponses:   g('fs-maxresp') ? +g('fs-maxresp') : null,
+    closedMessage:  g('fs-closed-msg'),
+    notOpenMessage: g('fs-notopen-msg'),
+    notifyEmail:    g('fs-notify-email'),
+    notifyType:     g('fs-notify-type'),
+    confirmEmail:   g('fs-confirm-email'),
+    confirmSubject: g('fs-confirm-subj'),
+    confirmBody:    g('fs-confirm-body'),
+  };
+  const newTitle = g('fs-title');
+  const newSlug  = g('fs-slug');
+  if (newTitle) document.getElementById('fb-title').textContent = newTitle;
+  if (newSlug)  { currentFormSlug = newSlug; document.getElementById('fb-url').textContent = `${location.origin}/form/${newSlug}`; }
+  closeM('modal-formsettings');
+  saveForm(true);
+}
+
+async function saveForm(settingsOnly=false) {
+  if (!currentFormId) return;
+  const title = document.getElementById('fb-title').textContent;
+
+  // Save form metadata + settings
+  await fetch(`${API}/api/forms/${currentFormId}`, {
+    method: 'PUT', headers: ah(),
+    body: JSON.stringify({ title, slug: currentFormSlug, description: formSettings.description||'', settings: formSettings }),
+  });
+
+  if (!settingsOnly) {
+    // Save fields — assign temp IDs to new fields
+    const fieldsToSave = formFields.map((f,i) => ({
+      ...f,
+      options: Array.isArray(f.options) ? f.options : [],
+    }));
+    await fetch(`${API}/api/forms/${currentFormId}/fields`, {
+      method: 'PUT', headers: ah(), body: JSON.stringify({ fields: fieldsToSave }),
+    });
+    // Reload to get real DB IDs
+    const r = await fetch(`${API}/api/forms/${currentFormId}`, { headers: ah() });
+    const d = await r.json();
+    formFields = d.fields.map(f => ({ ...f, options: f.options?JSON.parse(f.options):[], conditional: f.conditional?JSON.parse(f.conditional):null, settings: f.settings?JSON.parse(f.settings):{} }));
+    renderCanvas();
+  }
+
+  // Flash save indicator
+  const btn = document.querySelector('#tab-formbuild .btn-primary');
+  if (btn) { const orig=btn.textContent; btn.textContent='✓ Saved'; setTimeout(()=>btn.textContent=orig,1500); }
+}
+
+function previewForm() {
+  window.open(`/form/${currentFormSlug}`, '_blank');
+}
+
+// ── RESPONSES ─────────────────────────────────────────────────────
+let currentRespFormId = null;
+let currentRespFields = [];
+let currentRespData   = [];
+
+async function openFormResponses(formId, title) {
+  currentRespFormId = formId;
+  document.getElementById('resp-title').textContent = `Responses — ${title}`;
+  showTab('formresp', document.getElementById('sb-formresp'));
+  document.getElementById('sb-formresp').style.display = '';
+  loadResponses();
+  // Auto-refresh every 30s
+  if (window._respTimer) clearInterval(window._respTimer);
+  window._respTimer = setInterval(loadResponses, 30000);
+}
+
+async function loadResponses() {
+  const r = await fetch(`${API}/api/forms/${currentRespFormId}/responses`, { headers: ah() });
+  const d = await r.json();
+  currentRespFields = d.fields || [];
+  currentRespData   = d.responses || [];
+
+  document.getElementById('resp-count').textContent = `${currentRespData.length} response${currentRespData.length!==1?'s':''}`;
+
+  const contentFields = currentRespFields.filter(f => !['header','divider','page_break'].includes(f.type));
+
+  // Build table header
+  document.getElementById('resp-thead').innerHTML = `<tr><th>#</th><th>Submitted</th>${contentFields.map(f=>`<th>${esc(f.label)}</th>`).join('')}<th>Actions</th></tr>`;
+
+  if (!currentRespData.length) { document.getElementById('resp-tbody').innerHTML = '<tr class="empty"><td colspan="10">No responses yet</td></tr>'; return; }
+
+  document.getElementById('resp-tbody').innerHTML = currentRespData.map((resp, i) => {
+    const meta = JSON.parse(resp.metadata || '{}');
+    const ansMap = {};
+    (resp.answers||[]).forEach(a => ansMap[a.field_id] = a.value);
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-size:.72rem;color:var(--muted);white-space:nowrap">${resp.submitted_at?.replace('T',' ').slice(0,16)||'—'}</td>
+      ${contentFields.map(f => {
+        const val = ansMap[f.id] || '';
+        // Check if it's an R2 file key
+        if (val.startsWith('forms/') || val.startsWith('r2://')) {
+          const keys = val.replace('r2://','').split(', ');
+          return `<td>${keys.map(k=>`<a href="https://pub.moisdes-media.r2.dev/${k}" target="_blank" style="color:var(--accent);font-size:.72rem">📎 View</a>`).join('<br>')}</td>`;
+        }
+        if (val.startsWith('data:image')) return `<td><img src="${val}" style="max-height:40px;border-radius:2px"></td>`;
+        return `<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem" title="${esc(val)}">${esc(val)}</td>`;
+      }).join('')}
+      <td><button class="btn btn-danger btn-sm" onclick="deleteResp(${resp.id})">Delete</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteResp(id) {
+  if (!confirm('Delete this response?')) return;
+  await fetch(`${API}/api/form-responses/${id}`, { method:'DELETE', headers:ah() });
+  loadResponses();
+}
+
+async function exportExcel() {
+  if (!currentRespData.length) { alert('No responses to export'); return; }
+  const contentFields = currentRespFields.filter(f => !['header','divider','page_break'].includes(f.type));
+  const rows = [];
+  // Header row
+  rows.push(['#', 'Submitted At', 'IP', 'Country', ...contentFields.map(f=>f.label)]);
+  // Data rows
+  currentRespData.forEach((resp, i) => {
+    const meta   = JSON.parse(resp.metadata||'{}');
+    const ansMap = {};
+    (resp.answers||[]).forEach(a => ansMap[a.field_id] = a.value);
+    rows.push([i+1, resp.submitted_at, meta.ip||'', meta.country||'', ...contentFields.map(f=>ansMap[f.id]||'')]);
+  });
+  // Build CSV (fallback if SheetJS unavailable)
+  const csv = rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `responses-${currentRespFormId}-${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────
+async function openFormStats(formId, title) {
+  currentRespFormId = formId;
+  document.getElementById('stats-title').textContent = `Stats — ${title}`;
+  showTab('formstats', document.getElementById('sb-formstats'));
+  document.getElementById('sb-formstats').style.display = '';
+  const r = await fetch(`${API}/api/forms/${formId}/stats`, { headers:ah() });
+  const d = await r.json();
+  if (d.error) { document.getElementById('stats-content').textContent = d.error; return; }
+
+  let html = `<div class="stats" style="margin-bottom:1.5rem">
+    <div class="stat"><div class="stat-n">${d.total}</div><div class="stat-l">Total Responses</div></div>
+  </div>`;
+
+  // Response over time
+  if (d.byDay?.length) {
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:1.25rem;margin-bottom:1.25rem">
+      <div style="font-size:.78rem;font-weight:700;margin-bottom:1rem;color:var(--muted)">RESPONSES OVER TIME</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px">`;
+    const max = Math.max(...d.byDay.map(x=>x.n));
+    d.byDay.forEach(day => {
+      const h = max ? Math.round((day.n/max)*80) : 0;
+      html += `<div title="${day.day}: ${day.n}" style="flex:1;min-width:4px;height:${h}px;background:var(--accent);border-radius:1px;opacity:.8"></div>`;
+    });
+    html += `</div><div style="font-size:.65rem;color:var(--subtle);margin-top:.3rem">${d.byDay[0]?.day||''} — ${d.byDay[d.byDay.length-1]?.day||''}</div></div>`;
+  }
+
+  // Per-field stats
+  const choiceFields = d.fields?.filter(f => ['dropdown','radio','checkboxes'].includes(f.type)) || [];
+  choiceFields.forEach(field => {
+    const stats = d.fieldStats?.[field.id] || [];
+    if (!stats.length) return;
+    const total = stats.reduce((sum,s)=>sum+s.n, 0);
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:1.25rem;margin-bottom:1rem">
+      <div style="font-size:.78rem;font-weight:700;margin-bottom:1rem;color:var(--muted)">${esc(field.label).toUpperCase()}</div>`;
+    stats.forEach(s => {
+      const pct = total ? Math.round(s.n/total*100) : 0;
+      html += `<div style="margin-bottom:.5rem">
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.25rem"><span>${esc(s.value)}</span><span style="color:var(--muted)">${s.n} (${pct}%)</span></div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px"><div style="width:${pct}%;height:100%;background:var(--accent);border-radius:99px"></div></div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  document.getElementById('stats-content').innerHTML = html;
+}
+
+// Init forms tab
+document.addEventListener('DOMContentLoaded', () => {
+  // Forms tab loads on click via showTab
+});
+
 </script>
 </body>
 </html>
