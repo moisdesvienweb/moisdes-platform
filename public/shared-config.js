@@ -26,7 +26,7 @@ window.MOISDES.CFG = {
 
   // ── Netlify function base URL ──────────────────────────────────
   // Leave as-is — works on any Netlify deployment
-  submitBase: '/.netlify/functions',
+  submitBase: '', // Not used - all calls go directly to Worker
 
   // ── Google Drive parent folder IDs ────────────────────────────
   // Create a subfolder for each content type, share each with

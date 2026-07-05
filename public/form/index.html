@@ -376,13 +376,13 @@ async function doSubmit() {
       if (!files.length) continue;
       const r2Keys = [];
       for (const file of files) {
-        const signRes = await fetch('/.netlify/functions/r2sign', {
+        const signRes = await fetch(`${API}/api/upload/r2-sign`, {
           method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ key: `forms/${formData.id}/${Date.now()}-${file.name}`, mimeType: file.type }),
         });
         const signData = await signRes.json();
         if (signData.error) throw new Error('File upload failed: ' + signData.error);
-        const upRes = await fetch(signData.url, { method:'PUT', headers:{'Content-Type':file.type||'application/octet-stream'}, body: file });
+        const upRes = await fetch(signData.url, { method:'POST', headers:{'Content-Type':file.type||'application/octet-stream'}, body: file });
         if (!upRes.ok) throw new Error('File upload failed');
         r2Keys.push(signData.key);
       }

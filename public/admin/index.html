@@ -977,7 +977,7 @@ function setSt(key,type,msg) {
 // Upload file directly to R2 via presigned URL (no size limit, no CORS issues)
 async function r2Put(key, blob, mime, onProg) {
   // Step 1: get presigned URL from Netlify function (tiny request)
-  const signRes = await fetch('/.netlify/functions/r2sign', {
+  const signRes = await fetch(`${API}/api/upload/r2-sign`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key, mimeType: mime }),
@@ -988,8 +988,9 @@ async function r2Put(key, blob, mime, onProg) {
   // Step 2: upload directly to R2 with XHR for progress
   return new Promise((res, rej) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('PUT', signData.url);
+    xhr.open('POST', signData.url);
     xhr.setRequestHeader('Content-Type', mime || 'application/octet-stream');
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.upload.onprogress = e => { if (e.lengthComputable && onProg) onProg(e.loaded / e.total); };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) res(key);
@@ -1029,7 +1030,7 @@ async function doUpload(key) {
       setProg(key,80,'Saving...');
       payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
       payload.r2_keys = r2Keys;
-      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'blog',...payload})});
+      const r=await fetch(`${API}/api/upload/post`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='posters'){
@@ -1046,7 +1047,7 @@ async function doUpload(key) {
       setProg(key,80,'Saving...');
       payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
       payload.r2_keys = r2Keys;
-      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'poster',...payload})});
+      const r=await fetch(`${API}/api/upload/poster`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='events'){
@@ -1062,7 +1063,7 @@ async function doUpload(key) {
       setProg(key,80,'Saving...');
       payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
       payload.r2_keys = r2Keys;
-      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'event',...payload})});
+      const r=await fetch(`${API}/api/upload/event`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='video'){
@@ -1078,7 +1079,7 @@ async function doUpload(key) {
       payload={date,title,location:document.getElementById('video-loc').value,category:getTW('video-cat'),description:document.getElementById('video-desc').value,tags:getTW('video-tags'),video_url,newTags:getNewTW('video-tags'),newCategories:getNewTW('video-cat')};
       setProg(key,80,'Saving...');
       payload.r2_keys = r2Keys;
-      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'video',...payload})});
+      const r=await fetch(`${API}/api/upload/video`,{method:'POST',headers:ah(),body:JSON.stringify(payload)});
       const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
     }
     else if(key==='pdfs'){
@@ -1095,7 +1096,7 @@ async function doUpload(key) {
         const gi=document.querySelector(`.pm-tags[data-i="${i}"]`);
         const row={date,title:ti?.value||f.name,language:li?.value||'',category:ci?.value||'',parsha:pi?.value||'',year:yi?.value||'',tags:gi?.value||'',pdf_url:`r2://${k}`,r2_keys:[k],newTags:[],newCategories:[]};
         setProg(key,82+Math.round((i/files.length)*10),'Saving to database...');
-        const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'pdf',...row})});
+        const r=await fetch(`${API}/api/upload/pdf`,{method:'POST',headers:ah(),body:JSON.stringify(row)});
         const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
       }
     }
