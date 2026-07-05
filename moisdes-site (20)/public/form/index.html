@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" id="form-html">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form</title>
+  <link rel="icon" href="/logo.avif" type="image/avif">
+  <link id="gfont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--ff,'Heebo',sans-serif);background:var(--bg,#7a4a1e);color:var(--text,#fff);min-height:100vh;padding:2rem 1rem;direction:var(--dir,ltr)}
+    .wrap{max-width:680px;margin:0 auto}
+    .form-card{background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:6px;overflow:hidden}
+    .form-header{padding:2rem 2rem 1.5rem}
+    .form-logo{margin-bottom:1rem}
+    .form-logo img{max-height:64px;max-width:200px;object-fit:contain}
+    .form-banner img{width:100%;max-height:200px;object-fit:cover;display:block;margin-bottom:0}
+    h1.form-title{font-size:1.4rem;font-weight:900;margin-bottom:.5rem}
+    .form-desc{font-size:.88rem;color:rgba(255,255,255,.65);line-height:1.6}
+    .form-body{padding:1.5rem 2rem 2rem}
+    .field-wrap{margin-bottom:1.4rem}
+    .field-label{display:block;font-size:.78rem;font-weight:700;margin-bottom:.4rem;color:rgba(255,255,255,.8)}
+    .field-req{color:#ff6b6b;margin-right:.2rem}
+    .field-input,.field-select,.field-textarea{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);color:var(--text,#fff);font-family:inherit;font-size:.9rem;padding:.6rem .85rem;border-radius:3px;outline:none;transition:border .15s;direction:inherit}
+    .field-input:focus,.field-select:focus,.field-textarea:focus{border-color:rgba(255,255,255,.5)}
+    .field-input::placeholder,.field-textarea::placeholder{color:rgba(255,255,255,.3)}
+    .field-select option{background:#1a0e05;color:#fff}
+    .field-textarea{resize:vertical;min-height:100px}
+    .field-section-header{font-size:1rem;font-weight:700;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:.25rem}
+    .field-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:.5rem 0}
+    .checkbox-group,.radio-group{display:flex;flex-direction:column;gap:.5rem}
+    .check-item,.radio-item{display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.88rem}
+    .check-item input,.radio-item input{width:16px;height:16px;accent-color:var(--accent,#c8844a);cursor:pointer;flex-shrink:0}
+    .rating-group{display:flex;gap:.5rem}
+    .rating-star{font-size:1.6rem;cursor:pointer;color:rgba(255,255,255,.25);transition:color .12s;line-height:1}
+    .rating-star.on,.rating-star:hover{color:#f59e0b}
+    .file-zone{border:1px dashed rgba(255,255,255,.25);border-radius:3px;padding:1.5rem;text-align:center;cursor:pointer;transition:border .15s;background:rgba(255,255,255,.03)}
+    .file-zone:hover{border-color:rgba(255,255,255,.5)}
+    .file-zone-text{font-size:.82rem;color:rgba(255,255,255,.5);margin-top:.3rem}
+    .file-list{margin-top:.6rem;display:flex;flex-direction:column;gap:.3rem}
+    .file-item{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:rgba(255,255,255,.6);background:rgba(255,255,255,.05);padding:.35rem .6rem;border-radius:2px}
+    .file-item-rm{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:.85rem;margin-right:auto}
+    .sig-canvas{width:100%;height:140px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:3px;cursor:crosshair;display:block}
+    .sig-clear{background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);font-family:inherit;font-size:.72rem;padding:.25rem .6rem;border-radius:2px;cursor:pointer;margin-top:.3rem}
+    .sig-clear:hover{color:#fff}
+    .submit-btn{width:100%;padding:.8rem;font-family:inherit;font-size:.95rem;font-weight:700;border:none;border-radius:3px;cursor:pointer;transition:all .15s;margin-top:.5rem;background:var(--btn-bg,#c8844a);color:var(--btn-text,#fff)}
+    .submit-btn:hover:not(:disabled){filter:brightness(1.1)}
+    .submit-btn:disabled{opacity:.5;cursor:not-allowed}
+    .form-err{color:#ff6b6b;font-size:.8rem;margin-top:.5rem;padding:.5rem .8rem;background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.2);border-radius:2px;display:none}
+    .form-err.on{display:block}
+    .form-confirm{text-align:center;padding:3rem 2rem}
+    .form-confirm-icon{font-size:2.5rem;margin-bottom:1rem}
+    .form-confirm-msg{font-size:1rem;color:rgba(255,255,255,.8);line-height:1.6}
+    .form-closed{text-align:center;padding:3rem 2rem;color:rgba(255,255,255,.6)}
+    .pw-wrap{max-width:320px;margin:2rem auto;text-align:center}
+    .pw-wrap input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);color:#fff;font-family:inherit;font-size:.9rem;padding:.6rem .85rem;border-radius:3px;outline:none;margin-bottom:.75rem;direction:ltr}
+    .pw-wrap input:focus{border-color:rgba(255,255,255,.5)}
+    .prog-wrap{background:rgba(255,255,255,.08);border-radius:99px;height:4px;margin-bottom:1.5rem;overflow:hidden}
+    .prog-bar{height:100%;background:var(--accent,#c8844a);border-radius:99px;transition:width .3s}
+    @media(max-width:500px){.form-body,.form-header{padding:1.25rem}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="form-card" id="form-card">
+    <div id="form-root"><div style="text-align:center;padding:3rem;color:rgba(255,255,255,.5)">Loading...</div></div>
+  </div>
+</div>
+<script>
+const API  = 'https://moisdes-worker.moisdesvienweb.workers.dev';
+const slug = location.pathname.split('/').filter(Boolean).pop() || '';
+
+let formData = null;
+let fieldData = [];
+let answers  = {};
+let fileUploads = {}; // fieldId → [File]
+let sigData  = {}; // fieldId → base64
+let pwEntered = '';
+let submitted = false;
+
+async function init() {
+  if (!slug || slug === 'form') {
+    document.getElementById('form-root').innerHTML = '<div class="form-closed"><div style="font-size:2rem;margin-bottom:1rem">🔗</div><div>No form specified.</div></div>';
+    return;
+  }
+  try {
+    const res  = await fetch(`${API}/api/forms/${slug}/public`);
+    const data = await res.json();
+    if (!res.ok) {
+      document.getElementById('form-root').innerHTML = `<div class="form-closed"><div style="font-size:2rem;margin-bottom:1rem">🔒</div><div>${data.closedMessage || data.error || 'This form is unavailable.'}</div></div>`;
+      return;
+    }
+    formData  = data.form;
+    fieldData = data.fields;
+    const s   = JSON.parse(formData.settings || '{}');
+    applyStyles(s);
+    if (s.passwordProtected && s.accessType === 'password') { renderPasswordGate(s); return; }
+    render();
+  } catch(e) {
+    document.getElementById('form-root').innerHTML = '<div class="form-closed">Failed to load form.</div>';
+  }
+}
+
+function applyStyles(s) {
+  const root = document.documentElement;
+  if (s.bgColor)   document.body.style.background = s.bgColor;
+  if (s.bgImage)   document.body.style.backgroundImage = `url(${s.bgImage})`;
+  if (s.textColor) document.body.style.color = s.textColor;
+  if (s.accentColor) { root.style.setProperty('--accent', s.accentColor); root.style.setProperty('--btn-bg', s.accentColor); }
+  if (s.btnTextColor) root.style.setProperty('--btn-text', s.btnTextColor);
+  if (s.font) {
+    const link = document.getElementById('gfont');
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(s.font)}:wght@300;400;700;900&display=swap`;
+    document.body.style.fontFamily = `'${s.font}', sans-serif`;
+  }
+  if (s.direction) document.body.style.direction = s.direction;
+  document.title = formData.title + ' — מאישדעס';
+}
+
+function renderPasswordGate(s) {
+  document.getElementById('form-root').innerHTML = `
+    <div class="form-header">
+      <h1 class="form-title">${esc(formData.title)}</h1>
+    </div>
+    <div class="form-body">
+      <div class="pw-wrap">
+        <div style="font-size:1.5rem;margin-bottom:1rem">🔒</div>
+        <div style="font-size:.88rem;color:rgba(255,255,255,.6);margin-bottom:1rem">This form is password protected.</div>
+        <input type="password" id="pw-input" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()">
+        <button class="submit-btn" onclick="checkPw()">Continue</button>
+        <div class="form-err" id="pw-err">Incorrect password.</div>
+      </div>
+    </div>`;
+}
+
+function checkPw() {
+  const s = JSON.parse(formData.settings||'{}');
+  const v = document.getElementById('pw-input').value;
+  if (v === s.password) { pwEntered = v; render(); }
+  else { const e=document.getElementById('pw-err'); e.classList.add('on'); }
+}
+
+function render() {
+  const s = JSON.parse(formData.settings || '{}');
+  const sections = splitSections(fieldData);
+  let html = '';
+
+  if (s.bannerImage) html += `<div class="form-banner"><img src="${esc(s.bannerImage)}"></div>`;
+  html += '<div class="form-header">';
+  if (s.logoImage) html += `<div class="form-logo"><img src="${esc(s.logoImage)}"></div>`;
+  html += `<h1 class="form-title">${esc(formData.title)}</h1>`;
+  if (formData.description) html += `<div class="form-desc">${esc(formData.description)}</div>`;
+  html += '</div>';
+
+  html += '<div class="form-body">';
+  if (sections.length > 1) html += `<div class="prog-wrap"><div class="prog-bar" id="prog-bar" style="width:${Math.round(100/sections.length)}%"></div></div>`;
+  html += `<div id="sections-wrap">${renderSection(sections[0], 0)}</div>`;
+  html += `<div class="form-err" id="form-err"></div>`;
+  html += `<div style="display:flex;gap:.5rem;margin-top:1rem">`;
+  if (sections.length > 1) html += `<button class="submit-btn" id="prev-btn" onclick="prevSection()" style="display:none;flex:0 0 auto;width:auto;padding:.8rem 1.5rem;background:rgba(255,255,255,.1)">← Back</button>`;
+  html += `<button class="submit-btn" id="main-btn" onclick="nextOrSubmit()">${sections.length > 1 ? 'Next →' : (s.submitLabel || 'Submit')}</button>`;
+  html += '</div></div>';
+
+  document.getElementById('form-root').innerHTML = html;
+  window._sections     = sections;
+  window._curSection   = 0;
+  window._submitLabel  = s.submitLabel || 'Submit';
+  bindFieldEvents();
+}
+
+function splitSections(fields) {
+  const sections = [[]];
+  for (const f of fields) {
+    if (f.type === 'page_break') sections.push([]);
+    else sections[sections.length-1].push(f);
+  }
+  return sections.filter(s => s.length > 0);
+}
+
+function renderSection(fields, idx) {
+  return fields.map(f => renderField(f)).join('');
+}
+
+function renderField(f) {
+  const s = JSON.parse(f.settings || '{}');
+  const req = f.required ? `<span class="field-req">*</span>` : '';
+
+  if (f.type === 'header')    return `<div class="field-wrap"><div class="field-section-header">${esc(f.label)}</div>${f.placeholder?`<div style="font-size:.82rem;color:rgba(255,255,255,.55);margin-top:.25rem">${esc(f.placeholder)}</div>`:''}</div>`;
+  if (f.type === 'divider')   return `<div class="field-wrap"><hr class="field-divider"></div>`;
+  if (f.type === 'text' || f.type === 'email' || f.type === 'phone' || f.type === 'number') {
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><input class="field-input" type="${f.type==='phone'?'tel':f.type}" id="fi-${f.id}" placeholder="${esc(f.placeholder||'')}" oninput="setAns(${f.id},this.value)"></div>`;
+  }
+  if (f.type === 'textarea')  return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><textarea class="field-textarea" id="fi-${f.id}" placeholder="${esc(f.placeholder||'')}" oninput="setAns(${f.id},this.value)"></textarea></div>`;
+  if (f.type === 'date')      return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><input class="field-input" type="date" id="fi-${f.id}" onchange="setAns(${f.id},this.value)" style="direction:ltr;text-align:left"></div>`;
+  if (f.type === 'dropdown') {
+    const opts = JSON.parse(f.options || '[]');
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><select class="field-select" id="fi-${f.id}" onchange="setAns(${f.id},this.value)"><option value="">— Select —</option>${opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select></div>`;
+  }
+  if (f.type === 'radio') {
+    const opts = JSON.parse(f.options || '[]');
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><div class="radio-group">${opts.map(o=>`<label class="radio-item"><input type="radio" name="r-${f.id}" value="${esc(o)}" onchange="setAns(${f.id},this.value)"><span>${esc(o)}</span></label>`).join('')}</div></div>`;
+  }
+  if (f.type === 'checkboxes') {
+    const opts = JSON.parse(f.options || '[]');
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><div class="checkbox-group">${opts.map(o=>`<label class="check-item"><input type="checkbox" value="${esc(o)}" onchange="toggleCheck(${f.id},this)"><span>${esc(o)}</span></label>`).join('')}</div></div>`;
+  }
+  if (f.type === 'rating') {
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><div class="rating-group" id="rg-${f.id}">${[1,2,3,4,5].map(i=>`<span class="rating-star" data-v="${i}" onclick="setRating(${f.id},${i})">★</span>`).join('')}</div></div>`;
+  }
+  if (f.type === 'file') {
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><div class="file-zone" onclick="pickFile(${f.id})"><div style="font-size:1.2rem">📎</div><div class="file-zone-text">Click to upload file</div></div><div class="file-list" id="fl-${f.id}"></div></div>`;
+  }
+  if (f.type === 'signature') {
+    return `<div class="field-wrap" id="fw-${f.id}"><label class="field-label">${req}${esc(f.label)}</label><canvas class="sig-canvas" id="sig-${f.id}" width="640" height="140"></canvas><button class="sig-clear" onclick="clearSig(${f.id})">Clear</button></div>`;
+  }
+  return '';
+}
+
+function bindFieldEvents() {
+  // Signature canvases
+  fieldData.forEach(f => {
+    if (f.type === 'signature') {
+      const canvas = document.getElementById(`sig-${f.id}`);
+      if (!canvas) return;
+      let drawing = false, lx=0, ly=0;
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      canvas.onmousedown = e => { drawing=true; [lx,ly]=getPos(canvas,e); };
+      canvas.onmousemove = e => { if(!drawing)return; const [x,y]=getPos(canvas,e); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(x,y); ctx.stroke(); [lx,ly]=[x,y]; };
+      canvas.onmouseup = canvas.onmouseleave = () => { if(drawing){drawing=false;setAns(f.id,canvas.toDataURL());} };
+      canvas.ontouchstart = e => { e.preventDefault(); drawing=true; [lx,ly]=getPos(canvas,e.touches[0]); };
+      canvas.ontouchmove  = e => { e.preventDefault(); if(!drawing)return; const [x,y]=getPos(canvas,e.touches[0]); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(x,y); ctx.stroke(); [lx,ly]=[x,y]; };
+      canvas.ontouchend   = () => { if(drawing){drawing=false;setAns(f.id,canvas.toDataURL());} };
+    }
+  });
+  applyConditionals();
+}
+
+function getPos(canvas, e) {
+  const r = canvas.getBoundingClientRect();
+  return [(e.clientX-r.left)*(canvas.width/r.width), (e.clientY-r.top)*(canvas.height/r.height)];
+}
+
+function setAns(id, val) { answers[id] = val; applyConditionals(); }
+function toggleCheck(id, cb) {
+  if (!answers[id]) answers[id] = [];
+  if (!Array.isArray(answers[id])) answers[id] = [answers[id]];
+  if (cb.checked) answers[id].push(cb.value);
+  else answers[id] = answers[id].filter(v=>v!==cb.value);
+  applyConditionals();
+}
+function setRating(id, v) {
+  answers[id] = v;
+  const grp = document.getElementById(`rg-${id}`);
+  if (!grp) return;
+  grp.querySelectorAll('.rating-star').forEach(s => s.classList.toggle('on', +s.dataset.v <= v));
+}
+function clearSig(id) {
+  const canvas = document.getElementById(`sig-${id}`);
+  if (!canvas) return;
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+  delete answers[id];
+}
+
+function applyConditionals() {
+  fieldData.forEach(f => {
+    if (!f.conditional) return;
+    try {
+      const cond = JSON.parse(f.conditional);
+      if (!cond.fieldId || !cond.value) return;
+      const val = answers[cond.fieldId];
+      const show = Array.isArray(val) ? val.includes(cond.value) : String(val||'') === String(cond.value);
+      const el = document.getElementById(`fw-${f.id}`);
+      if (el) el.style.display = show ? '' : 'none';
+    } catch(e) {}
+  });
+}
+
+function pickFile(fieldId) {
+  const f = fieldData.find(f=>f.id===fieldId);
+  const s = JSON.parse(f?.settings||'{}');
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.multiple = !!s.multiFile;
+  if (s.allowedTypes) inp.accept = s.allowedTypes;
+  inp.style.cssText = 'position:fixed;top:-9999px';
+  document.body.appendChild(inp);
+  inp.onchange = () => {
+    if (!fileUploads[fieldId]) fileUploads[fieldId] = [];
+    Array.from(inp.files).forEach(file => fileUploads[fieldId].push(file));
+    renderFileList(fieldId);
+    document.body.removeChild(inp);
+  };
+  inp.click();
+}
+
+function renderFileList(fieldId) {
+  const el = document.getElementById(`fl-${fieldId}`);
+  if (!el) return;
+  const files = fileUploads[fieldId] || [];
+  el.innerHTML = files.map((f,i) => `<div class="file-item"><span>${esc(f.name)}</span><button class="file-item-rm" onclick="removeFormFile(${fieldId},${i})">✕</button></div>`).join('');
+  answers[fieldId] = files.map(f=>f.name).join(', ');
+}
+
+function removeFormFile(fieldId, idx) {
+  fileUploads[fieldId].splice(idx, 1);
+  renderFileList(fieldId);
+}
+
+// ── MULTI-SECTION NAV ─────────────────────────────────────────────
+function nextOrSubmit() {
+  const sections = window._sections;
+  const cur      = window._curSection;
+  const errEl    = document.getElementById('form-err');
+  errEl.classList.remove('on');
+
+  // Validate current section
+  const fields = sections[cur];
+  for (const f of fields) {
+    if (f.required && f.type !== 'header' && f.type !== 'divider') {
+      const el = document.getElementById(`fw-${f.id}`);
+      if (el && el.style.display === 'none') continue;
+      const val = answers[f.id];
+      if (!val || (Array.isArray(val) && !val.length) || String(val).trim() === '') {
+        errEl.textContent = `"${f.label}" is required.`;
+        errEl.classList.add('on');
+        return;
+      }
+    }
+  }
+
+  if (cur < sections.length - 1) {
+    window._curSection++;
+    document.getElementById('sections-wrap').innerHTML = renderSection(sections[window._curSection], window._curSection);
+    bindFieldEvents();
+    // Update progress
+    const bar = document.getElementById('prog-bar');
+    if (bar) bar.style.width = Math.round((window._curSection+1)/sections.length*100)+'%';
+    // Show/hide prev
+    const prevBtn = document.getElementById('prev-btn');
+    if (prevBtn) prevBtn.style.display = '';
+    // Update main btn label
+    const mainBtn = document.getElementById('main-btn');
+    if (mainBtn) mainBtn.textContent = window._curSection === sections.length-1 ? window._submitLabel : 'Next →';
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    doSubmit();
+  }
+}
+
+function prevSection() {
+  if (window._curSection <= 0) return;
+  window._curSection--;
+  const sections = window._sections;
+  document.getElementById('sections-wrap').innerHTML = renderSection(sections[window._curSection], window._curSection);
+  bindFieldEvents();
+  const bar = document.getElementById('prog-bar');
+  if (bar) bar.style.width = Math.round((window._curSection+1)/sections.length*100)+'%';
+  if (window._curSection === 0) { const pb=document.getElementById('prev-btn'); if(pb)pb.style.display='none'; }
+  const mainBtn = document.getElementById('main-btn');
+  if (mainBtn) mainBtn.textContent = window._curSection === sections.length-1 ? window._submitLabel : 'Next →';
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────
+async function doSubmit() {
+  if (submitted) return;
+  const btn = document.getElementById('main-btn');
+  const err = document.getElementById('form-err');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  err.classList.remove('on');
+
+  try {
+    // Upload files to R2 if any
+    for (const [fieldId, files] of Object.entries(fileUploads)) {
+      if (!files.length) continue;
+      const r2Keys = [];
+      for (const file of files) {
+        const signRes = await fetch('/.netlify/functions/r2sign', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ key: `forms/${formData.id}/${Date.now()}-${file.name}`, mimeType: file.type }),
+        });
+        const signData = await signRes.json();
+        if (signData.error) throw new Error('File upload failed: ' + signData.error);
+        const upRes = await fetch(signData.url, { method:'PUT', headers:{'Content-Type':file.type||'application/octet-stream'}, body: file });
+        if (!upRes.ok) throw new Error('File upload failed');
+        r2Keys.push(signData.key);
+      }
+      answers[fieldId] = r2Keys.join(', ');
+    }
+
+    const res = await fetch(`${API}/api/forms/${slug}/submit`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ answers, _password: pwEntered }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Submission failed');
+
+    submitted = true;
+    document.getElementById('form-root').innerHTML = `
+      <div class="form-confirm">
+        <div class="form-confirm-icon">✅</div>
+        <div class="form-confirm-msg">${esc(data.confirmMessage || 'Thank you for your submission!')}</div>
+      </div>`;
+  } catch(e) {
+    err.textContent = '⚠ ' + e.message;
+    err.classList.add('on');
+    btn.disabled = false;
+    btn.textContent = window._submitLabel || 'Submit';
+  }
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/logo.avif" type="image/avif">
+  <title>Login — מאישדעס</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Heebo', sans-serif;
+      background: #7a4a1e;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .card {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+    .logo { text-align: center; margin-bottom: 2rem; }
+    .logo img { height: 64px; }
+    h1 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; color: rgba(255,255,255,0.8); }
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+    input {
+      width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18);
+      color: #fff; font-family: 'Heebo', sans-serif; font-size: 0.9rem;
+      padding: 0.65rem 0.85rem; outline: none; border-radius: 2px; direction: ltr;
+      transition: border 0.15s;
+    }
+    input:focus { border-color: rgba(255,255,255,0.45); }
+    input::placeholder { color: rgba(255,255,255,0.25); }
+    .btn {
+      width: 100%; padding: 0.8rem; margin-top: 0.5rem;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.35);
+      color: #fff; font-family: 'Heebo', sans-serif; font-size: 0.92rem; font-weight: 700;
+      border-radius: 2px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.6); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .err { color: #ff6b6b; font-size: 0.8rem; margin-top: 0.75rem; text-align: center; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><img src="/logo.avif" alt="מאישדעס"></div>
+    <h1>Sign In</h1>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn" id="login-btn">Sign In</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <script>
+    const API = 'https://moisdes-worker.moisdesvienweb.workers.dev';
+
+    async function login() {
+      const btn   = document.getElementById('login-btn');
+      const email = document.getElementById('email').value.trim();
+      const pass  = document.getElementById('password').value;
+      const err   = document.getElementById('err');
+
+      if (!email || !pass) { err.textContent = 'Please enter email and password'; return; }
+
+      btn.disabled = true;
+      err.textContent = '';
+
+      try {
+        const res  = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
+
+        // Store token and user info
+        localStorage.setItem('moisdes_token', data.token);
+        localStorage.setItem('moisdes_user',  JSON.stringify(data.user));
+        localStorage.setItem('moisdes_perms', JSON.stringify(data.permissions));
+
+        // Redirect to intended page or home
+        const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+        window.location.href = redirect;
+      } catch(e) {
+        err.textContent = e.message;
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('login-btn').addEventListener('click', login);
+    document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+    document.getElementById('email').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+    // If already logged in, redirect
+    if (localStorage.getItem('moisdes_token')) {
+      const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+      window.location.href = redirect;
+    }
+  </script>
+</body>
+</html>

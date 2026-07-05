@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — מאישדעס</title>
+  <link rel="icon" href="/logo.avif" type="image/avif">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#180e05;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+      --border:rgba(255,255,255,0.11);--border2:rgba(255,255,255,0.18);
+      --text:#fff;--muted:rgba(255,255,255,0.52);--subtle:rgba(255,255,255,0.28);
+      --accent:#c8844a;--accent2:rgba(200,132,74,0.15);
+      --error:#ff6b6b;--success:#4ade80;
+    }
+    body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:ltr}
+
+    /* ── HEADER ── */
+    .hdr{position:sticky;top:0;z-index:200;background:rgba(15,8,2,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
+    .hdr img{height:38px}
+    .hdr-right{display:flex;align-items:center;gap:.75rem;margin-left:auto}
+    .hdr-user{font-size:.78rem;color:var(--muted)}
+    .btn-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.75rem;padding:.28rem .7rem;border-radius:2px;cursor:pointer;transition:all .15s}
+    .btn-logout:hover{color:var(--text);border-color:var(--border2)}
+
+    /* ── LAYOUT ── */
+    .layout{display:flex;min-height:calc(100vh - 58px)}
+
+    /* ── SIDEBAR ── */
+    .sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);padding:.75rem 0;background:rgba(0,0,0,0.2)}
+    .sb-section{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--subtle);padding:.9rem 1.2rem .3rem}
+    .sb-link{display:flex;align-items:center;gap:.55rem;padding:.48rem 1.2rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:all .12s;border-left:2px solid transparent;user-select:none}
+    .sb-link:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+    .sb-link.on{color:var(--text);border-right-color:var(--accent);background:rgba(200,132,74,0.07);font-weight:700}
+    .sb-icon{font-size:.88rem;width:18px;text-align:center;flex-shrink:0}
+
+    /* ── MAIN ── */
+    .main{flex:1;padding:1.75rem 2rem;overflow-y:auto}
+    .tab{display:none}.tab.on{display:block}
+    .pg-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+    h2{font-size:1.1rem;font-weight:900}
+
+    /* ── STAT CARDS ── */
+    .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.85rem;margin-bottom:2rem}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1rem 1.1rem}
+    .stat-n{font-size:2rem;font-weight:900;color:var(--accent);line-height:1}
+    .stat-l{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+
+    /* ── TABLE ── */
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.81rem}
+    th{text-align:left;padding:.5rem .7rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+    td{padding:.58rem .7rem;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,0.02)}
+    .empty td{color:var(--muted);text-align:center;padding:2.5rem;font-size:.85rem}
+
+    /* ── BADGES ── */
+    .badge{display:inline-block;font-size:.61rem;font-weight:700;padding:.12rem .45rem;border-radius:99px;white-space:nowrap}
+    .badge-superadmin{background:rgba(200,132,74,.28);color:#e8a46a}
+    .badge-admin{background:rgba(200,132,74,.14);color:var(--accent)}
+    .badge-user{background:rgba(255,255,255,.08);color:var(--muted)}
+    .badge-on{background:rgba(74,222,128,.14);color:#4ade80}
+    .badge-off{background:rgba(255,107,107,.14);color:#ff6b6b}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:.3rem;padding:.38rem .8rem;border-radius:2px;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;border:1px solid;transition:all .15s;white-space:nowrap}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn-primary{background:var(--accent2);border-color:rgba(200,132,74,.4);color:var(--accent)}
+    .btn-primary:hover:not(:disabled){background:rgba(200,132,74,.26)}
+    .btn-success{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.28);color:#4ade80}
+    .btn-success:hover:not(:disabled){background:rgba(74,222,128,.2)}
+    .btn-danger{background:rgba(255,107,107,.09);border-color:rgba(255,107,107,.24);color:#ff6b6b}
+    .btn-danger:hover:not(:disabled){background:rgba(255,107,107,.18)}
+    .btn-ghost{background:transparent;border-color:var(--border);color:var(--muted)}
+    .btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--border2)}
+    .btn-sm{padding:.22rem .55rem;font-size:.69rem}
+    .btn+.btn{margin-right:.35rem}
+    .btn-full{width:100%;justify-content:center;padding:.75rem}
+
+    /* ── MODAL ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+    .modal-bg.on{display:flex}
+    .modal{background:#1e1206;border:1px solid var(--border);border-radius:3px;width:100%;max-width:520px;margin:auto}
+    .modal-hdr{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .modal-title{font-size:.95rem;font-weight:700}
+    .modal-x{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.2rem}
+    .modal-x:hover{color:var(--text)}
+    .modal-body{padding:1.2rem}
+    .modal-ftr{padding:.9rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-start;gap:.5rem}
+
+    /* ── FORM ── */
+    .field{margin-bottom:1rem}
+    .field label{display:block;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.32rem}
+    .field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.88rem;padding:.58rem .8rem;outline:none;border-radius:2px;transition:border .15s;direction:rtl}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(255,255,255,.4)}
+    .field input::placeholder,.field textarea::placeholder{color:var(--subtle)}
+    .field select option{background:#1e1206}
+    .field textarea{resize:vertical;min-height:80px}
+    .field input[type=date]{direction:ltr;text-align:right}
+    .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem}
+    .field-hint{font-size:.64rem;color:var(--subtle);margin-top:.28rem}
+
+    /* ── HEBREW DATE ── */
+    .heb-date-wrap{margin-bottom:.4rem}
+    .heb-selects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.4rem}
+    .heb-selects select{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.85rem;padding:.5rem .7rem;outline:none;border-radius:2px;direction:rtl;-webkit-appearance:none;appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:left .6rem center;padding-left:1.8rem}
+    .heb-selects select:focus{border-color:rgba(255,255,255,.4)}
+    .heb-selects select option{background:#1e1206}
+    .heb-date-manual{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.88rem;padding:.58rem .8rem;outline:none;border-radius:2px;direction:ltr;text-align:right}
+    .heb-date-manual:focus{border-color:rgba(255,255,255,.4)}
+    .heb-date-manual::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+    .date-note{font-size:.72rem;color:var(--muted);margin-top:.3rem;min-height:1.1em;direction:ltr;text-align:right}
+    .date-divider{text-align:center;font-size:.65rem;color:var(--subtle);margin:.35rem 0}
+
+    /* ── TAGS WIDGET ── */
+    .tags-box{border:1px solid var(--border);border-radius:2px;background:rgba(255,255,255,0.05);padding:.5rem .75rem;min-height:42px;cursor:text;position:relative;transition:border .15s}
+    .tags-box:focus-within{border-color:rgba(255,255,255,.38)}
+    .tags-pills{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.3rem}
+    .t-pill{display:inline-flex;align-items:center;gap:.2rem;background:rgba(200,132,74,.15);border:1px solid rgba(200,132,74,.3);color:var(--accent);font-size:.69rem;padding:.1rem .45rem;border-radius:99px}
+    .t-pill-x{background:none;border:none;color:inherit;cursor:pointer;font-size:.75rem;padding:0;opacity:.7;line-height:1}
+    .t-pill-x:hover{opacity:1}
+    .t-input{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:.85rem;outline:none;width:100%;min-width:100px;direction:rtl}
+    .t-input::placeholder{color:var(--subtle)}
+    .t-dd{position:absolute;top:100%;right:0;left:0;z-index:300;background:#1a0e05;border:1px solid var(--border);border-radius:2px;max-height:160px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.6);margin-top:2px}
+    .t-dd.on{display:block}
+    .t-opt{padding:.4rem .75rem;font-size:.82rem;cursor:pointer;transition:background .1s;direction:rtl}
+    .t-opt:hover{background:rgba(255,255,255,.07)}
+    .t-opt.new{color:var(--subtle);font-style:italic}
+
+    /* ── UPLOAD ZONE ── */
+    .u-zone{border:1px dashed var(--border);border-radius:2px;padding:1.5rem 1rem;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all .15s;user-select:none}
+    .u-zone:hover,.u-zone.drag-over{border-color:var(--accent);background:rgba(200,132,74,.04)}
+    .u-zone-icon{font-size:1.5rem;color:var(--muted);margin-bottom:.3rem}
+    .u-zone-text{font-size:.82rem;color:var(--muted)}
+    .u-zone-sub{font-size:.67rem;color:var(--subtle);margin-top:.2rem}
+
+    /* ── FILE LIST ── */
+    .f-list{margin-top:.6rem;display:flex;flex-direction:column;gap:.3rem}
+    .f-item{display:flex;align-items:center;gap:.55rem;padding:.42rem .5rem;border-radius:2px;background:rgba(255,255,255,.04);border:1px solid var(--border);cursor:grab}
+    .f-item.dragging{opacity:.4}
+    .f-drag{color:var(--subtle);font-size:1rem;flex-shrink:0;cursor:grab}
+    .f-name{flex:1;color:var(--muted);font-size:.79rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+    .f-rename{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.79rem;outline:none;padding:.1rem 0;direction:rtl}
+    .f-rename:focus{border-bottom-color:var(--accent)}
+    .f-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;flex-shrink:0;padding:.15rem;line-height:1}
+    .f-rm:hover{color:var(--error)}
+
+    /* ── PROGRESS ── */
+    .prog{display:none;margin-top:1rem}
+    .prog.on{display:block}
+    .prog-hdr{display:flex;justify-content:space-between;margin-bottom:.35rem;font-size:.73rem;color:var(--muted)}
+    .prog-pct{font-weight:700;color:var(--text)}
+    .prog-track{height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+    .prog-bar{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:99px;transition:width .3s;width:0%;box-shadow:0 0 6px rgba(74,222,128,.4)}
+
+    /* ── STATUS ── */
+    .status{font-size:.8rem;margin-top:.7rem;padding:.55rem .85rem;border-radius:2px;display:none}
+    .status.on{display:block}
+    .status.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);color:#4ade80}
+    .status.err{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.22);color:#ff6b6b}
+    .status.ld{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted)}
+
+    /* ── CONTENT FILTERS ── */
+    .filters{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center}
+    .f-pill{padding:.26rem .78rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:.74rem;cursor:pointer;transition:all .12s}
+    .f-pill.on{border-color:var(--accent);color:var(--accent);background:rgba(200,132,74,.08)}
+    .search-box{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.81rem;padding:.38rem .78rem;border-radius:2px;outline:none;width:210px;direction:rtl}
+    .search-box:focus{border-color:var(--border2)}
+    .search-box::placeholder{color:var(--subtle)}
+
+    /* ── PERMISSIONS TABLE ── */
+    .perms-tbl{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.4rem}
+    .perms-tbl th{text-align:left;padding:.38rem .6rem;font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    .perms-tbl td{padding:.42rem .6rem;border-bottom:1px solid rgba(255,255,255,.04)}
+    .perms-tbl tr:last-child td{border-bottom:none}
+    .perms-tbl td:first-child{font-weight:600}
+    .pcheck{display:flex;align-items:center;gap:.4rem;cursor:pointer}
+    .pcheck input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+
+    /* ── MSG ── */
+    .msg{font-size:.77rem;min-height:1.1rem;margin-top:.45rem}
+    .msg.ok{color:var(--success)}.msg.err{color:var(--error)}
+
+    /* ── PDF META ── */
+    .pdf-meta-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:2px;padding:.9rem;margin-top:.65rem}
+    .pdf-meta-fname{font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.65rem;direction:ltr;text-align:right}
+
+    @media(max-width:768px){
+      .sidebar{display:none}
+      .main{padding:1rem}
+      .row2,.row3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="/"><img src="/logo.avif" alt="מאישדעס"></a>
+  <div class="hdr-right">
+    <span class="hdr-user" id="hdr-user"></span>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-section">כללי</div>
+    <div class="sb-link on" onclick="showTab('dash',this)"><span class="sb-icon">◈</span>Overview</div>
+
+    <div class="sb-section" id="sb-upload-title">העלאדן</div>
+    <div class="sb-link" id="sb-blog"    onclick="showTab('blog',this)"><span class="sb-icon">✎</span>Blog Post</div>
+    <div class="sb-link" id="sb-posters" onclick="showTab('posters',this)"><span class="sb-icon">◻</span>Posters</div>
+    <div class="sb-link" id="sb-events"  onclick="showTab('events',this)"><span class="sb-icon">♫</span>Events</div>
+    <div class="sb-link" id="sb-video"   onclick="showTab('video',this)"><span class="sb-icon">▶</span>Videos</div>
+    <div class="sb-link" id="sb-pdfs"    onclick="showTab('pdfs',this)"><span class="sb-icon">▤</span>PDFs</div>
+
+    <div class="sb-section">Manage</div>
+    <div class="sb-link" id="sb-content" onclick="showTab('content',this)"><span class="sb-icon">≡</span>Browse & Edit</div>
+    <div class="sb-link" id="sb-trash"   onclick="showTab('trash',this)"><span class="sb-icon">⊘</span>Trash</div>
+
+    <div class="sb-section">Forms</div>
+    <div class="sb-link" id="sb-forms"    onclick="showTab('forms',this)"><span class="sb-icon">⊞</span>All Forms</div>
+    <div class="sb-link" id="sb-formbuild" onclick="showTab('formbuild',this)" style="display:none"><span class="sb-icon">✏</span>Builder</div>
+    <div class="sb-link" id="sb-formresp"  onclick="showTab('formresp',this)"  style="display:none"><span class="sb-icon">📋</span>Responses</div>
+    <div class="sb-link" id="sb-formstats" onclick="showTab('formstats',this)" style="display:none"><span class="sb-icon">📊</span>Stats</div>
+
+    <div class="sb-section" id="sb-admin-title">Admin</div>
+    <div class="sb-link" id="sb-users" onclick="showTab('users',this)"><span class="sb-icon">◉</span>Users</div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="tab on" id="tab-dash">
+      <h2 style="margin-bottom:1.5rem">Welcome</h2>
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="sn-posts">—</div><div class="stat-l">Blog Posts</div></div>
+        <div class="stat"><div class="stat-n" id="sn-events">—</div><div class="stat-l">Events</div></div>
+        <div class="stat"><div class="stat-n" id="sn-videos">—</div><div class="stat-l">Videos</div></div>
+        <div class="stat"><div class="stat-n" id="sn-pdfs">—</div><div class="stat-l">PDFs</div></div>
+        <div class="stat"><div class="stat-n" id="sn-posters">—</div><div class="stat-l">Posters</div></div>
+      </div>
+      <p style="color:var(--muted);font-size:.82rem">Use the sidebar to upload content or manage existing items.</p>
+    </div>
+
+    <!-- BLOG -->
+    <div class="tab" id="tab-blog">
+      <div class="pg-hdr"><h2>Upload Blog Post</h2></div>
+      <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-blog"></div></div>
+      <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="blog-title" placeholder="פאסט קעפל..."></div>
+      <div class="field"><label>Body</label><textarea id="blog-body" rows="6" placeholder="שרייב דעם טעקסט..."></textarea></div>
+      <div class="field"><label>Category</label><div class="tags-box" id="tb-blog-cat"><div class="tags-pills" id="tp-blog-cat"></div><input class="t-input" id="ti-blog-cat" placeholder="Category..."><div class="t-dd" id="td-blog-cat"></div></div></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-blog-tags"><div class="tags-pills" id="tp-blog-tags"></div><input class="t-input" id="ti-blog-tags" placeholder="Add tags..."><div class="t-dd" id="td-blog-tags"></div></div></div>
+      <div class="field"><label>בילדער</label><div class="u-zone" id="uz-blog"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag images here</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-blog"></div></div>
+      <div class="prog" id="pr-blog"><div class="prog-hdr"><span id="pl-blog">העלאָדט...</span><span class="prog-pct" id="pp-blog">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-blog"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('blog')" id="sub-blog">Submit Post</button>
+      <div class="status" id="st-blog"></div>
+    </div>
+
+    <!-- POSTERS -->
+    <div class="tab" id="tab-posters">
+      <div class="pg-hdr"><h2>Upload Posters</h2></div>
+      <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-posters"></div></div>
+      <div class="field"><label>Parsha</label><input type="text" id="posters-parsha" placeholder="ווערט אויטאמאטיש דעטעקטירט..."></div>
+      <div class="field"><label>בילדער <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-posters"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag images here</div><div class="u-zone-sub">PNG, JPG, GIF, WEBP</div></div><div class="f-list" id="fl-posters"></div></div>
+      <div class="prog" id="pr-posters"><div class="prog-hdr"><span id="pl-posters">העלאָדט...</span><span class="prog-pct" id="pp-posters">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-posters"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('posters')" id="sub-posters">Upload Posters</button>
+      <div class="status" id="st-posters"></div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="tab" id="tab-events">
+      <div class="pg-hdr"><h2>Upload Event Recording</h2></div>
+      <div class="row2">
+        <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-events"></div></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="events-title" placeholder="נאמען פון מעמד..."></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Location</label><input type="text" id="events-loc" placeholder="וואו..."></div>
+        <div class="field"><label>Category</label><div class="tags-box" id="tb-events-cat"><div class="tags-pills" id="tp-events-cat"></div><input class="t-input" id="ti-events-cat" placeholder="Category..."><div class="t-dd" id="td-events-cat"></div></div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="events-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-events-tags"><div class="tags-pills" id="tp-events-tags"></div><input class="t-input" id="ti-events-tags" placeholder="Add tags..."><div class="t-dd" id="td-events-tags"></div></div></div>
+      <div class="field"><label>טראַקס</label><div class="field-hint" style="margin-bottom:.4rem">Drag to reorder • Click to rename</div><div class="u-zone" id="uz-events"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag audio files here</div><div class="u-zone-sub">MP3, WAV, M4A</div></div><div class="f-list" id="fl-events"></div></div>
+      <div class="prog" id="pr-events"><div class="prog-hdr"><span id="pl-events">העלאָדט...</span><span class="prog-pct" id="pp-events">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-events"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('events')" id="sub-events">Upload Event</button>
+      <div class="status" id="st-events"></div>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="tab" id="tab-video">
+      <div class="pg-hdr"><h2>Upload Video</h2></div>
+      <div class="row2">
+        <div class="field"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-video"></div></div>
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" id="video-title" placeholder="ווידיאו טיטל..."></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Location</label><input type="text" id="video-loc" placeholder="וואו..."></div>
+        <div class="field"><label>Category</label><div class="tags-box" id="tb-video-cat"><div class="tags-pills" id="tp-video-cat"></div><input class="t-input" id="ti-video-cat" placeholder="Category..."><div class="t-dd" id="td-video-cat"></div></div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="video-desc" rows="3" placeholder="(אפציאנאל)..."></textarea></div>
+      <div class="field"><label>Tags</label><div class="tags-box" id="tb-video-tags"><div class="tags-pills" id="tp-video-tags"></div><input class="t-input" id="ti-video-tags" placeholder="Add tags..."><div class="t-dd" id="td-video-tags"></div></div></div>
+      <div class="field"><label>YouTube / Drive / Dropbox Link</label><input type="url" id="video-link" placeholder="https://..." style="direction:ltr;text-align:right"></div>
+      <div class="field"><label>Or upload a video file</label><div class="u-zone" id="uz-video"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag video here</div><div class="u-zone-sub">MP4, MOV, MKV</div></div><div class="f-list" id="fl-video"></div></div>
+      <div class="prog" id="pr-video"><div class="prog-hdr"><span id="pl-video">העלאָדט...</span><span class="prog-pct" id="pp-video">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-video"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('video')" id="sub-video">Upload Video</button>
+      <div class="status" id="st-video"></div>
+    </div>
+
+    <!-- PDFs -->
+    <div class="tab" id="tab-pdfs">
+      <div class="pg-hdr"><h2>Upload PDFs</h2></div>
+      <div class="field" style="max-width:260px"><label>Date <span style="color:var(--error)">*</span></label><div id="dp-pdfs"></div></div>
+      <div class="field"><label>PDF Files <span style="color:var(--error)">*</span></label><div class="u-zone" id="uz-pdfs"><div class="u-zone-icon">↑</div><div class="u-zone-text">Click or drag PDFs here</div><div class="u-zone-sub">PDF only • Multiple allowed</div></div><div class="f-list" id="fl-pdfs"></div></div>
+      <div id="pdfs-meta"></div>
+      <div class="prog" id="pr-pdfs"><div class="prog-hdr"><span id="pl-pdfs">העלאָדט...</span><span class="prog-pct" id="pp-pdfs">0%</span></div><div class="prog-track"><div class="prog-bar" id="pb-pdfs"></div></div></div>
+      <button class="btn btn-success btn-full" style="margin-top:1rem" onclick="doUpload('pdfs')" id="sub-pdfs">Upload PDFs</button>
+      <div class="status" id="st-pdfs"></div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="tab" id="tab-content">
+      <div class="pg-hdr"><h2>Browse & Edit</h2></div>
+      <div class="filters">
+        <button class="f-pill on" onclick="setCT('posts',this)">Blog</button>
+        <button class="f-pill" onclick="setCT('posters',this)">Posters</button>
+        <button class="f-pill" onclick="setCT('events',this)">Events</button>
+        <button class="f-pill" onclick="setCT('videos',this)">Videos</button>
+        <button class="f-pill" onclick="setCT('pdfs',this)">PDFs</button>
+        <input class="search-box" type="text" placeholder="Search..." id="ct-search" oninput="loadContent()">
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Title</th><th>Tags</th><th>Added</th><th>Actions</th></tr></thead><tbody id="ct-body"><tr class="empty"><td colspan="5">לאדט...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- TRASH -->
+    <div class="tab" id="tab-trash">
+      <div class="pg-hdr"><h2>Trash <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(30-day auto-delete)</span></h2></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Title</th><th>Deleted</th><th>Actions</th></tr></thead><tbody id="trash-body"><tr class="empty"><td colspan="4">לאדט...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- FORMS LIST -->
+    <div class="tab" id="tab-forms">
+      <div class="pg-hdr"><h2>Forms</h2><button class="btn btn-primary" onclick="newForm()">+ New Form</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Title</th><th>Slug / URL</th><th>Responses</th><th>Created</th><th>Actions</th></tr></thead><tbody id="forms-body"><tr class="empty"><td colspan="5">Loading...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- FORM BUILDER -->
+    <div class="tab" id="tab-formbuild">
+      <div class="pg-hdr">
+        <div>
+          <h2 id="fb-title">Form Builder</h2>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Public URL: <span id="fb-url" style="color:var(--accent)"></span></div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-ghost" onclick="showFormSettings()">⚙ Settings</button>
+          <button class="btn btn-primary" onclick="saveForm()">Save</button>
+          <button class="btn btn-ghost" id="fb-preview-btn" onclick="previewForm()" target="_blank">Preview ↗</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start">
+        <!-- Field palette -->
+        <div>
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.6rem">Add Field</div>
+          <div id="field-palette" style="display:flex;flex-direction:column;gap:.3rem"></div>
+        </div>
+        <!-- Canvas -->
+        <div>
+          <div id="fb-canvas" style="min-height:200px;border:1px dashed var(--border);border-radius:3px;padding:1rem;background:rgba(255,255,255,.02)">
+            <div id="fb-empty" style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Add fields from the left panel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM SETTINGS MODAL -->
+    <div class="modal-bg" id="modal-formsettings">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-hdr"><div class="modal-title">Form Settings</div><button class="modal-x" onclick="closeM('modal-formsettings')">✕</button></div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+          <!-- Tabs -->
+          <div style="display:flex;gap:.25rem;margin-bottom:1.25rem;border-bottom:1px solid var(--border);padding-bottom:.75rem">
+            <button class="f-pill on" onclick="fsTab('general',this)">General</button>
+            <button class="f-pill" onclick="fsTab('style',this)">Style</button>
+            <button class="f-pill" onclick="fsTab('access',this)">Access</button>
+            <button class="f-pill" onclick="fsTab('schedule',this)">Schedule</button>
+            <button class="f-pill" onclick="fsTab('notify',this)">Notifications</button>
+          </div>
+          <!-- General -->
+          <div id="fst-general">
+            <div class="field"><label>Form Title</label><input type="text" id="fs-title" placeholder="My Form"></div>
+            <div class="field"><label>Slug (URL)</label><input type="text" id="fs-slug" placeholder="my-form" style="direction:ltr"></div>
+            <div class="field"><label>Description</label><textarea id="fs-desc" rows="3" placeholder="Optional description..."></textarea></div>
+            <div class="field"><label>Confirmation Message</label><input type="text" id="fs-confirm" placeholder="Thank you for your submission!"></div>
+            <div class="field"><label>Submit Button Text</label><input type="text" id="fs-submit-label" placeholder="Submit"></div>
+          </div>
+          <!-- Style -->
+          <div id="fst-style" style="display:none">
+            <div class="row2">
+              <div class="field"><label>Background Color</label><input type="color" id="fs-bg" value="#7a4a1e" style="height:42px;padding:.2rem"></div>
+              <div class="field"><label>Text Color</label><input type="color" id="fs-text" value="#ffffff" style="height:42px;padding:.2rem"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label>Accent / Button Color</label><input type="color" id="fs-accent" value="#c8844a" style="height:42px;padding:.2rem"></div>
+              <div class="field"><label>Button Text Color</label><input type="color" id="fs-btntext" value="#ffffff" style="height:42px;padding:.2rem"></div>
+            </div>
+            <div class="field"><label>Font</label><select id="fs-font"><option value="Heebo">Heebo (Default)</option><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Playfair Display">Playfair Display</option><option value="Frank Ruhl Libre">Frank Ruhl Libre</option><option value="Noto Serif Hebrew">Noto Serif Hebrew</option></select></div>
+            <div class="field"><label>Direction</label><select id="fs-dir"><option value="ltr">LTR (English)</option><option value="rtl">RTL (Hebrew/Yiddish)</option></select></div>
+            <div class="field"><label>Logo Image URL</label><input type="url" id="fs-logo" placeholder="https://..." style="direction:ltr"></div>
+            <div class="field"><label>Banner Image URL</label><input type="url" id="fs-banner" placeholder="https://..." style="direction:ltr"></div>
+          </div>
+          <!-- Access -->
+          <div id="fst-access" style="display:none">
+            <div class="field"><label>Access Type</label><select id="fs-access"><option value="public">Public (anyone)</option><option value="password">Password Protected</option><option value="login">Login Required</option></select></div>
+            <div class="field" id="fs-pw-field"><label>Password</label><input type="text" id="fs-password" placeholder="Enter password..."></div>
+            <div class="field"><label>CAPTCHA</label><select id="fs-captcha"><option value="">None</option><option value="simple">Simple math question</option></select></div>
+          </div>
+          <!-- Schedule -->
+          <div id="fst-schedule" style="display:none">
+            <div class="row2">
+              <div class="field"><label>Open Date & Time</label><input type="datetime-local" id="fs-open" style="direction:ltr"></div>
+              <div class="field"><label>Close Date & Time</label><input type="datetime-local" id="fs-close" style="direction:ltr"></div>
+            </div>
+            <div class="field"><label>Max Responses</label><input type="number" id="fs-maxresp" placeholder="Unlimited" min="1" style="direction:ltr"></div>
+            <div class="field"><label>Closed Message</label><input type="text" id="fs-closed-msg" placeholder="This form is now closed."></div>
+            <div class="field"><label>Not Yet Open Message</label><input type="text" id="fs-notopen-msg" placeholder="This form is not yet open."></div>
+          </div>
+          <!-- Notifications -->
+          <div id="fst-notify" style="display:none">
+            <div class="field"><label>Notify Email (on each submission)</label><input type="email" id="fs-notify-email" placeholder="admin@email.com" style="direction:ltr"></div>
+            <div class="field"><label>Notification Type</label><select id="fs-notify-type"><option value="">Off</option><option value="instant">Every submission</option><option value="digest">Daily digest</option></select></div>
+            <div class="field"><label>Send Confirmation to Submitter?</label><select id="fs-confirm-email"><option value="">No</option><option value="yes">Yes (requires email field in form)</option></select></div>
+            <div class="field"><label>Confirmation Email Subject</label><input type="text" id="fs-confirm-subj" placeholder="Thank you for your submission"></div>
+            <div class="field"><label>Confirmation Email Body</label><textarea id="fs-confirm-body" rows="3" placeholder="Thank you for submitting..."></textarea></div>
+          </div>
+        </div>
+        <div class="modal-ftr">
+          <button class="btn btn-primary" onclick="saveFormSettings()">Save Settings</button>
+          <button class="btn btn-ghost" onclick="closeM('modal-formsettings')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIELD SETTINGS MODAL -->
+    <div class="modal-bg" id="modal-fieldsettings">
+      <div class="modal">
+        <div class="modal-hdr"><div class="modal-title" id="fld-modal-title">Field Settings</div><button class="modal-x" onclick="closeM('modal-fieldsettings')">✕</button></div>
+        <div class="modal-body" id="fld-modal-body"></div>
+        <div class="modal-ftr">
+          <button class="btn btn-primary" onclick="saveFieldSettings()">Save</button>
+          <button class="btn btn-ghost" onclick="closeM('modal-fieldsettings')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM RESPONSES -->
+    <div class="tab" id="tab-formresp">
+      <div class="pg-hdr">
+        <h2 id="resp-title">Responses</h2>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-ghost" onclick="exportExcel()">⬇ Export Excel</button>
+          <button class="btn btn-ghost" onclick="loadResponses()">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem" id="resp-count"></div>
+      <div class="tbl-wrap" id="resp-table-wrap"><table><thead id="resp-thead"></thead><tbody id="resp-tbody"><tr class="empty"><td colspan="3">Loading...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- FORM STATS -->
+    <div class="tab" id="tab-formstats">
+      <div class="pg-hdr"><h2 id="stats-title">Stats</h2></div>
+      <div id="stats-content" style="color:var(--muted)">Loading...</div>
+    </div>
+
+    <!-- USERS -->
+    <div class="tab" id="tab-users">
+      <div class="pg-hdr"><h2>Users</h2><button class="btn btn-primary" onclick="openCreateUser()">+ New User</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody id="users-body"><tr class="empty"><td colspan="6">לאדט...</td></tr></tbody></table></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-bg" id="modal-user">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="modal-user-title">נייער Users</div><button class="modal-x" onclick="closeM('modal-user')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="u-id">
+      <div class="row2">
+        <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="פולן נאמען..."></div>
+        <div class="field"><label>Email <span style="color:var(--error)">*</span></label><input type="email" id="u-email" placeholder="user@email.com" style="direction:ltr;text-align:right"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Password <span id="pw-hint" style="color:var(--subtle);font-size:.62rem;display:none">(leave blank to keep)</span></label><input type="password" id="u-pass" placeholder="••••••••"></div>
+        <div class="field"><label>Role</label><select id="u-role"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option></select></div>
+      </div>
+      <div class="field">
+        <label>Page Permissions <span style="color:var(--subtle);font-size:.62rem">(admins have full access)</span></label>
+        <table class="perms-tbl">
+          <thead><tr><th>Page</th><th>Upload</th><th>Edit</th></tr></thead>
+          <tbody>
+            <tr><td>Blog</td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="blog" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Posters</td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="posters" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Events</td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="events" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>Videos</td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="video" data-type="edit" checked> Allow</label></td></tr>
+            <tr><td>PDFs</td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="upload" checked> Allow</label></td><td><label class="pcheck"><input type="checkbox" data-page="pdfs" data-type="edit" checked> Allow</label></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="msg" id="u-msg"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-user')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT EDIT MODAL -->
+<div class="modal-bg" id="modal-ct">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">רעדאקטירן</div><button class="modal-x" onclick="closeM('modal-ct')">✕</button></div>
+    <div class="modal-body" id="ct-modal-body"></div>
+    <div class="modal-ftr">
+      <button class="btn btn-primary" onclick="saveContent()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-ct')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://moisdes-worker.moisdesvienweb.workers.dev';
+let token = localStorage.getItem('moisdes_token');
+let me    = JSON.parse(localStorage.getItem('moisdes_user')||'null');
+let perms = JSON.parse(localStorage.getItem('moisdes_perms')||'[]');
+
+if (!token || !me) location.href = '/login?redirect=/admin';
+document.getElementById('hdr-user').textContent = me?.name || me?.email || '';
+
+// Hide admin nav for non-superadmin
+if (me?.role !== 'superadmin') {
+  ['sb-admin-title','sb-users'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+}
+
+function ah() { return { Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }; }
+function logout() { fetch(`${API}/api/auth/logout`,{method:'POST',headers:ah()}).catch(()=>{}); localStorage.clear(); location.href='/login'; }
+function openM(id) { document.getElementById(id).classList.add('on'); }
+function closeM(id) { document.getElementById(id).classList.remove('on'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── TABS ──────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('on'));
+  document.getElementById(`tab-${name}`).classList.add('on');
+  if (el) el.classList.add('on');
+  if (name==='dash')    loadDash();
+  if (name==='content') loadContent();
+  if (name==='trash')   loadTrash();
+  if (name==='users')   loadUsers();
+  if (name==='forms')   loadForms();
+  if (name==='formresp') loadResponses();
+}
+
+// ── HEBREW DATE PICKER ────────────────────────────────────────────
+const PARSHIYOT = ['בראשית','נח','לך לך','וירא','חיי שרה','תולדות','ויצא','וישלח','וישב','מקץ','ויגש','ויחי','שמות','וארא','בא','בשלח','יתרו','משפטים','תרומה','תצוה','כי תשא','ויקהל','פקודי','ויקרא','צו','שמיני','תזריע','מצורע','אחרי','קדושים','אמור','בהר','בחוקותי','במדבר','נשא','בהעלותך','שלח','קרח','חוקת','בלק','פינחס','מטות','מסעי','דברים','ואתחנן','עקב','ראה','שופטים','כי תצא','כי תבוא','נצבים','וילך','האזינו','וזאת הברכה'];
+const COMBINED  = {'ויקהל':'ויקהל-פקודי','תזריע':'תזריע-מצורע','אחרי':'אחרי-קדושים','בהר':'בהר-בחוקותי','מטות':'מטות-מסעי','נצבים':'נצבים-וילך'};
+const ANCHOR_DATE  = '2025-10-18';
+const ANCHOR_IDX   = 0;
+const SECOND_PAIR  = new Set(['פקודי','מצורע','קדושים','בחוקותי','מסעי','וילך']);
+const DOW_LABELS   = ['זונטאג','מאנטאג','דינסטאג','מיטוואך','דאנערשטאג','ערב שבת','מוצאי שבת'];
+const HEB_MONTHS   = ['ניסן','אייר','סיון','תמוז','אב','אלול','תשרי','חשון','כסלו','טבת','שבט','אדר','אדר א','אדר ב'];
+const HEB_DAYS     = Array.from({length:30},(_,i)=>{const n=i+1;const H=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];const T=['','י','כ','ל'];return n<=9?H[n]:n<=19?'י'+H[n-10]:n<=29?'כ'+H[n-20]:'ל';});
+
+function yearToHebrew(y) {
+  const n=y-5000,H=['','ק','ר','ש','ת'],T=['','י','כ','ל','מ','נ','ס','ע','פ','צ'],O=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];
+  let h=Math.floor(n/100),t=Math.floor((n%100)/10),o=n%10,r='';
+  if(h>4){r+='ת';h-=4;} r+=H[h]||'';
+  const to=t*10+o;
+  if(to===15)r+='ט"ו';else if(to===16)r+='ט"ז';else{r+=T[t]||'';r+=O[o]||'';}
+  return r.length===1?r+"'":r.slice(0,-1)+'"'+r.slice(-1);
+}
+function currentHY() { const n=new Date(),hy=n.getFullYear()+3760; return n.getMonth()>=8?hy+1:hy; }
+function hebrewToDate(hy,parsha,dow) {
+  const gy=hy-3760,msD=86400000,msW=7*msD;
+  const anchor=new Date(ANCHOR_DATE+'T12:00:00Z');
+  const rev={};for(const[b,d]of Object.entries(COMBINED))rev[d]=b;
+  const base=rev[parsha]||parsha;
+  const start=new Date(`${gy-1}-09-01T12:00:00Z`),end=new Date(`${gy+1}-10-01T12:00:00Z`);
+  const matches=[];let cur=new Date(start);
+  while(cur<=end){
+    if(cur.getUTCDay()===6){
+      const wk=Math.round((cur-anchor)/msW);
+      const idx=((ANCHOR_IDX+wk)%PARSHIYOT.length+PARSHIYOT.length)%PARSHIYOT.length;
+      const p=PARSHIYOT[idx];
+      if(p===base||(COMBINED[p]||p)===parsha)matches.push(new Date(cur));
+    }
+    cur=new Date(cur.getTime()+msD);
+  }
+  if(!matches.length)return null;
+  const mid=new Date(`${gy}-01-15T12:00:00Z`);
+  matches.sort((a,b)=>Math.abs(a-mid)-Math.abs(b-mid));
+  return new Date(matches[0].getTime()-(6-dow)*msD);
+}
+function dateToParsha(iso) {
+  const anchor=new Date(ANCHOR_DATE+'T12:00:00Z'),date=new Date(iso+'T12:00:00Z'),msW=7*86400000;
+  const dts=(6-date.getUTCDay()+7)%7;
+  const shab=new Date(date.getTime()+dts*86400000);
+  const wk=Math.round((shab-anchor)/msW);
+  const idx=((ANCHOR_IDX+wk)%PARSHIYOT.length+PARSHIYOT.length)%PARSHIYOT.length;
+  const p=PARSHIYOT[idx];return COMBINED[p]||p;
+}
+
+// Date pickers state: { selYear, selParsha, selDow, inputDate, noteEl }
+const dps = {};
+function initDatePicker(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const key = containerId.replace('dp-','');
+
+  // Build year options
+  const curHY = currentHY();
+  let yearOpts = '<option value="">שנה</option>';
+  for (let y=curHY; y>=5742; y--) yearOpts += `<option value="${y}">${yearToHebrew(y)}</option>`;
+
+  // Parsha options (skip second of combined)
+  let parshaOpts = '<option value="">פרשה</option>';
+  PARSHIYOT.filter(p=>!SECOND_PAIR.has(p)).forEach(p=>{ const d=COMBINED[p]||p; parshaOpts+=`<option value="${d}">${d}</option>`; });
+
+  let dowOpts = '<option value="">טאג</option>';
+  DOW_LABELS.forEach((l,i) => dowOpts+=`<option value="${i}">${l}</option>`);
+
+  // Yiddish day options (א through ל)
+  let dayOpts='<option value="">טאג</option>';
+  for(let d=1;d<=30;d++){const h=HEB_DAYS[d-1];dayOpts+=`<option value="${d}">${h}${d===1?'':''} (${d})</option>`;}
+  let monOpts='<option value="">חודש</option>';
+  HEB_MONTHS.forEach((m,i)=>monOpts+=`<option value="${i}">${m}</option>`);
+  let yidYrOpts='<option value="">שנה</option>';
+  for(let y=currentHY();y>=5742;y--)yidYrOpts+=`<option value="${y}">${yearToHebrew(y)}</option>`;
+
+  container.innerHTML = `
+    <div class="heb-date-wrap">
+      <div style="display:flex;gap:.4rem;margin-bottom:.4rem;border-bottom:1px solid var(--border);padding-bottom:.4rem">
+        <button type="button" class="dp-tab-btn on" id="dptab-parsha-${key}" onclick="switchDPTab('${key}','parsha')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">פרשה</button>
+        <button type="button" class="dp-tab-btn" id="dptab-yiddish-${key}" onclick="switchDPTab('${key}','yiddish')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">אידיש</button>
+        <button type="button" class="dp-tab-btn" id="dptab-english-${key}" onclick="switchDPTab('${key}','english')" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:2px">English</button>
+      </div>
+      <div id="dppanel-parsha-${key}">
+        <div class="heb-selects">
+          <select id="dp-yr-${key}">${yearOpts}</select>
+          <select id="dp-pr-${key}">${parshaOpts}</select>
+          <select id="dp-dw-${key}">${dowOpts}</select>
+        </div>
+      </div>
+      <div id="dppanel-yiddish-${key}" style="display:none">
+        <div class="heb-selects">
+          <select id="dp-yd-${key}">${dayOpts}</select>
+          <select id="dp-ym-${key}">${monOpts}</select>
+          <select id="dp-yy-${key}">${yidYrOpts}</select>
+        </div>
+      </div>
+      <div id="dppanel-english-${key}" style="display:none">
+        <input type="date" class="heb-date-manual" id="dp-dt-${key}" style="width:100%">
+      </div>
+      <div class="date-note" id="dp-nt-${key}" style="margin-top:.35rem"></div>
+    </div>`;
+
+  const sY=document.getElementById(`dp-yr-${key}`);
+  const sP=document.getElementById(`dp-pr-${key}`);
+  const sD=document.getElementById(`dp-dw-${key}`);
+  const iD=document.getElementById(`dp-dt-${key}`);
+  const nE=document.getElementById(`dp-nt-${key}`);
+  dps[key]={sY,sP,sD,iD,nE};
+
+  function fromDropdowns() {
+    if(!sY.value||!sP.value||sD.value==='') return;
+    const d=hebrewToDate(+sY.value,sP.value,+sD.value);
+    if(!d){nE.textContent='דאטום נישט געפונען';return;}
+    iD.value=d.toISOString().split('T')[0];
+    nE.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    // Auto-fill parsha field if exists
+    const pf=document.getElementById(`${key==='blog'?'blog':key}-parsha`);
+    if(pf) pf.value=sP.value;
+  }
+  function fromManual() {
+    if(!iD.value){nE.textContent='';return;}
+    sY.value='';sP.value='';sD.value='';
+    const d=new Date(iD.value+'T12:00:00Z');
+    const parsha=dateToParsha(iD.value);
+    const [y,mo]=iD.value.split('-');
+    const hy=+mo>=9?+y+3761:+y+3760;
+    const engStr=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    nE.textContent=engStr+' ('+parsha+' '+yearToHebrew(hy)+')';
+    const pf=document.getElementById(`${key}-parsha`);
+    if(pf&&!pf.value) pf.value=parsha;
+  }
+  sY.addEventListener('change',fromDropdowns);
+  sP.addEventListener('change',fromDropdowns);
+  sD.addEventListener('change',fromDropdowns);
+  iD.addEventListener('change',fromManual);
+
+  // Wire Yiddish date selects
+  const yd=document.getElementById(`dp-yd-${key}`);
+  const ym=document.getElementById(`dp-ym-${key}`);
+  const yy=document.getElementById(`dp-yy-${key}`);
+  if(yd&&ym&&yy){
+    function fromYiddish(){
+      if(!yd.value||ym.value===''||!yy.value)return;
+      // Convert Hebrew calendar to Gregorian using HDate approximation
+      try{
+        const hYear=+yy.value,hMonth=+ym.value,hDay=+yd.value;
+        const gregDate=hebToGreg(hYear,hMonth,hDay);
+        if(gregDate){
+          iD.value=gregDate;
+          const d=new Date(gregDate+'T12:00:00Z');
+          const engDate=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+          const yidDate=HEB_DAYS[hDay-1]+' '+HEB_MONTHS[hMonth]+' '+yearToHebrew(hYear);
+          nE.textContent=yidDate+' = '+engDate;
+        } else {
+          nE.textContent='Could not convert date — please check values';
+        }
+      }catch(e){nE.textContent='Date conversion error';}
+    }
+    yd.addEventListener('change',fromYiddish);
+    ym.addEventListener('change',fromYiddish);
+    yy.addEventListener('change',fromYiddish);
+  }
+}
+
+function switchDPTab(key, tab) {
+  ['parsha','yiddish','english'].forEach(t=>{
+    const panel=document.getElementById(`dppanel-${t}-${key}`);
+    const btn=document.getElementById(`dptab-${t}-${key}`);
+    if(panel) panel.style.display = t===tab?'':'none';
+    if(btn){btn.style.color=t===tab?'var(--text)':'var(--muted)';btn.style.background=t===tab?'rgba(255,255,255,0.08)':'none';}
+  });
+}
+
+// Hebrew calendar → Gregorian (verified correct algorithm)
+// Based on Calendrical Calculations with correct postponement rules
+function hebElapsed(y) {
+  const m = Math.floor((235*y - 234) / 19);
+  const p = 204 + 793 * (m % 1080);
+  const h = 5 + 12*m + Math.floor(793*(m/1080)) + Math.floor(p/1080);
+  const c = (h%24) + 1080*(p%1080);
+  let d = m*29 + Math.floor(h/24);
+  if (c >= 19440 ||
+      (d%7 === 2 && c >= 9924 && (235*y-234)%19 >= 7) ||
+      (d%7 === 1 && c >= 16789 && (235*(y-1)-234)%19 < 7)) d++;
+  if ([0,3,5].includes(d%7)) d++;
+  return d;
+}
+
+function daysInHebYear(y) { return hebElapsed(y+1) - hebElapsed(y); }
+
+function hebMonthLengths(y) {
+  const d = daysInHebYear(y), leap = isHebLeap(y);
+  const base = [30,29,30,29,30,leap?30:29,leap?29:0,30,29,30,29,30,29];
+  if (d%10===5) base[1]=30; // long Cheshvan
+  if (d%10===3) base[2]=29; // short Kislev
+  return base;
+}
+
+function isHebLeap(y) { return (7*y+1)%19 < 7; }
+
+function hebToGreg(hYear, hMonthNisan0, hDay) {
+  // hMonthNisan0: 0=Nisan,1=Iyar,2=Sivan,3=Tamuz,4=Av,5=Elul,
+  //   6=Tishri,7=Cheshvan,8=Kislev,9=Tevet,10=Shvat,11=Adar,12=AdarB(leap)
+  const leap = isHebLeap(hYear);
+  // Map Nisan-based month index to Tishri-based (0=Tishri)
+  const ntMap = leap
+    ? [8,9,10,11,12,13,0,1,2,3,4,5,6]
+    : [6,7,8,9,10,11,0,1,2,3,4,5];
+  if (hMonthNisan0 >= ntMap.length) return null;
+  const mTishri = ntMap[hMonthNisan0];
+  let total = hebElapsed(hYear);
+  const lens = hebMonthLengths(hYear);
+  for (let i=0; i<mTishri; i++) total += lens[i]||0;
+  total += hDay - 1;
+  // Convert to Gregorian using JD epoch 347997
+  // (anchored: 1 Tishri 5785 = Oct 3 2024 = JD 2460587, hebElapsed(5785)=2112590)
+  const jd = total + 347997;
+  // JD to Gregorian calendar
+  const jdN = jd - 1721425;  // ordinal offset
+  try {
+    const d = new Date(Date.UTC(1,0,1) + (jdN - 1) * 86400000);
+    const y = d.getUTCFullYear(), m = d.getUTCMonth()+1, day = d.getUTCDate();
+    return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  } catch(e) { return null; }
+}
+
+
+function getDPValue(key) {
+  const dp=dps[key];if(!dp)return'';
+  const v=dp.iD.value;if(!v)return'';
+  const[y,m,d]=v.split('-');return`${m}/${d}/${y}`;
+}
+function getDPRaw(key) { return dps[key]?.iD.value||''; }
+function resetDP(key) { const dp=dps[key];if(!dp)return;dp.sY.value='';dp.sP.value='';dp.sD.value='';dp.iD.value='';dp.nE.textContent=''; }
+
+// ── TAGS WIDGET ───────────────────────────────────────────────────
+let allTags=[], allCats=[];
+const tState={};
+
+function initTW(id, srcFn, allowNew=true) {
+  tState[id]={sel:[],newItems:[]};
+  const box=document.getElementById(`tb-${id}`);
+  const pills=document.getElementById(`tp-${id}`);
+  const inp=document.getElementById(`ti-${id}`);
+  const dd=document.getElementById(`td-${id}`);
+  if(!box||!inp||!dd)return;
+  box.addEventListener('click',()=>inp.focus());
+  function renderPills(){
+    pills.innerHTML=tState[id].sel.map(t=>`<span class="t-pill">${esc(t)}<button class="t-pill-x" onmousedown="event.preventDefault();rmTag('${id}','${esc(t)}')">✕</button></span>`).join('');
+  }
+  function renderDD(q=''){
+    const list=srcFn().filter(t=>!tState[id].sel.includes(t)&&(!q||t.toLowerCase().includes(q.toLowerCase())));
+    let html=list.map(t=>`<div class="t-opt" onmousedown="event.preventDefault();addTag('${id}','${esc(t)}')">${esc(t)}</div>`).join('');
+    const typed=q.trim();
+    if(allowNew&&typed&&!srcFn().some(t=>t.toLowerCase()===typed.toLowerCase())&&!tState[id].sel.some(t=>t.toLowerCase()===typed.toLowerCase()))
+      html+=`<div class="t-opt new" onmousedown="event.preventDefault();addNewTag('${id}','${esc(typed)}')">+ הוספן: "${esc(typed)}"</div>`;
+    if(!html)html=`<div class="t-opt" style="color:var(--subtle);cursor:default">קיין רעזולטאטן</div>`;
+    dd.innerHTML=html;
+  }
+  inp.addEventListener('focus',()=>{renderDD(inp.value);dd.classList.add('on');});
+  inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('on'),150));
+  inp.addEventListener('input',()=>renderDD(inp.value));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();const v=inp.value.trim();if(!v)return;const m=srcFn().find(t=>t.toLowerCase()===v.toLowerCase());m?addTag(id,m):allowNew&&addNewTag(id,v);}
+    if(e.key==='Escape')dd.classList.remove('on');
+  });
+  renderPills();
+}
+
+function addTag(id,tag) {
+  if(!tState[id].sel.includes(tag))tState[id].sel.push(tag);
+  const inp=document.getElementById(`ti-${id}`);if(inp)inp.value='';
+  const pills=document.getElementById(`tp-${id}`);
+  if(pills)pills.innerHTML=tState[id].sel.map(t=>`<span class="t-pill">${esc(t)}<button class="t-pill-x" onmousedown="event.preventDefault();rmTag('${id}','${esc(t)}')">✕</button></span>`).join('');
+}
+function addNewTag(id,tag) {
+  if(id.endsWith('tags')){if(!allTags.includes(tag))allTags.push(tag);tState[id].newItems.push(tag);}
+  else{if(!allCats.includes(tag))allCats.push(tag);tState[id].newItems.push(tag);}
+  addTag(id,tag);
+}
+function rmTag(id,tag) {
+  tState[id].sel=tState[id].sel.filter(t=>t!==tag);
+  const pills=document.getElementById(`tp-${id}`);
+  if(pills)pills.innerHTML=tState[id].sel.map(t=>`<span class="t-pill">${esc(t)}<button class="t-pill-x" onmousedown="event.preventDefault();rmTag('${id}','${esc(t)}')">✕</button></span>`).join('');
+}
+function getTW(id){return tState[id]?.sel.join(', ')||'';}
+function getNewTW(id){return tState[id]?.newItems||[];}
+function resetTW(id){if(tState[id]){tState[id].sel=[];tState[id].newItems=[];}const p=document.getElementById(`tp-${id}`);if(p)p.innerHTML='';}
+
+async function loadTaxonomy() {
+  try {
+    const [tr,cr]=await Promise.all([
+      fetch(`${API}/api/tags`,{headers:ah()}).then(r=>r.json()),
+      fetch(`${API}/api/categories`,{headers:ah()}).then(r=>r.json()),
+    ]);
+    allTags=tr.tags||[];allCats=cr.categories||[];
+  } catch(e){allTags=[];allCats=[];}
+  initTW('blog-tags',()=>allTags);
+  initTW('blog-cat',()=>allCats);
+  initTW('events-tags',()=>allTags);
+  initTW('video-tags',()=>allTags);
+  initTW('events-cat',()=>allCats);
+  initTW('video-cat',()=>allCats);
+}
+
+// ── FILE ZONES ────────────────────────────────────────────────────
+const fStore={blog:[],posters:[],events:[],video:[],pdfs:[]};
+let dragSrc=null;
+
+function initZone(key,accept,multiple,reorder,named) {
+  const zone=document.getElementById(`uz-${key}`);if(!zone)return;
+  zone.addEventListener('click',()=>{
+    const inp=document.createElement('input');
+    inp.type='file';inp.accept=accept;inp.multiple=multiple;
+    inp.style.cssText='position:fixed;top:-9999px';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',e=>{addFiles(key,e.target.files,reorder,named);document.body.removeChild(inp);});
+    inp.click();
+  });
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');addFiles(key,e.dataTransfer.files,reorder,named);});
+}
+
+function addFiles(key,fileList,reorder,named) {
+  for(const f of fileList) fStore[key].push({id:Date.now()+Math.random(),file:f,name:f.name.replace(/\.[^.]+$/,'')});
+  renderFL(key,reorder,named);
+  if(key==='pdfs')renderPdfMeta();
+}
+
+function renderFL(key,reorder,named) {
+  const listEl=document.getElementById(`fl-${key}`);if(!listEl)return;
+  listEl.innerHTML=fStore[key].map((f,i)=>`
+    <div class="f-item" draggable="${reorder}" data-id="${f.id}"
+      ${reorder?`ondragstart="dragSrc=this;this.classList.add('dragging')" ondragend="this.classList.remove('dragging')" ondragover="event.preventDefault()" ondrop="dropFile(event,'${key}',${reorder},${named})"`:''}>
+      ${reorder?'<span class="f-drag">≡</span>':''}
+      ${named
+        ?`<input class="f-rename" value="${esc(f.name)}" onchange="renameF('${key}',${f.id},this.value)">`
+        :`<span class="f-name">${esc(f.file.name)}</span>`}
+      <button class="f-rm" onclick="removeF('${key}',${f.id})">✕</button>
+    </div>`).join('');
+}
+
+function dropFile(e,key,reorder,named) {
+  e.preventDefault();
+  if(!dragSrc)return;
+  const srcId=parseFloat(dragSrc.dataset.id);
+  const dstId=parseFloat(e.currentTarget.dataset.id);
+  if(srcId===dstId)return;
+  const si=fStore[key].findIndex(f=>f.id===srcId);
+  const di=fStore[key].findIndex(f=>f.id===dstId);
+  if(si<0||di<0)return;
+  const[moved]=fStore[key].splice(si,1);
+  fStore[key].splice(di,0,moved);
+  dragSrc=null;
+  renderFL(key,reorder,named);
+}
+
+function removeF(key,id) {
+  fStore[key]=fStore[key].filter(f=>f.id!==id);
+  const reorder=key==='events';const named=key==='events';
+  renderFL(key,reorder,named);
+  if(key==='pdfs')renderPdfMeta();
+}
+function renameF(key,id,name){const f=fStore[key].find(f=>f.id===id);if(f)f.name=name;}
+
+function renderPdfMeta() {
+  const el=document.getElementById('pdfs-meta');if(!el)return;
+  const files=fStore['pdfs'];
+  if(!files.length){el.innerHTML='';return;}
+  el.innerHTML=files.map((f,i)=>`
+    <div class="pdf-meta-card">
+      <div class="pdf-meta-fname">${esc(f.file.name)}</div>
+      <div class="row2">
+        <div class="field"><label>Title <span style="color:var(--error)">*</span></label><input type="text" class="pm-title" data-i="${i}" value="${esc(f.name)}" placeholder="טיטל..."></div>
+        <div class="field"><label>Language</label><select class="pm-lang" data-i="${i}"><option value="">—</option><option>ייִדיש</option><option>לשון הקודש</option><option>English</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Category</label><input type="text" class="pm-cat" data-i="${i}" placeholder="Category..."></div>
+        <div class="field"><label>Parsha / Occasion</label><input type="text" class="pm-parsha" data-i="${i}" placeholder="פּרשה..."></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Year</label><input type="text" class="pm-year" data-i="${i}" placeholder="ז.ב. תשפ״ה"></div>
+        <div class="field"><label>Tags</label><input type="text" class="pm-tags" data-i="${i}" placeholder="טאג1, טאג2..."></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── PROGRESS & STATUS ─────────────────────────────────────────────
+function setProg(key,pct,label) {
+  const w=document.getElementById(`pr-${key}`);if(!w)return;w.classList.add('on');
+  const b=document.getElementById(`pb-${key}`);if(b)b.style.width=pct+'%';
+  const p=document.getElementById(`pp-${key}`);if(p)p.textContent=Math.round(pct)+'%';
+  const l=document.getElementById(`pl-${key}`);if(l&&label)l.textContent=label;
+}
+function setSt(key,type,msg) {
+  const el=document.getElementById(`st-${key}`);if(!el)return;
+  el.className=`status ${type} on`;el.textContent=msg;
+  if(type==='ok')setTimeout(()=>el.classList.remove('on'),6000);
+}
+
+// ── R2 UPLOAD ─────────────────────────────────────────────────────
+// Upload file directly to R2 via presigned URL (no size limit, no CORS issues)
+async function r2Put(key, blob, mime, onProg) {
+  // Step 1: get presigned URL from Netlify function (tiny request)
+  const signRes = await fetch('/.netlify/functions/r2sign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, mimeType: mime }),
+  });
+  const signData = await signRes.json();
+  if (signData.error) throw new Error('Presign failed: ' + signData.error);
+
+  // Step 2: upload directly to R2 with XHR for progress
+  return new Promise((res, rej) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', signData.url);
+    xhr.setRequestHeader('Content-Type', mime || 'application/octet-stream');
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProg) onProg(e.loaded / e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) res(key);
+      else rej(new Error(`R2 upload failed: ${xhr.status} ${xhr.responseText.slice(0,100)}`));
+    };
+    xhr.onerror = () => rej(new Error('R2 upload network error'));
+    xhr.send(blob);
+  });
+}
+
+function fmtDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${m}/${d}/${y}`;}
+
+// ── MAIN UPLOAD HANDLER ───────────────────────────────────────────
+async function doUpload(key) {
+  const btn=document.getElementById(`sub-${key}`);
+  btn.disabled=true;setSt(key,'ld','מכין...');setProg(key,5,'מכין...');
+  const r2Keys=[];
+  try {
+    const date=getDPValue(key);
+    if(!date) throw new Error('Please enter a date');
+
+    let payload={};
+
+    if(key==='blog'){
+      const title=document.getElementById('blog-title').value.trim();
+      if(!title)throw new Error('ביטע שרייב א קעפל');
+      const files=fStore['blog'];
+      const folder=`blog/${Date.now()}`;
+      for(let i=0;i<files.length;i++){
+        const f=files[i],ext=f.file.name.split('.').pop();
+        const k=`${folder}/${i+1}-${f.name}.${ext}`;
+        setProg(key,10+Math.round((i/Math.max(files.length,1))*65),`העלאָדט בילד ${i+1}/${files.length}...`);
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/Math.max(files.length,1))*65),`העלאָדט בילד ${i+1}/${files.length}...`));
+        r2Keys.push(k);
+      }
+      payload={date,title,body:document.getElementById('blog-body').value,category:getTW('blog-cat'),tags:getTW('blog-tags'),folder_url:r2Keys.length?`r2://blog/${Date.now()}`:'',r2_keys:r2Keys,newTags:getNewTW('blog-tags'),newCategories:getNewTW('blog-cat')};
+      setProg(key,80,'Saving...');
+      payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
+      payload.r2_keys = r2Keys;
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'blog',...payload})});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
+    }
+    else if(key==='posters'){
+      const files=fStore['posters'];if(!files.length)throw new Error('ביטע העלאד בילדער');
+      const folder=`posters/${Date.now()}`;
+      for(let i=0;i<files.length;i++){
+        const f=files[i],ext=f.file.name.split('.').pop(),k=`${folder}/${i+1}.${ext}`;
+        setProg(key,10+Math.round((i/files.length)*65),`העלאָדט בילד ${i+1}/${files.length}...`);
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/files.length)*65),`העלאָדט ${i+1}/${files.length}...`));
+        r2Keys.push(k);
+      }
+      const parsha=document.getElementById('posters-parsha').value||dateToParsha(getDPRaw('posters'));
+      payload={date,parsha};
+      setProg(key,80,'Saving...');
+      payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
+      payload.r2_keys = r2Keys;
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'poster',...payload})});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
+    }
+    else if(key==='events'){
+      const title=document.getElementById('events-title').value.trim();if(!title)throw new Error('ביטע שרייב א טיטל');
+      const files=fStore['events'];const folder=`events/${Date.now()}`;
+      for(let i=0;i<files.length;i++){
+        const f=files[i],ext=f.file.name.split('.').pop(),k=`${folder}/${String(i+1).padStart(2,'0')}-${f.name}.${ext}`;
+        setProg(key,10+Math.round((i/Math.max(files.length,1))*65),`העלאָדט טראַק ${i+1}/${files.length}: ${f.name}`);
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,10+Math.round(((i+p)/Math.max(files.length,1))*65),`${f.name}`));
+        r2Keys.push(k);
+      }
+      payload={date,title,location:document.getElementById('events-loc').value,category:getTW('events-cat'),description:document.getElementById('events-desc').value,tags:getTW('events-tags'),newTags:getNewTW('events-tags'),newCategories:getNewTW('events-cat')};
+      setProg(key,80,'Saving...');
+      payload.folder_url = r2Keys.length ? 'r2://' + r2Keys[0].split('/').slice(0,-1).join('/') : '';
+      payload.r2_keys = r2Keys;
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'event',...payload})});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
+    }
+    else if(key==='video'){
+      const title=document.getElementById('video-title').value.trim();if(!title)throw new Error('ביטע שרייב א טיטל');
+      const link=document.getElementById('video-link').value.trim();
+      let video_url=link;
+      if(!link&&fStore['video'].length){
+        const f=fStore['video'][0],ext=f.file.name.split('.').pop(),k=`video/${Date.now()}.${ext}`;
+        setProg(key,15,'העלאָדט ווידיאו...');
+        await r2Put(k,f.file,f.file.type,p=>setProg(key,15+Math.round(p*60),'העלאָדט ווידיאו...'));
+        video_url=`r2://${k}`;r2Keys.push(k);
+      }
+      payload={date,title,location:document.getElementById('video-loc').value,category:getTW('video-cat'),description:document.getElementById('video-desc').value,tags:getTW('video-tags'),video_url,newTags:getNewTW('video-tags'),newCategories:getNewTW('video-cat')};
+      setProg(key,80,'Saving...');
+      payload.r2_keys = r2Keys;
+      const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'video',...payload})});
+      const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
+    }
+    else if(key==='pdfs'){
+      const files=fStore['pdfs'];if(!files.length)throw new Error('ביטע העלאד PDF פֿײלן');
+      for(let i=0;i<files.length;i++){
+        const f=files[i],k=`pdfs/${Date.now()}-${i+1}.pdf`;
+        setProg(key,10+Math.round((i/files.length)*70),`העלאָדט PDF ${i+1}/${files.length}...`);
+        await r2Put(k,f.file,'application/pdf',p=>setProg(key,10+Math.round(((i+p)/files.length)*70),`PDF ${i+1}/${files.length}...`));
+        const ti=document.querySelector(`.pm-title[data-i="${i}"]`);
+        const li=document.querySelector(`.pm-lang[data-i="${i}"]`);
+        const ci=document.querySelector(`.pm-cat[data-i="${i}"]`);
+        const pi=document.querySelector(`.pm-parsha[data-i="${i}"]`);
+        const yi=document.querySelector(`.pm-year[data-i="${i}"]`);
+        const gi=document.querySelector(`.pm-tags[data-i="${i}"]`);
+        const row={date,title:ti?.value||f.name,language:li?.value||'',category:ci?.value||'',parsha:pi?.value||'',year:yi?.value||'',tags:gi?.value||'',pdf_url:`r2://${k}`,r2_keys:[k],newTags:[],newCategories:[]};
+        setProg(key,82+Math.round((i/files.length)*10),'Saving to database...');
+        const r=await fetch('/.netlify/functions/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'pdf',...row})});
+        const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'Submit failed: '+JSON.stringify(d));
+      }
+    }
+
+    setProg(key,100,'פארטיק!');
+    setSt(key,'ok','✓ אריינגעשיקט! יישר כח.');
+    resetUpload(key);
+  } catch(e){
+    setSt(key,'err','⚠ '+e.message);
+    console.error('[Upload]',e);
+  }
+  btn.disabled=false;
+}
+
+function resetUpload(key) {
+  fStore[key]=[];renderFL(key,key==='events',key==='events');
+  const dp=dps[key];if(dp){dp.sY.value='';dp.sP.value='';dp.sD.value='';dp.iD.value='';dp.nE.textContent='';}
+  ['blog-tags','blog-cat','events-tags','events-cat','video-tags','video-cat'].forEach(k=>{if(tState[k])resetTW(k);});
+  ['blog-title','blog-body','events-title','events-loc','events-desc','video-title','video-loc','video-desc','video-link','posters-parsha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const pm=document.getElementById('pdfs-meta');if(pm)pm.innerHTML='';
+  const pw=document.getElementById(`pr-${key}`);if(pw)pw.classList.remove('on');
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDash() {
+  for(const t of['posts','events','videos','pdfs','posters']){
+    fetch(`${API}/api/${t}?limit=999`,{headers:ah()}).then(r=>r.json()).then(d=>{
+      const el=document.getElementById(`sn-${t}`);if(el)el.textContent=d.items?.length||0;
+    }).catch(()=>{});
+  }
+}
+
+// ── USERS ─────────────────────────────────────────────────────────
+async function loadUsers() {
+  const r=await fetch(`${API}/api/admin/users`,{headers:ah()});
+  const d=await r.json();
+  const tbody=document.getElementById('users-body');
+  if(!d.users?.length){tbody.innerHTML='<tr class="empty"><td colspan="6">קיין באַניצער</td></tr>';return;}
+  tbody.innerHTML=d.users.map(u=>`
+    <tr>
+      <td>${esc(u.name||'—')}</td>
+      <td style="color:var(--muted);direction:ltr;text-align:right">${esc(u.email)}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td><span class="badge badge-${u.active?'on':'off'}">${u.active?'אַקטיוו':'דיזייבלד'}</span></td>
+      <td style="font-size:.7rem;color:var(--muted)">${fmtPerms(u.permissions,u.role)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>רעדאקטירן</button>
+        ${u.role!=='superadmin'?`<button class="btn btn-danger btn-sm" onclick="toggleUser(${u.id},${u.active})">${u.active?'דיזייבלן':'ענייבלן'}</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function fmtPerms(perms,role){
+  if(role==='superadmin'||role==='admin')return'אַלץ';
+  if(!perms?.length)return'—';
+  return perms.map(p=>{const page=typeof p==='string'?p:p.page,up=typeof p==='string'?1:p.can_upload,ed=typeof p==='string'?1:p.can_edit;return`${page}(${up?'U':''}${ed?'E':''})`;}).join(', ');
+}
+
+function openCreateUser(){
+  document.getElementById('u-id').value='';
+  ['u-name','u-email','u-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('u-role').value='user';
+  document.getElementById('pw-hint').style.display='none';
+  document.getElementById('modal-user-title').textContent='נייער באַניצער';
+  document.getElementById('u-msg').textContent='';
+  document.querySelectorAll('.pcheck input[type=checkbox]').forEach(cb=>cb.checked=true);
+  openM('modal-user');
+}
+
+function openEditUser(u){
+  document.getElementById('u-id').value=u.id;
+  document.getElementById('u-name').value=u.name||'';
+  document.getElementById('u-email').value=u.email;
+  document.getElementById('u-pass').value='';
+  document.getElementById('u-role').value=u.role;
+  document.getElementById('pw-hint').style.display='';
+  document.getElementById('modal-user-title').textContent='רעדאקטירן באַניצער';
+  document.getElementById('u-msg').textContent='';
+  const pp=u.permissions||[];
+  document.querySelectorAll('.pcheck input[type=checkbox]').forEach(cb=>{
+    const page=cb.dataset.page,type=cb.dataset.type;
+    const perm=pp.find(p=>(typeof p==='string'?p===page:p.page===page));
+    if(perm){cb.checked=type==='upload'?(typeof perm==='string'?true:!!perm.can_upload):(typeof perm==='string'?true:!!perm.can_edit);}
+    else cb.checked=false;
+  });
+  openM('modal-user');
+}
+
+async function saveUser(){
+  const id=document.getElementById('u-id').value;
+  const name=document.getElementById('u-name').value.trim();
+  const email=document.getElementById('u-email').value.trim();
+  const pass=document.getElementById('u-pass').value;
+  const role=document.getElementById('u-role').value;
+  const msg=document.getElementById('u-msg');
+  const pages=['blog','posters','events','video','pdfs'];
+  const permissions=pages.map(page=>({page,can_upload:document.querySelector(`input[data-page="${page}"][data-type="upload"]`)?.checked?1:0,can_edit:document.querySelector(`input[data-page="${page}"][data-type="edit"]`)?.checked?1:0})).filter(p=>p.can_upload||p.can_edit);
+  try{
+    if(id){
+      const body={name,role,permissions};if(pass)body.password=pass;
+      const r=await fetch(`${API}/api/admin/users/${id}`,{method:'PUT',headers:ah(),body:JSON.stringify(body)});
+      const d=await r.json();if(d.error)throw new Error(d.error);
+      await fetch(`${API}/api/admin/users/${id}/permissions`,{method:'PUT',headers:ah(),body:JSON.stringify({permissions})});
+    }else{
+      if(!email||!pass)throw new Error('אימעיל און פּאַסווארט זיינען פארלאנגט');
+      const r=await fetch(`${API}/api/admin/users`,{method:'POST',headers:ah(),body:JSON.stringify({email,name,password:pass,role,permissions})});
+      const d=await r.json();if(d.error)throw new Error(d.error);
+    }
+    msg.className='msg ok';msg.textContent='גהאלטן!';
+    setTimeout(()=>{closeM('modal-user');loadUsers();},700);
+  }catch(e){msg.className='msg err';msg.textContent=e.message;}
+}
+
+async function toggleUser(id,active){
+  await fetch(`${API}/api/admin/users/${id}`,{method:'PUT',headers:ah(),body:JSON.stringify({active:active?0:1})});
+  loadUsers();
+}
+
+// ── CONTENT ───────────────────────────────────────────────────────
+let curCT='posts', editCTId=null;
+function setCT(type,btn){curCT=type;document.querySelectorAll('.f-pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');loadContent();}
+
+async function loadContent(){
+  const q=document.getElementById('ct-search')?.value||'';
+  const r=await fetch(`${API}/api/${curCT}?search=${encodeURIComponent(q)}&limit=200`,{headers:ah()});
+  const d=await r.json();
+  const tbody=document.getElementById('ct-body');
+  if(!d.items?.length){tbody.innerHTML='<tr class="empty"><td colspan="5">קיין אייטעמס</td></tr>';return;}
+  tbody.innerHTML=d.items.map(item=>`
+    <tr>
+      <td style="color:var(--muted);white-space:nowrap">${item.date||'—'}</td>
+      <td>${esc(item.title||item.parsha||'—')}</td>
+      <td style="font-size:.7rem;color:var(--muted)">${esc((item.tags||'').split(',').slice(0,3).filter(Boolean).join(', '))}</td>
+      <td style="font-size:.7rem;color:var(--muted);white-space:nowrap">${item.created_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick='openEditCT(${JSON.stringify(item)})'>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCT(${item.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openEditCT(item){
+  editCTId=item.id;
+  const fields={posts:[['date','דאטום'],['title','טיטל'],['body','טעקסט'],['tags','טאגן']],posters:[['date','דאטום'],['parsha','פרשה']],events:[['date','דאטום'],['title','טיטל'],['location','אָרט'],['category','קאטעגאריע'],['description','באשרייבונג'],['tags','טאגן']],videos:[['date','דאטום'],['title','טיטל'],['location','אָרט'],['category','קאטעגאריע'],['description','באשרייבונג'],['tags','טאגן'],['video_url','ווידיאו לינק']],pdfs:[['date','דאטום'],['title','טיטל'],['category','קאטעגאריע'],['language','שפּראך'],['parsha','פרשה'],['year','יאָר'],['tags','טאגן']]};
+  document.getElementById('ct-modal-body').innerHTML=(fields[curCT]||[]).map(([k,l])=>`
+    <div class="field"><label>${l}</label>
+      ${k==='body'||k==='description'?`<textarea id="ec-${k}" rows="4">${esc(item[k]||'')}</textarea>`:`<input type="text" id="ec-${k}" value="${esc(item[k]||'')}">` }
+    </div>`).join('');
+  openM('modal-ct');
+}
+
+async function saveContent(){
+  const fields={posts:['date','title','body','tags'],posters:['date','parsha'],events:['date','title','location','category','description','tags'],videos:['date','title','location','category','description','tags','video_url'],pdfs:['date','title','category','language','parsha','year','tags']};
+  const body={};(fields[curCT]||[]).forEach(f=>{const el=document.getElementById(`ec-${f}`);if(el)body[f]=el.value;});
+  const r=await fetch(`${API}/api/${curCT}/${editCTId}`,{method:'PUT',headers:ah(),body:JSON.stringify(body)});
+  const d=await r.json();if(d.error){alert(d.error);return;}
+  closeM('modal-ct');loadContent();
+}
+
+async function deleteCT(id){
+  if(!confirm('אויסמעקן? (גייט אין אָפּפֿאַלגרוב)'))return;
+  await fetch(`${API}/api/${curCT}/${id}`,{method:'DELETE',headers:ah()});
+  loadContent();
+}
+
+// ── TRASH ─────────────────────────────────────────────────────────
+async function loadTrash(){
+  const r=await fetch(`${API}/api/trash`,{headers:ah()});
+  const d=await r.json();
+  const tbody=document.getElementById('trash-body');
+  if(!d.items?.length){tbody.innerHTML='<tr class="empty"><td colspan="4">אָפּפֿאַלגרוב איז ליידיג</td></tr>';return;}
+  tbody.innerHTML=d.items.map(item=>`
+    <tr>
+      <td><span class="badge badge-user">${item._table}</span></td>
+      <td>${esc(item.title||item.parsha||item.date||'—')}</td>
+      <td style="color:var(--muted);font-size:.77rem;white-space:nowrap">${item.deleted_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="restoreItem('${item._table}',${item.id})">Restore</button>
+        <button class="btn btn-danger btn-sm" onclick="permDel('${item._table}',${item.id})">פאר אייביג Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function restoreItem(table,id){await fetch(`${API}/api/trash/restore/${id}`,{method:'POST',headers:ah(),body:JSON.stringify({table,id})});loadTrash();}
+async function permDel(table,id){if(!confirm('פאר אייביג מעקן? קען נישט אומגעקערט ווערן.'))return;await fetch(`${API}/api/trash/permanent/${id}`,{method:'DELETE',headers:ah(),body:JSON.stringify({table,id})});loadTrash();}
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  loadTaxonomy();
+  loadDash();
+  ['blog','posters','events','video','pdfs'].forEach(k=>initDatePicker(`dp-${k}`));
+  initZone('blog',   'image/*',              true, false, false);
+  initZone('posters','image/*',              true, false, false);
+  initZone('events', 'audio/*',              true, true,  true);
+  initZone('video',  'video/*',              false,false, false);
+  initZone('pdfs',   '.pdf,application/pdf', true, false, false);
+});
+// ══════════════════════════════════════════════════════════════════
+// FORM BUILDER
+// ══════════════════════════════════════════════════════════════════
+
+const FIELD_TYPES = [
+  { type:'text',       label:'Short Text',    icon:'Aa' },
+  { type:'textarea',   label:'Long Text',     icon:'¶'  },
+  { type:'email',      label:'Email',         icon:'@'  },
+  { type:'phone',      label:'Phone',         icon:'☎'  },
+  { type:'number',     label:'Number',        icon:'#'  },
+  { type:'date',       label:'Date',          icon:'📅' },
+  { type:'dropdown',   label:'Dropdown',      icon:'▾'  },
+  { type:'radio',      label:'Radio',         icon:'◉'  },
+  { type:'checkboxes', label:'Checkboxes',    icon:'☑'  },
+  { type:'rating',     label:'Rating Stars',  icon:'★'  },
+  { type:'file',       label:'File Upload',   icon:'📎' },
+  { type:'signature',  label:'Signature',     icon:'✍'  },
+  { type:'header',     label:'Section Header',icon:'H'  },
+  { type:'divider',    label:'Divider',       icon:'—'  },
+  { type:'page_break', label:'Page Break',    icon:'⊟'  },
+];
+
+let currentFormId   = null;
+let currentFormSlug = '';
+let formFields      = [];  // [{id,type,label,placeholder,options,required,conditional,settings}]
+let formSettings    = {};
+let editingFieldIdx = null;
+let autoSaveTimer   = null;
+
+// ── FORMS LIST ────────────────────────────────────────────────────
+async function loadForms() {
+  const r = await fetch(`${API}/api/forms`, { headers: ah() });
+  const d = await r.json();
+  const tbody = document.getElementById('forms-body');
+  if (!d.forms?.length) { tbody.innerHTML = '<tr class="empty"><td colspan="5">No forms yet — click + New Form</td></tr>'; return; }
+  tbody.innerHTML = d.forms.map(f => {
+    const s = JSON.parse(f.settings||'{}');
+    const url = `${location.origin}/form/${f.slug}`;
+    return `<tr>
+      <td><strong>${esc(f.title)}</strong></td>
+      <td style="font-size:.72rem"><a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none">/form/${esc(f.slug)}</a></td>
+      <td style="color:var(--muted)">—</td>
+      <td style="font-size:.72rem;color:var(--muted)">${f.created_at?.split('T')[0]||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openFormBuilder(${f.id})">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openFormResponses(${f.id},'${esc(f.title)}')">Responses</button>
+        <button class="btn btn-ghost btn-sm" onclick="openFormStats(${f.id},'${esc(f.title)}')">Stats</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFormConfirm(${f.id})">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function newForm() {
+  const title = prompt('Form title:');
+  if (!title) return;
+  const r = await fetch(`${API}/api/forms`, { method:'POST', headers:ah(), body:JSON.stringify({ title, settings:{} }) });
+  const d = await r.json();
+  if (d.error) { alert(d.error); return; }
+  currentFormId   = d.id;
+  currentFormSlug = d.slug;
+  formFields      = [];
+  formSettings    = { bgColor:'#7a4a1e', textColor:'#ffffff', accentColor:'#c8844a', btnTextColor:'#ffffff', font:'Heebo', direction:'ltr', submitLabel:'Submit', confirmMessage:'Thank you for your submission!' };
+  openFormBuilder(d.id);
+}
+
+async function openFormBuilder(formId) {
+  const r = await fetch(`${API}/api/forms/${formId}`, { headers:ah() });
+  const d = await r.json();
+  if (d.error) { alert(d.error); return; }
+  currentFormId   = formId;
+  currentFormSlug = d.form.slug;
+  formFields      = d.fields.map(f => ({ ...f, options: f.options ? JSON.parse(f.options) : [], conditional: f.conditional ? JSON.parse(f.conditional) : null, settings: f.settings ? JSON.parse(f.settings) : {} }));
+  formSettings    = JSON.parse(d.form.settings || '{}');
+
+  document.getElementById('fb-title').textContent = d.form.title;
+  document.getElementById('fb-url').textContent = `${location.origin}/form/${currentFormSlug}`;
+  document.getElementById('sb-formbuild').style.display = '';
+  document.getElementById('sb-formresp').style.display  = '';
+  document.getElementById('sb-formstats').style.display = '';
+  showTab('formbuild', document.getElementById('sb-formbuild'));
+  renderPalette();
+  renderCanvas();
+}
+
+async function deleteFormConfirm(formId) {
+  if (!confirm('Delete this form? All responses will be lost.')) return;
+  await fetch(`${API}/api/forms/${formId}`, { method:'DELETE', headers:ah() });
+  loadForms();
+}
+
+// ── PALETTE ───────────────────────────────────────────────────────
+function renderPalette() {
+  const el = document.getElementById('field-palette');
+  el.innerHTML = FIELD_TYPES.map(ft => `
+    <button onclick="addField('${ft.type}')" style="display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.78rem;border-radius:2px;cursor:pointer;text-align:left;transition:all .12s;width:100%" onmouseover="this.style.color='#fff';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='';this.style.borderColor=''">
+      <span style="width:18px;text-align:center;font-size:.82rem;flex-shrink:0">${ft.icon}</span>${ft.label}
+    </button>`).join('');
+}
+
+// ── CANVAS ────────────────────────────────────────────────────────
+function renderCanvas() {
+  const canvas = document.getElementById('fb-canvas');
+  const empty  = document.getElementById('fb-empty');
+  if (!formFields.length) { if(empty)empty.style.display=''; canvas.innerHTML = '<div id="fb-empty" style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Add fields from the left panel</div>'; return; }
+  if (empty) empty.style.display = 'none';
+  canvas.innerHTML = formFields.map((f,i) => `
+    <div class="fb-field" data-idx="${i}" style="display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:2px;margin-bottom:.4rem;cursor:grab" draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event)" ondrop="fbDrop(event,${i})">
+      <span style="color:var(--subtle);cursor:grab;flex-shrink:0">≡</span>
+      <span style="font-size:.72rem;color:var(--muted);flex-shrink:0;width:80px">${FIELD_TYPES.find(t=>t.type===f.type)?.label||f.type}</span>
+      <span style="flex:1;font-size:.85rem;font-weight:${f.type==='header'?'700':'400'}">${esc(f.label)||'<span style="color:var(--subtle)">Untitled</span>'}</span>
+      ${f.required ? '<span style="font-size:.65rem;background:rgba(255,107,107,.15);color:#ff6b6b;padding:.1rem .4rem;border-radius:99px">Required</span>' : ''}
+      <button onclick="editField(${i})" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:.7rem;padding:.2rem .5rem;border-radius:2px;cursor:pointer">Edit</button>
+      <button onclick="removeField(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:.1rem">✕</button>
+    </div>`).join('');
+}
+
+let fbDragIdx = null;
+function fbDragStart(e, idx) { fbDragIdx=idx; e.dataTransfer.effectAllowed='move'; }
+function fbDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function fbDrop(e, idx) {
+  e.preventDefault();
+  if (fbDragIdx===null||fbDragIdx===idx) return;
+  const moved = formFields.splice(fbDragIdx,1)[0];
+  formFields.splice(idx,0,moved);
+  fbDragIdx=null;
+  renderCanvas();
+}
+
+function addField(type) {
+  const defaults = { type, label: FIELD_TYPES.find(t=>t.type===type)?.label || type, placeholder:'', options: ['dropdown','radio','checkboxes'].includes(type)?['Option 1','Option 2']:[], required:false, conditional:null, settings:{} };
+  formFields.push(defaults);
+  renderCanvas();
+}
+
+function removeField(idx) {
+  formFields.splice(idx,1);
+  renderCanvas();
+}
+
+// ── FIELD SETTINGS ────────────────────────────────────────────────
+function editField(idx) {
+  editingFieldIdx = idx;
+  const f = formFields[idx];
+  document.getElementById('fld-modal-title').textContent = `Edit: ${FIELD_TYPES.find(t=>t.type===f.type)?.label||f.type}`;
+  const hasOptions = ['dropdown','radio','checkboxes'].includes(f.type);
+  const hasCond    = formFields.some((ff,i) => i!==idx && ['dropdown','radio','checkboxes'].includes(ff.type));
+  const condFields = formFields.filter((ff,i) => i!==idx && ['dropdown','radio','checkboxes'].includes(ff.type));
+
+  let html = '';
+  if (f.type !== 'header' && f.type !== 'divider' && f.type !== 'page_break') {
+    html += `<div class="field"><label>Label</label><input type="text" id="fld-label" value="${esc(f.label)}"></div>`;
+    if (f.type !== 'rating' && f.type !== 'signature' && f.type !== 'file') {
+      html += `<div class="field"><label>Placeholder</label><input type="text" id="fld-ph" value="${esc(f.placeholder||'')}"></div>`;
+    }
+    html += `<div class="field"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer"><input type="checkbox" id="fld-req" ${f.required?'checked':''} style="width:16px;height:16px;accent-color:var(--accent)"> Required</label></div>`;
+  } else {
+    html += `<div class="field"><label>Label / Text</label><input type="text" id="fld-label" value="${esc(f.label)}"></div>`;
+  }
+
+  if (hasOptions) {
+    const opts = Array.isArray(f.options) ? f.options : [];
+    html += `<div class="field"><label>Options (one per line)</label><textarea id="fld-opts" rows="6" style="direction:ltr">${esc(opts.join('\n'))}</textarea></div>`;
+  }
+
+  if (f.type === 'file') {
+    html += `<div class="field"><label>Allowed File Types</label><input type="text" id="fld-filetypes" value="${esc(f.settings?.allowedTypes||'')}" placeholder="e.g. image/*,.pdf (leave blank for all)"></div>`;
+    html += `<div class="field"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer"><input type="checkbox" id="fld-multifile" ${f.settings?.multiFile?'checked':''} style="width:16px;height:16px;accent-color:var(--accent)"> Allow multiple files</label></div>`;
+  }
+
+  if (hasCond) {
+    html += `<div class="field"><label>Show only if...</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+      <select id="fld-cond-field"><option value="">— No condition —</option>${condFields.map(ff=>`<option value="${ff.id||ff._tempId}" ${f.conditional?.fieldId===(ff.id||ff._tempId)?'selected':''}>${esc(ff.label)}</option>`).join('')}</select>
+      <input type="text" id="fld-cond-val" value="${esc(f.conditional?.value||'')}" placeholder="equals value...">
+    </div></div>`;
+  }
+
+  document.getElementById('fld-modal-body').innerHTML = html;
+  openM('modal-fieldsettings');
+}
+
+function saveFieldSettings() {
+  const f    = formFields[editingFieldIdx];
+  const lbl  = document.getElementById('fld-label');
+  const ph   = document.getElementById('fld-ph');
+  const req  = document.getElementById('fld-req');
+  const opts = document.getElementById('fld-opts');
+  const cf   = document.getElementById('fld-cond-field');
+  const cv   = document.getElementById('fld-cond-val');
+
+  if (lbl) f.label       = lbl.value;
+  if (ph)  f.placeholder = ph.value;
+  if (req) f.required    = req.checked;
+  if (opts) f.options    = opts.value.split('\n').map(s=>s.trim()).filter(Boolean);
+
+  const ft = document.getElementById('fld-filetypes');
+  const fm = document.getElementById('fld-multifile');
+  if (ft||fm) { f.settings = f.settings||{}; if(ft)f.settings.allowedTypes=ft.value; if(fm)f.settings.multiFile=fm.checked; }
+
+  if (cf && cv) {
+    const fid = cf.value;
+    const val = cv.value.trim();
+    f.conditional = fid && val ? { fieldId: fid, value: val } : null;
+  }
+
+  renderCanvas();
+  closeM('modal-fieldsettings');
+}
+
+// ── FORM SETTINGS ─────────────────────────────────────────────────
+function showFormSettings() {
+  const s = formSettings;
+  const setVal = (id, val) => { const el=document.getElementById(id); if(el&&val!==undefined)el.value=val; };
+  setVal('fs-title',        document.getElementById('fb-title').textContent);
+  setVal('fs-slug',         currentFormSlug);
+  setVal('fs-desc',         s.description||'');
+  setVal('fs-confirm',      s.confirmMessage||'Thank you for your submission!');
+  setVal('fs-submit-label', s.submitLabel||'Submit');
+  setVal('fs-bg',           s.bgColor||'#7a4a1e');
+  setVal('fs-text',         s.textColor||'#ffffff');
+  setVal('fs-accent',       s.accentColor||'#c8844a');
+  setVal('fs-btntext',      s.btnTextColor||'#ffffff');
+  setVal('fs-font',         s.font||'Heebo');
+  setVal('fs-dir',          s.direction||'ltr');
+  setVal('fs-logo',         s.logoImage||'');
+  setVal('fs-banner',       s.bannerImage||'');
+  setVal('fs-access',       s.accessType||'public');
+  setVal('fs-password',     s.password||'');
+  setVal('fs-captcha',      s.captcha||'');
+  setVal('fs-open',         s.openAt||'');
+  setVal('fs-close',        s.closeAt||'');
+  setVal('fs-maxresp',      s.maxResponses||'');
+  setVal('fs-closed-msg',   s.closedMessage||'');
+  setVal('fs-notopen-msg',  s.notOpenMessage||'');
+  setVal('fs-notify-email', s.notifyEmail||'');
+  setVal('fs-notify-type',  s.notifyType||'');
+  setVal('fs-confirm-email',s.confirmEmail||'');
+  setVal('fs-confirm-subj', s.confirmSubject||'');
+  setVal('fs-confirm-body', s.confirmBody||'');
+  openM('modal-formsettings');
+}
+
+function fsTab(name, btn) {
+  ['general','style','access','schedule','notify'].forEach(t => {
+    const el=document.getElementById(`fst-${t}`); if(el)el.style.display=t===name?'':'none';
+  });
+  document.querySelectorAll('#modal-formsettings .f-pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function saveFormSettings() {
+  const g = id => document.getElementById(id)?.value || '';
+  formSettings = {
+    ...formSettings,
+    description:    g('fs-desc'),
+    confirmMessage: g('fs-confirm'),
+    submitLabel:    g('fs-submit-label'),
+    bgColor:        g('fs-bg'),
+    textColor:      g('fs-text'),
+    accentColor:    g('fs-accent'),
+    btnTextColor:   g('fs-btntext'),
+    font:           g('fs-font'),
+    direction:      g('fs-dir'),
+    logoImage:      g('fs-logo'),
+    bannerImage:    g('fs-banner'),
+    accessType:     g('fs-access'),
+    password:       g('fs-password'),
+    captcha:        g('fs-captcha'),
+    openAt:         g('fs-open'),
+    closeAt:        g('fs-close'),
+    maxResponses:   g('fs-maxresp') ? +g('fs-maxresp') : null,
+    closedMessage:  g('fs-closed-msg'),
+    notOpenMessage: g('fs-notopen-msg'),
+    notifyEmail:    g('fs-notify-email'),
+    notifyType:     g('fs-notify-type'),
+    confirmEmail:   g('fs-confirm-email'),
+    confirmSubject: g('fs-confirm-subj'),
+    confirmBody:    g('fs-confirm-body'),
+  };
+  const newTitle = g('fs-title');
+  const newSlug  = g('fs-slug');
+  if (newTitle) document.getElementById('fb-title').textContent = newTitle;
+  if (newSlug)  { currentFormSlug = newSlug; document.getElementById('fb-url').textContent = `${location.origin}/form/${newSlug}`; }
+  closeM('modal-formsettings');
+  saveForm(true);
+}
+
+async function saveForm(settingsOnly=false) {
+  if (!currentFormId) return;
+  const title = document.getElementById('fb-title').textContent;
+
+  // Save form metadata + settings
+  await fetch(`${API}/api/forms/${currentFormId}`, {
+    method: 'PUT', headers: ah(),
+    body: JSON.stringify({ title, slug: currentFormSlug, description: formSettings.description||'', settings: formSettings }),
+  });
+
+  if (!settingsOnly) {
+    // Save fields — assign temp IDs to new fields
+    const fieldsToSave = formFields.map((f,i) => ({
+      ...f,
+      options: Array.isArray(f.options) ? f.options : [],
+    }));
+    await fetch(`${API}/api/forms/${currentFormId}/fields`, {
+      method: 'PUT', headers: ah(), body: JSON.stringify({ fields: fieldsToSave }),
+    });
+    // Reload to get real DB IDs
+    const r = await fetch(`${API}/api/forms/${currentFormId}`, { headers: ah() });
+    const d = await r.json();
+    formFields = d.fields.map(f => ({ ...f, options: f.options?JSON.parse(f.options):[], conditional: f.conditional?JSON.parse(f.conditional):null, settings: f.settings?JSON.parse(f.settings):{} }));
+    renderCanvas();
+  }
+
+  // Flash save indicator
+  const btn = document.querySelector('#tab-formbuild .btn-primary');
+  if (btn) { const orig=btn.textContent; btn.textContent='✓ Saved'; setTimeout(()=>btn.textContent=orig,1500); }
+}
+
+function previewForm() {
+  window.open(`/form/${currentFormSlug}`, '_blank');
+}
+
+// ── RESPONSES ─────────────────────────────────────────────────────
+let currentRespFormId = null;
+let currentRespFields = [];
+let currentRespData   = [];
+
+async function openFormResponses(formId, title) {
+  currentRespFormId = formId;
+  document.getElementById('resp-title').textContent = `Responses — ${title}`;
+  showTab('formresp', document.getElementById('sb-formresp'));
+  document.getElementById('sb-formresp').style.display = '';
+  loadResponses();
+  // Auto-refresh every 30s
+  if (window._respTimer) clearInterval(window._respTimer);
+  window._respTimer = setInterval(loadResponses, 30000);
+}
+
+async function loadResponses() {
+  const r = await fetch(`${API}/api/forms/${currentRespFormId}/responses`, { headers: ah() });
+  const d = await r.json();
+  currentRespFields = d.fields || [];
+  currentRespData   = d.responses || [];
+
+  document.getElementById('resp-count').textContent = `${currentRespData.length} response${currentRespData.length!==1?'s':''}`;
+
+  const contentFields = currentRespFields.filter(f => !['header','divider','page_break'].includes(f.type));
+
+  // Build table header
+  document.getElementById('resp-thead').innerHTML = `<tr><th>#</th><th>Submitted</th>${contentFields.map(f=>`<th>${esc(f.label)}</th>`).join('')}<th>Actions</th></tr>`;
+
+  if (!currentRespData.length) { document.getElementById('resp-tbody').innerHTML = '<tr class="empty"><td colspan="10">No responses yet</td></tr>'; return; }
+
+  document.getElementById('resp-tbody').innerHTML = currentRespData.map((resp, i) => {
+    const meta = JSON.parse(resp.metadata || '{}');
+    const ansMap = {};
+    (resp.answers||[]).forEach(a => ansMap[a.field_id] = a.value);
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-size:.72rem;color:var(--muted);white-space:nowrap">${resp.submitted_at?.replace('T',' ').slice(0,16)||'—'}</td>
+      ${contentFields.map(f => {
+        const val = ansMap[f.id] || '';
+        // Check if it's an R2 file key
+        if (val.startsWith('forms/') || val.startsWith('r2://')) {
+          const keys = val.replace('r2://','').split(', ');
+          return `<td>${keys.map(k=>`<a href="https://pub.moisdes-media.r2.dev/${k}" target="_blank" style="color:var(--accent);font-size:.72rem">📎 View</a>`).join('<br>')}</td>`;
+        }
+        if (val.startsWith('data:image')) return `<td><img src="${val}" style="max-height:40px;border-radius:2px"></td>`;
+        return `<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem" title="${esc(val)}">${esc(val)}</td>`;
+      }).join('')}
+      <td><button class="btn btn-danger btn-sm" onclick="deleteResp(${resp.id})">Delete</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteResp(id) {
+  if (!confirm('Delete this response?')) return;
+  await fetch(`${API}/api/form-responses/${id}`, { method:'DELETE', headers:ah() });
+  loadResponses();
+}
+
+async function exportExcel() {
+  if (!currentRespData.length) { alert('No responses to export'); return; }
+  const contentFields = currentRespFields.filter(f => !['header','divider','page_break'].includes(f.type));
+  const rows = [];
+  // Header row
+  rows.push(['#', 'Submitted At', 'IP', 'Country', ...contentFields.map(f=>f.label)]);
+  // Data rows
+  currentRespData.forEach((resp, i) => {
+    const meta   = JSON.parse(resp.metadata||'{}');
+    const ansMap = {};
+    (resp.answers||[]).forEach(a => ansMap[a.field_id] = a.value);
+    rows.push([i+1, resp.submitted_at, meta.ip||'', meta.country||'', ...contentFields.map(f=>ansMap[f.id]||'')]);
+  });
+  // Build CSV (fallback if SheetJS unavailable)
+  const csv = rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `responses-${currentRespFormId}-${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────
+async function openFormStats(formId, title) {
+  currentRespFormId = formId;
+  document.getElementById('stats-title').textContent = `Stats — ${title}`;
+  showTab('formstats', document.getElementById('sb-formstats'));
+  document.getElementById('sb-formstats').style.display = '';
+  const r = await fetch(`${API}/api/forms/${formId}/stats`, { headers:ah() });
+  const d = await r.json();
+  if (d.error) { document.getElementById('stats-content').textContent = d.error; return; }
+
+  let html = `<div class="stats" style="margin-bottom:1.5rem">
+    <div class="stat"><div class="stat-n">${d.total}</div><div class="stat-l">Total Responses</div></div>
+  </div>`;
+
+  // Response over time
+  if (d.byDay?.length) {
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:1.25rem;margin-bottom:1.25rem">
+      <div style="font-size:.78rem;font-weight:700;margin-bottom:1rem;color:var(--muted)">RESPONSES OVER TIME</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px">`;
+    const max = Math.max(...d.byDay.map(x=>x.n));
+    d.byDay.forEach(day => {
+      const h = max ? Math.round((day.n/max)*80) : 0;
+      html += `<div title="${day.day}: ${day.n}" style="flex:1;min-width:4px;height:${h}px;background:var(--accent);border-radius:1px;opacity:.8"></div>`;
+    });
+    html += `</div><div style="font-size:.65rem;color:var(--subtle);margin-top:.3rem">${d.byDay[0]?.day||''} — ${d.byDay[d.byDay.length-1]?.day||''}</div></div>`;
+  }
+
+  // Per-field stats
+  const choiceFields = d.fields?.filter(f => ['dropdown','radio','checkboxes'].includes(f.type)) || [];
+  choiceFields.forEach(field => {
+    const stats = d.fieldStats?.[field.id] || [];
+    if (!stats.length) return;
+    const total = stats.reduce((sum,s)=>sum+s.n, 0);
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:1.25rem;margin-bottom:1rem">
+      <div style="font-size:.78rem;font-weight:700;margin-bottom:1rem;color:var(--muted)">${esc(field.label).toUpperCase()}</div>`;
+    stats.forEach(s => {
+      const pct = total ? Math.round(s.n/total*100) : 0;
+      html += `<div style="margin-bottom:.5rem">
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.25rem"><span>${esc(s.value)}</span><span style="color:var(--muted)">${s.n} (${pct}%)</span></div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px"><div style="width:${pct}%;height:100%;background:var(--accent);border-radius:99px"></div></div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  document.getElementById('stats-content').innerHTML = html;
+}
+
+// Init forms tab
+document.addEventListener('DOMContentLoaded', () => {
+  // Forms tab loads on click via showTab
+});
+
+</script>
+</body>
+</html>
