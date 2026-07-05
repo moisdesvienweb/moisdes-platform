@@ -22,10 +22,20 @@ exports.handler = async (event) => {
 
   if (!CF_API_TOKEN) return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: 'CF_API_TOKEN not set in Netlify environment variables' }) };
 
+  // Test endpoint — POST with {"type":"test"} to check D1 connectivity
   try {
     const p = JSON.parse(event.body);
     const { type } = p;
     if (!type) return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Missing type' }) };
+
+    if (type === 'test') {
+      try {
+        const testResult = await d1Run('SELECT 1 as ok', []);
+        return { statusCode: 200, headers: HEADERS, body: JSON.stringify({ success: true, d1: 'connected', result: testResult }) };
+      } catch(e) {
+        return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: 'D1 test failed: ' + e.message, token_prefix: CF_API_TOKEN?.slice(0,8) + '...', account: CF_ACCOUNT_ID, db: CF_DB_ID }) };
+      }
+    }
 
     let id = 0;
     if (type === 'blog')        id = await d1Run('INSERT INTO posts (date,title,body,folder_url,tags,uploaded_by) VALUES (?,?,?,?,?,?)', [p.date||'',p.title||'',p.body||'',p.folder_url||'',p.tags||'',1]);
@@ -59,7 +69,12 @@ async function d1Run(sql, params=[]) {
     headers: { Authorization: `Bearer ${CF_API_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ sql, params }),
   });
-  const data = await res.json();
-  if (!res.ok || !data.success) throw new Error('D1 error: ' + (data.errors?.[0]?.message || JSON.stringify(data)));
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error(`D1 returned non-JSON (status ${res.status}): ${text.slice(0,200)}`); }
+  if (!res.ok || !data.success) {
+    const msg = data.errors?.[0]?.message || data.error || JSON.stringify(data);
+    throw new Error(`D1 error (${res.status}): ${msg}`);
+  }
   return data.result?.[0]?.meta?.last_row_id || 0;
 }
