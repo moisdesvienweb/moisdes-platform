@@ -1,7 +1,10 @@
 // ================================================================
 // MOISDES — קהילה לוח (COMMUNITY CALENDAR)
-// calendar.js — full month-grid view, synced from the community
-// Google Calendar. Click a day to see its events below the grid.
+// calendar.js — Google-Calendar-style month grid + a continuous,
+// scrollable agenda list (all events, grouped by day, positioned at
+// today on load — scroll down for later events, up for earlier ones).
+// The grid renders immediately with no event data so the page feels
+// instant; events fill in (grid pills + agenda) once the fetch lands.
 // ================================================================
 
 (async function () {
@@ -31,46 +34,19 @@
 
   const WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
   const MONTH_NAMES = ['ינואר', 'פעברואר', 'מארץ', 'אפריל', 'מיי', 'יוני', 'יולי', 'אויגוסט', 'סעפטעמבער', 'אקטאבער', 'נאוועמבער', 'דעצעמבער'];
+  const MAX_PILLS = 2;
 
   const pad = (n) => String(n).padStart(2, '0');
   const isoOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-  let eventsByDay = {};
-  try {
-    const { events } = await api.get('/api/gcal-events');
-    events.forEach((ev) => {
-      const day = ev.start.slice(0, 10);
-      (eventsByDay[day] = eventsByDay[day] || []).push(ev);
-    });
-  } catch (e) {
-    agendaEl.innerHTML = `<p class="state-msg">${util.eh(e.message || 'נישט געקענט לאדן דעם קאלענדאר')}</p>`;
-  }
 
   const today = new Date();
   const todayIso = isoOf(today);
   let viewYear = today.getFullYear();
   let viewMonth = today.getMonth();
-  let selectedDay = todayIso;
+  let eventsByDay = {};
+  let eventsLoaded = false;
 
-  function renderAgenda(dayIso) {
-    const list = (eventsByDay[dayIso] || []).slice().sort((a, b) => a.start.localeCompare(b.start));
-    agendaEl.innerHTML = `<h3 class="parsha-heading">${util.eh(hebrew.isoToHebrewString(dayIso))}</h3>`;
-    if (!list.length) {
-      agendaEl.innerHTML += '<p class="state-msg">קיין געשעענישן נישט אין דעם טאג</p>';
-      return;
-    }
-    list.forEach((ev) => {
-      const time = ev.allDay ? '' : new Date(ev.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      const row = document.createElement('div');
-      row.className = 'search-result';
-      row.innerHTML = `
-        <div class="search-result-title">${util.eh(ev.summary)}${time ? ' · ' + time : ''}</div>
-        ${ev.location ? `<div class="search-result-meta">${util.eh(ev.location)}</div>` : ''}
-        ${ev.description ? `<div class="search-result-excerpt">${util.eh(ev.description)}</div>` : ''}
-      `;
-      agendaEl.appendChild(row);
-    });
-  }
+  agendaEl.innerHTML = '<p class="state-msg">לאדט געשעענישן...</p>';
 
   function renderGrid() {
     labelEl.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
@@ -102,21 +78,63 @@
       const cell = document.createElement('div');
       cell.className = 'cal-day' + (otherMonth ? ' other-month' : '');
       if (dayIso === todayIso) cell.classList.add('is-today');
-      if (dayIso === selectedDay) cell.classList.add('is-selected');
       const dayEvents = eventsByDay[dayIso] || [];
       const hebDay = hebrew.isoToHebrew(dayIso);
+
+      let eventsHtml = '';
+      if (dayEvents.length) {
+        const shown = dayEvents.slice(0, MAX_PILLS).map((ev) => `<span class="cal-event-pill">${util.eh(ev.summary)}</span>`).join('');
+        const more = dayEvents.length > MAX_PILLS ? `<span class="cal-event-more">+${dayEvents.length - MAX_PILLS}</span>` : '';
+        eventsHtml = `<div class="cal-events">${shown}${more}</div>`;
+      } else if (!eventsLoaded) {
+        eventsHtml = '';
+      }
+
       cell.innerHTML = `
-        <span class="cal-daynum">${d.getDate()}</span>
-        <span class="cal-hebday">${util.eh(hebrew.dayToHebrew(hebDay.day))}</span>
-        ${dayEvents.length ? '<span class="cal-dot"></span>' : ''}
+        <div class="cal-day-top">
+          <span class="cal-daynum">${d.getDate()}</span>
+          <span class="cal-hebday">${util.eh(hebrew.dayToHebrew(hebDay.day))}</span>
+        </div>
+        ${eventsHtml}
       `;
       cell.addEventListener('click', () => {
-        selectedDay = dayIso;
-        renderGrid();
-        renderAgenda(dayIso);
+        const heading = agendaEl.querySelector(`[data-day="${dayIso}"]`);
+        if (heading) heading.scrollIntoView({ block: 'start', behavior: 'smooth' });
       });
       gridEl.appendChild(cell);
     });
+  }
+
+  function renderAgenda() {
+    const days = Object.keys(eventsByDay).sort();
+    if (!days.length) {
+      agendaEl.innerHTML = '<p class="state-msg">נאך קיין געשעענישן אין קאלענדאר</p>';
+      return;
+    }
+    agendaEl.innerHTML = '';
+    let scrollTarget = null;
+    days.forEach((dayIso) => {
+      const heading = document.createElement('h4');
+      heading.className = 'agenda-day-heading';
+      heading.dataset.day = dayIso;
+      heading.textContent = hebrew.isoToHebrewString(dayIso);
+      if (dayIso === todayIso) heading.classList.add('is-today');
+      if (dayIso >= todayIso && !scrollTarget) scrollTarget = heading;
+      agendaEl.appendChild(heading);
+
+      eventsByDay[dayIso].slice().sort((a, b) => a.start.localeCompare(b.start)).forEach((ev) => {
+        const time = ev.allDay ? '' : new Date(ev.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const row = document.createElement('div');
+        row.className = 'search-result';
+        row.innerHTML = `
+          <div class="search-result-title">${util.eh(ev.summary)}${time ? ' · ' + time : ''}</div>
+          ${ev.location ? `<div class="search-result-meta">${util.eh(ev.location)}</div>` : ''}
+          ${ev.description ? `<div class="search-result-excerpt">${util.eh(ev.description)}</div>` : ''}
+        `;
+        agendaEl.appendChild(row);
+      });
+    });
+    if (scrollTarget) scrollTarget.scrollIntoView({ block: 'start' });
   }
 
   prevBtn.addEventListener('click', () => {
@@ -131,5 +149,17 @@
   });
 
   renderGrid();
-  renderAgenda(selectedDay);
+
+  try {
+    const { events } = await api.get('/api/gcal-events');
+    events.forEach((ev) => {
+      (eventsByDay[ev.date] = eventsByDay[ev.date] || []).push(ev);
+    });
+    eventsLoaded = true;
+    renderGrid();
+    renderAgenda();
+  } catch (e) {
+    eventsLoaded = true;
+    agendaEl.innerHTML = `<p class="state-msg">${util.eh(e.message || 'נישט געקענט לאדן דעם קאלענדאר')}</p>`;
+  }
 })();

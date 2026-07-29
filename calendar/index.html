@@ -52,21 +52,28 @@
   <div class="ticker-track" id="simchas-ticker"></div>
 </div>
 
-<main class="page">
+<main class="page page-wide">
   <div class="calendar-header">
     <h1 class="page-title" style="border:none;margin:0">קהילה לוח</h1>
     <div class="calendar-header-actions">
-      <a class="btn btn-outline" id="gcal-add-btn" href="#" target="_blank" rel="noopener" style="display:none">הוסף צום גוגל קאלענדאר</a>
       <a class="btn btn-primary" id="report-simcha-btn" href="#" target="_blank" rel="noopener" style="display:none">מעלדט א שמחה</a>
     </div>
   </div>
   <div class="calendar-nav">
     <button type="button" class="cal-nav-btn" id="calendar-prev" aria-label="פארגאנגענעם חודש">&#8249;</button>
-    <div class="calendar-month-label" id="calendar-month-label"></div>
+    <div class="calendar-month-wrap">
+      <div class="calendar-month-label" id="calendar-month-label"></div>
+      <a class="calendar-gcal-link" id="gcal-add-btn" href="#" target="_blank" rel="noopener" style="display:none">+ צום גוגל קאלענדאר</a>
+    </div>
     <button type="button" class="cal-nav-btn" id="calendar-next" aria-label="קומענדיגן חודש">&#8250;</button>
   </div>
-  <div class="cal-grid" id="calendar-grid"></div>
-  <div id="calendar-agenda" class="calendar-agenda"></div>
+  <div class="calendar-body">
+    <div class="cal-grid" id="calendar-grid"></div>
+    <div class="calendar-agenda-panel">
+      <div class="calendar-agenda-title">געשעענישן</div>
+      <div id="calendar-agenda" class="calendar-agenda"></div>
+    </div>
+  </div>
 </main>
 
 <footer id="moisdes-footer">
@@ -81,10 +88,14 @@
       <li><a href="/pdfs">גליונות</a></li>
       <li><a href="/calendar" class="active">לוח</a></li>
     </ul>
-    <a class="btn btn-sm newsletter-btn" id="newsletter-btn" href="#" target="_blank" rel="noopener" style="display:none">סיינט אייך אויף פאר קהלתינו</a>
-    <a class="btn btn-sm newsletter-btn" id="contact-btn" href="#" style="display:none">קאנטאקט</a>
-    <a class="powered-by" href="https://everythingshul.com" target="_blank" rel="noopener"><span>Powered by</span><img src="/everythingshul-logo.png" alt="EverythingShul.com"></a>
-    <div class="footer-copy">&copy; 2026 Mosdes Vien</div>
+    <div class="footer-actions">
+      <a class="btn btn-sm newsletter-btn" id="newsletter-btn" href="#" target="_blank" rel="noopener" style="display:none">סיינט אייך אויף פאר קהלתינו</a>
+      <a class="btn btn-sm newsletter-btn" id="contact-btn" href="#" style="display:none">קאנטאקט</a>
+    </div>
+    <div class="footer-attribution">
+      <a class="powered-by" href="https://everythingshul.com" target="_blank" rel="noopener"><span>Powered by</span><img src="/everythingshul-logo.png" alt="EverythingShul.com"></a>
+      <div class="footer-copy">&copy; 2026 Mosdes Vien</div>
+    </div>
   </div>
 </footer>
 

@@ -49,27 +49,28 @@
 
     for (const v of sorted) {
       const ytId = util.youtubeId(v.video_url);
-      // A directly-hosted file plays with a plain <video> tag — no
-      // YouTube branding — and takes priority over the YouTube embed.
-      const videoEmbed = v.video_file_url
-        ? `<video class="video-embed-native" controls src="${util.eh(api.r2Url(v.video_file_url))}"></video>`
-        : (ytId ? `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${ytId}?modestbranding=1&rel=0" allowfullscreen loading="lazy"></iframe></div>` : '');
-      const card = document.createElement('div');
+      // Listing page never embeds a player (no YouTube branding here at
+      // all) — just a thumbnail with a play badge, linking to the
+      // detail page where the actual video (with whatever branding it
+      // carries) plays.
+      let thumbUrl = null;
+      if (ytId) thumbUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+      else if (v.folder_url) thumbUrl = await api.firstImageUrl(v.folder_url);
+
+      const card = document.createElement('a');
       card.className = 'card video-card-item';
       card.id = `video-${v.id}`;
+      card.href = `/video/post.html?id=${v.id}`;
       card.innerHTML = `
-        ${videoEmbed}
-        <div class="event-meta">${hebrew.isoToHebrewString(v.date)}${v.location ? ' · ' + util.eh(v.location) : ''}${v.category ? ' · ' + util.eh(v.category) : ''}</div>
-        <h2 class="video-title">${util.eh(v.title)}</h2>
-        <div class="event-desc">${util.eh(v.description || '')}</div>
-        <div class="event-tags"></div>
+        <div class="card-media video-thumb">
+          ${thumbUrl ? `<img src="${util.eh(thumbUrl)}" alt="">` : ''}
+          <span class="video-play-badge">&#9658;</span>
+        </div>
+        <div class="card-body">
+          <div class="card-date">${hebrew.isoToHebrewString(v.date)}${v.location ? ' · ' + util.eh(v.location) : ''}${v.category ? ' · ' + util.eh(v.category) : ''}</div>
+          <div class="card-title">${util.eh(v.title)}</div>
+        </div>
       `;
-      const tagsEl = card.querySelector('.event-tags');
-      (v.tags || '').split(',').map((t) => t.trim()).filter(Boolean).forEach((t) => tagsEl.appendChild(tagPill(t)));
-      if (!tagsEl.children.length) tagsEl.remove();
-      if (window.MOISDES.shareButton) {
-        card.appendChild(window.MOISDES.shareButton(`${location.origin}/video#video-${v.id}`, v.title));
-      }
       grid.appendChild(card);
     }
 

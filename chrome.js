@@ -19,7 +19,7 @@
     overlay.classList.add('hidden');
     setTimeout(() => overlay.remove(), 500);
   };
-  setTimeout(window.MOISDES.hideLoadingOverlay, 6000);
+  setTimeout(window.MOISDES.hideLoadingOverlay, 12000);
 })();
 
 (function () {
@@ -95,6 +95,13 @@
 
 // ── SHARE BUTTON — a small reusable "share" control (email + copy link),
 // used on content cards across the site. Each click is tracked.
+//
+// The dropdown is appended to <body> (not the button's own wrapper) and
+// positioned with `position: fixed` from the button's live bounding rect.
+// Cards use `overflow: hidden` for their media crop, which was clipping
+// an absolutely-positioned menu — a body-level portal sidesteps that
+// entirely and also lets it flip to open upward when there's no room
+// below (e.g. the last card in a grid, near the footer).
 (function () {
   if (!window.MOISDES) return;
   window.MOISDES.shareButton = function (url, title) {
@@ -125,24 +132,56 @@
       try { await navigator.clipboard.writeText(url); copyBtn.textContent = 'קאפירט!'; }
       catch (err) { copyBtn.textContent = url; }
       window.MOISDES.track('share', `copy:${url}`);
-      setTimeout(() => { menu.style.display = 'none'; copyBtn.textContent = 'קאפירן לינק'; }, 1200);
+      setTimeout(() => { closeMenu(); copyBtn.textContent = 'קאפירן לינק'; }, 1200);
     });
 
     menu.appendChild(emailLink);
     menu.appendChild(copyBtn);
+    document.body.appendChild(menu);
+
+    function positionMenu() {
+      const r = btn.getBoundingClientRect();
+      menu.style.minWidth = '130px';
+      const openUpward = r.bottom + 120 > window.innerHeight;
+      if (openUpward) {
+        menu.style.top = '';
+        menu.style.bottom = `${window.innerHeight - r.top + 6}px`;
+      } else {
+        menu.style.bottom = '';
+        menu.style.top = `${r.bottom + 6}px`;
+      }
+      const rtl = getComputedStyle(document.documentElement).direction === 'rtl';
+      if (rtl) {
+        menu.style.left = '';
+        menu.style.right = `${Math.max(6, window.innerWidth - r.right)}px`;
+      } else {
+        menu.style.right = '';
+        menu.style.left = `${Math.max(6, r.left)}px`;
+      }
+    }
+    function closeMenu() {
+      menu.style.display = 'none';
+      window.removeEventListener('scroll', positionMenu, true);
+      window.removeEventListener('resize', positionMenu);
+    }
+    function openMenu() {
+      document.querySelectorAll('.share-menu').forEach((m) => { m.style.display = 'none'; });
+      positionMenu();
+      menu.style.display = 'flex';
+      window.addEventListener('scroll', positionMenu, true);
+      window.addEventListener('resize', positionMenu);
+    }
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      document.querySelectorAll('.share-menu').forEach((m) => { if (m !== menu) m.style.display = 'none'; });
-      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+      if (menu.style.display === 'none') openMenu(); else closeMenu();
     });
     document.addEventListener('click', (e) => {
-      if (!wrap.contains(e.target)) menu.style.display = 'none';
+      if (!wrap.contains(e.target) && !menu.contains(e.target)) closeMenu();
     });
 
     wrap.appendChild(btn);
-    wrap.appendChild(menu);
     return wrap;
   };
 })();

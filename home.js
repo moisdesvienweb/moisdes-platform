@@ -27,7 +27,7 @@
     post: { label: 'בלאג', href: (data) => `/blog/post.html?id=${data.id}` },
     poster: { label: 'מודעה', href: (data) => `${window.MOISDES.CFG.pages.posters}#poster-${data.id}` },
     event: { label: 'מעמד', href: (data) => `${window.MOISDES.CFG.pages.events}#event-${data.id}` },
-    video: { label: 'ווידיאו', href: (data) => `${window.MOISDES.CFG.pages.video}#video-${data.id}` },
+    video: { label: 'ווידיאו', href: (data) => `/video/post.html?id=${data.id}` },
     pdf: { label: 'גליון', href: (data) => `${window.MOISDES.CFG.pages.pdfs}#pdf-${data.id}` },
   };
 
@@ -94,27 +94,29 @@
     moreBtn.style.display = remaining.length ? '' : 'none';
   }
 
-  try {
-    const [postsR, postersR, eventsR, videosR, pdfsR] = await Promise.all([
-      api.get('/api/posts').catch(() => ({ posts: [] })),
-      api.get('/api/posters').catch(() => ({ posters: [] })),
-      api.get('/api/events').catch(() => ({ events: [] })),
-      api.get('/api/videos').catch(() => ({ videos: [] })),
-      api.get('/api/pdfs').catch(() => ({ pdfs: [] })),
-    ]);
-    const byType = {
-      post: [...postsR.posts].sort((a, b) => util.dateDesc(a.date, b.date)),
-      poster: [...postersR.posters].sort((a, b) => util.dateDesc(a.date, b.date)),
-      event: [...eventsR.events].sort((a, b) => util.dateDesc(a.date, b.date)),
-      video: [...videosR.videos].sort((a, b) => util.dateDesc(a.date, b.date)),
-      pdf: [...pdfsR.pdfs].sort((a, b) => util.dateDesc(a.date, b.date)),
-    };
-    const allFlat = Object.entries(byType).flatMap(([type, arr]) => arr.map((data) => ({ type, data })));
-    allFlat.sort((a, b) => util.dateDesc(a.data.date, b.data.date));
+  async function loadMosaic() {
+    try {
+      const [postsR, postersR, eventsR, videosR, pdfsR] = await Promise.all([
+        api.get('/api/posts').catch(() => ({ posts: [] })),
+        api.get('/api/posters').catch(() => ({ posters: [] })),
+        api.get('/api/events').catch(() => ({ events: [] })),
+        api.get('/api/videos').catch(() => ({ videos: [] })),
+        api.get('/api/pdfs').catch(() => ({ pdfs: [] })),
+      ]);
+      const byType = {
+        post: [...postsR.posts].sort((a, b) => util.dateDesc(a.date, b.date)),
+        poster: [...postersR.posters].sort((a, b) => util.dateDesc(a.date, b.date)),
+        event: [...eventsR.events].sort((a, b) => util.dateDesc(a.date, b.date)),
+        video: [...videosR.videos].sort((a, b) => util.dateDesc(a.date, b.date)),
+        pdf: [...pdfsR.pdfs].sort((a, b) => util.dateDesc(a.date, b.date)),
+      };
+      const allFlat = Object.entries(byType).flatMap(([type, arr]) => arr.map((data) => ({ type, data })));
+      allFlat.sort((a, b) => util.dateDesc(a.data.date, b.data.date));
 
-    if (!allFlat.length) {
-      mosaicEl.innerHTML = '<p class="state-msg">נאך קיין אינהאלט נישט פארעפנטליכט</p>';
-    } else {
+      if (!allFlat.length) {
+        mosaicEl.innerHTML = '<p class="state-msg">נאך קיין אינהאלט נישט פארעפנטליכט</p>';
+        return;
+      }
       // Curate exactly 10 for the mosaic: newest blog post always
       // included (and always the "big" tile), one of every other
       // section guaranteed, rest filled by overall recency.
@@ -149,46 +151,56 @@
       } else {
         moreBtn.style.display = 'none';
       }
+    } catch (e) {
+      mosaicEl.innerHTML = '<p class="state-msg">נישט געקענט לאדן</p>';
     }
-  } catch (e) {
-    mosaicEl.innerHTML = '<p class="state-msg">נישט געקענט לאדן</p>';
   }
-  if (window.MOISDES.hideLoadingOverlay) window.MOISDES.hideLoadingOverlay();
 
   // ── ZMANIM + HEBREW DATE (rolls over at shkia+72, not midnight) ────
-  const zmanimEl = document.getElementById('zmanim-widget');
-  if (zmanimEl && window.MOISDES.zmanim) {
-    window.MOISDES.zmanim.withLocation((loc) => {
-      try {
-        const Z = window.MOISDES.zmanim;
-        const heb = Z.currentHebrewDateDisplay(loc.lat, loc.lon);
-        const z = Z.computeZmanim(new Date(), loc.lat, loc.lon);
-        const rows = [
-          ['הנץ החמה', Z.fmtTime(z.sunrise)],
-          ['סוף זמן ק"ש (מג"א / גר"א)', `${Z.fmtTime(z.sofZmanShemaEarly)} / ${Z.fmtTime(z.sofZmanShemaLate)}`],
-          ['סוף זמן תפילה (מג"א / גר"א)', `${Z.fmtTime(z.sofZmanTfilahEarly)} / ${Z.fmtTime(z.sofZmanTfilahLate)}`],
-          ['חצות', Z.fmtTime(z.chatzos)],
-          ['שקיעה', Z.fmtTime(z.sunset)],
-          ['צאת (60)', Z.fmtTime(z.tzeis60)],
-          ['צאת (72)', Z.fmtTime(z.tzeis72)],
-        ];
-        const englishDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        zmanimEl.innerHTML = `
-          <div class="widget-title">${util.eh(heb.text)}</div>
-          <div class="widget-eng-date">${util.eh(englishDate)}</div>
-          <table class="zmanim-table">${rows.map(([l, v]) => `<tr><td>${util.eh(l)}</td><td>${util.eh(v)}</td></tr>`).join('')}</table>
-          <div class="widget-loc">${util.eh(loc.label)}</div>
-        `;
-      } catch (e) {
-        zmanimEl.innerHTML = '<p class="state-msg">נישט געקענט רעכענען זמנים</p>';
-      }
+  function loadZmanim() {
+    const zmanimEl = document.getElementById('zmanim-widget');
+    if (!zmanimEl || !window.MOISDES.zmanim) return Promise.resolve();
+    return new Promise((resolve) => {
+      let settled = false;
+      window.MOISDES.zmanim.withLocation((loc) => {
+        try {
+          const Z = window.MOISDES.zmanim;
+          const heb = Z.currentHebrewDateDisplay(loc.lat, loc.lon);
+          const z = Z.computeZmanim(new Date(), loc.lat, loc.lon);
+          const rows = [
+            ['הנץ החמה', Z.fmtTime(z.sunrise)],
+            ['סוף זמן ק"ש (מג"א)', Z.fmtTime(z.sofZmanShemaEarly)],
+            ['סוף זמן ק"ש (גר"א)', Z.fmtTime(z.sofZmanShemaLate)],
+            ['סוף זמן תפילה (מג"א)', Z.fmtTime(z.sofZmanTfilahEarly)],
+            ['סוף זמן תפילה (גר"א)', Z.fmtTime(z.sofZmanTfilahLate)],
+            ['חצות', Z.fmtTime(z.chatzos)],
+            ['שקיעה', Z.fmtTime(z.sunset)],
+            ['צאת (60)', Z.fmtTime(z.tzeis60)],
+            ['צאת (72)', Z.fmtTime(z.tzeis72)],
+          ];
+          const englishDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          zmanimEl.innerHTML = `
+            <div class="widget-title">${util.eh(heb.text)}</div>
+            <div class="widget-eng-date">${util.eh(englishDate)}</div>
+            <div class="zmanim-grid">${rows.map(([l, v]) => `<div class="zman-item"><span class="zman-label">${util.eh(l)}</span><span class="zman-value">${util.eh(v)}</span></div>`).join('')}</div>
+            <div class="widget-loc">${util.eh(loc.label)}</div>
+          `;
+        } catch (e) {
+          zmanimEl.innerHTML = '<p class="state-msg">נישט געקענט רעכענען זמנים</p>';
+        }
+        // withLocation calls back a second time once reverse-geocoding
+        // upgrades the label — only the first (fast) call should gate
+        // the loading overlay, the label just quietly updates after.
+        if (!settled) { settled = true; resolve(); }
+      });
     });
   }
 
   // ── DAF TODAY (ובהם נהגה) — follows the same shkia+72 rollover as the
   // Hebrew date above, since this is a "daily" program in the halachic sense.
-  const dafEl = document.getElementById('daf-widget');
-  if (dafEl) {
+  async function loadDaf() {
+    const dafEl = document.getElementById('daf-widget');
+    if (!dafEl) return;
     try {
       const { entries } = await api.get('/api/daf-entries');
       const effectiveIso = await new Promise((resolve) => {
@@ -207,32 +219,40 @@
     }
   }
 
-  // ── UPCOMING (מעמדים און שמחות, from the synced calendar) ─────────
-  const upcomingEl = document.getElementById('home-upcoming');
-  if (upcomingEl) {
+  // ── UPCOMING (מעמדים און שמחות, from the synced calendar) — a small
+  // horizontal-scrolling strip, not a full list; "see all" links to /calendar.
+  async function loadUpcoming() {
+    const upcomingEl = document.getElementById('home-upcoming');
+    if (!upcomingEl) return;
     try {
       const { events } = await api.get('/api/gcal-events');
       const todayIso = new Date().toISOString().slice(0, 10);
-      const recent = events.filter((ev) => ev.start.slice(0, 10) >= todayIso).slice(0, 10);
+      const recent = events.filter((ev) => ev.date >= todayIso).slice(0, 5);
       if (!recent.length) {
         upcomingEl.innerHTML = '<p class="state-msg">נאך קיין געשעענישן אין קאלענדאר</p>';
-      } else {
-        upcomingEl.innerHTML = '';
-        const ul = document.createElement('div');
-        recent.forEach((ev) => {
-          const row = document.createElement('div');
-          row.className = 'search-result';
-          row.innerHTML = `
-            <div class="search-result-title">${util.eh(ev.summary)}</div>
-            <div class="search-result-meta">${hebrew.isoToHebrewString(ev.start.slice(0, 10))}</div>
-          `;
-          ul.appendChild(row);
-        });
-        upcomingEl.appendChild(ul);
+        return;
       }
+      upcomingEl.innerHTML = '';
+      recent.forEach((ev) => {
+        const card = document.createElement('a');
+        card.className = 'upcoming-card';
+        card.href = '/calendar';
+        card.innerHTML = `
+          <div class="upcoming-card-title">${util.eh(ev.summary)}</div>
+          <div class="upcoming-card-date">${hebrew.isoToHebrewString(ev.date)}</div>
+        `;
+        upcomingEl.appendChild(card);
+      });
     } catch (e) {
       upcomingEl.innerHTML = '<p class="state-msg">נישט געקענט לאדן</p>';
     }
   }
+
+  // Everything the home page shows runs concurrently; the loading
+  // overlay only lifts once ALL of it — mosaic, zmanim, daf, upcoming —
+  // has actually finished, so nothing pops in after the animation ends.
+  await Promise.all([loadMosaic(), loadZmanim(), loadDaf(), loadUpcoming()]);
+  if (window.MOISDES.hideLoadingOverlay) window.MOISDES.hideLoadingOverlay();
+
   // Simchas ticker is handled globally by chrome.js (runs on every page).
 })();

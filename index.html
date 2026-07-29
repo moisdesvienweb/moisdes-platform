@@ -56,27 +56,32 @@
   <div class="ticker-track" id="simchas-ticker"></div>
 </div>
 
-<main class="page" id="home-page">
-  <div class="widget-box combined-widget">
-    <div id="zmanim-widget"><p class="state-msg">לאדט זמנים...</p></div>
-    <div id="daf-widget"><p class="state-msg">לאדט...</p></div>
+<main class="page home-layout" id="home-page">
+  <div class="home-main">
+    <div class="section-heading">
+      <h2>מעמדים און שמחות</h2>
+      <a href="/calendar">אלע ←</a>
+    </div>
+    <div class="upcoming-strip" id="home-upcoming"><p class="state-msg">לאדט...</p></div>
+
+    <div class="section-heading" style="margin-top:2.5rem">
+      <h2>נייעס</h2>
+    </div>
+    <div class="mosaic" id="home-mosaic"><p class="state-msg">לאדט...</p></div>
+
+    <div class="section-heading" style="margin-top:2.5rem">
+      <h2>נאך נייעס</h2>
+    </div>
+    <div class="grid" id="home-more-grid"></div>
+    <div style="text-align:center;margin-top:2rem">
+      <button class="load-more-btn" id="home-more-btn" style="display:none">ווייזט מער ←</button>
+    </div>
   </div>
 
-  <div class="section-heading" style="margin-top:3rem">
-    <h2>מעמדים און שמחות</h2>
-    <a href="/calendar">אלע ←</a>
-  </div>
-  <div id="home-upcoming"><p class="state-msg">לאדט...</p></div>
-
-  <div class="section-heading" style="margin-top:3rem">
-    <h2>נייעס</h2>
-  </div>
-  <div class="mosaic" id="home-mosaic"><p class="state-msg">לאדט...</p></div>
-
-  <div class="grid" id="home-more-grid" style="margin-top:2rem"></div>
-  <div style="text-align:center;margin-top:2rem">
-    <button class="load-more-btn" id="home-more-btn" style="display:none">ווייזט מער ←</button>
-  </div>
+  <aside class="home-sidebar">
+    <div class="widget-box" id="zmanim-widget"><p class="state-msg">לאדט זמנים...</p></div>
+    <div class="widget-box" id="daf-widget"><p class="state-msg">לאדט...</p></div>
+  </aside>
 </main>
 
 <footer id="moisdes-footer">
@@ -91,10 +96,14 @@
       <li><a href="/pdfs">גליונות</a></li>
       <li><a href="/calendar">לוח</a></li>
     </ul>
-    <a class="btn btn-sm newsletter-btn" id="newsletter-btn" href="#" target="_blank" rel="noopener" style="display:none">סיינט אייך אויף פאר קהלתינו</a>
-    <a class="btn btn-sm newsletter-btn" id="contact-btn" href="#" style="display:none">קאנטאקט</a>
-    <a class="powered-by" href="https://everythingshul.com" target="_blank" rel="noopener"><span>Powered by</span><img src="/everythingshul-logo.png" alt="EverythingShul.com"></a>
-    <div class="footer-copy">&copy; 2026 Mosdes Vien</div>
+    <div class="footer-actions">
+      <a class="btn btn-sm newsletter-btn" id="newsletter-btn" href="#" target="_blank" rel="noopener" style="display:none">סיינט אייך אויף פאר קהלתינו</a>
+      <a class="btn btn-sm newsletter-btn" id="contact-btn" href="#" style="display:none">קאנטאקט</a>
+    </div>
+    <div class="footer-attribution">
+      <a class="powered-by" href="https://everythingshul.com" target="_blank" rel="noopener"><span>Powered by</span><img src="/everythingshul-logo.png" alt="EverythingShul.com"></a>
+      <div class="footer-copy">&copy; 2026 Mosdes Vien</div>
+    </div>
   </div>
 </footer>
 
