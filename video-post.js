@@ -63,7 +63,7 @@
       wrap.innerHTML = '<h1 class="page-title">דער ווידיאו נישט געפונען</h1>';
       return;
     }
-    document.title = `${v.title} — מאסדעס וויען`;
+    document.title = `${v.title} — חצר וויען`;
 
     const ytId = youtubeId(v.video_url);
     const videoEmbed = v.video_file_url
@@ -74,7 +74,7 @@
       ${videoEmbed}
       <div class="event-meta">${hebrew.isoToHebrewString(v.date)}${v.location ? ' · ' + util.eh(v.location) : ''}${v.category ? ' · ' + util.eh(v.category) : ''}</div>
       <h1 class="page-title" style="border:none;margin-bottom:1rem">${util.eh(v.title)}</h1>
-      <div class="event-desc">${util.eh(v.description || '')}</div>
+      <div class="detail-body">${util.eh(v.description || '')}</div>
       <div class="stack" data-gallery style="margin-top:1.5rem"></div>
       <div class="event-tags" data-tags></div>
     `;

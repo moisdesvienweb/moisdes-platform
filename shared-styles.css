@@ -230,10 +230,13 @@ p { margin: 0 0 1em; }
 }
 .share-btn:hover { background: rgba(255, 255, 255, .16); color: var(--ink); }
 .share-menu {
-  position: absolute; top: calc(100% + .4rem); inset-inline-end: 0; z-index: 20;
+  /* position: fixed with top/bottom/left/right set from JS (button's
+     live getBoundingClientRect), since it's appended to <body> rather
+     than the button's own (possibly overflow:hidden) card ancestor. */
+  position: fixed; z-index: 2500;
   background: var(--footer-bg); border: 1px solid var(--line); border-radius: 6px;
-  padding: .4rem; display: flex; flex-direction: column; gap: .2rem; min-width: 130px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+  padding: .4rem; flex-direction: column; gap: .2rem; min-width: 130px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
 }
 .share-menu a, .share-menu button {
   display: block; width: 100%; text-align: right; background: none; border: none;
@@ -250,23 +253,38 @@ p { margin: 0 0 1em; }
 
 /* Vertical stack for image galleries (posts/posters/events) — full-view,
    uncropped, one per row, instead of a cropped thumbnail grid. */
-.stack { display: flex; flex-direction: column; gap: .75rem; align-items: center; }
-.stack img { max-width: min(480px, 100%); max-height: 480px; width: auto; height: auto; border-radius: 3px; cursor: zoom-in; }
+.stack { display: flex; flex-direction: column; gap: .9rem; align-items: center; }
+.stack img {
+  max-width: min(480px, 100%); max-height: 480px; width: auto; height: auto;
+  border-radius: 10px; cursor: zoom-in; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+}
 
 /* Posters: uncropped but wrapped into a grid, not a one-per-row stack */
 .poster-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
-.poster-grid img { max-width: 200px; max-height: 260px; width: auto; height: auto; border-radius: 3px; cursor: zoom-in; }
+.poster-grid img {
+  max-width: 200px; max-height: 260px; width: auto; height: auto;
+  border-radius: 10px; cursor: zoom-in; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+}
 @media (max-width: 560px) { .poster-grid img { max-width: 100%; } }
 
 .card {
   background: var(--card-bg);
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 10px;
   overflow: hidden;
-  transition: background .15s, border-color .15s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+  transition: background .15s, border-color .15s, transform .15s;
 }
-.card:hover { background: var(--card-bg-hover); border-color: rgba(255, 255, 255, .22); }
+.card:hover { background: var(--card-bg-hover); border-color: rgba(255, 255, 255, .22); transform: translateY(-2px); }
 .card-media { aspect-ratio: 4 / 3; overflow: hidden; background: rgba(0, 0, 0, .2); }
+
+/* ── DETAIL-PAGE BODY/DESCRIPTION CONTAINER ─────────────────────── */
+
+.detail-body {
+  background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px;
+  padding: 1.1rem 1.3rem; margin: 1rem 0; line-height: 1.7;
+}
+.detail-body:empty { display: none; }
 .card-media img { width: 100%; height: 100%; object-fit: cover; }
 .card-body { padding: 1rem 1.1rem 1.2rem; }
 .card-date { font-size: .78rem; color: var(--ink-faint); margin-bottom: .3rem; }
@@ -311,15 +329,16 @@ p { margin: 0 0 1em; }
 
 /* Event cards sit in a grid, newest first — first-in-DOM lands rightmost
    in RTL, so date-desc order already puts the newest event on the right. */
-.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
-@media (max-width: 560px) { .events-grid { grid-template-columns: 1fr; } }
+.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; }
+@media (max-width: 560px) { .events-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .event-card, .video-card {
   background: var(--card-bg);
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 10px;
   padding: 1rem 1.1rem;
   margin-bottom: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
 }
 .video-card { max-width: 520px; }
 .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
@@ -336,7 +355,7 @@ p { margin: 0 0 1em; }
 .events-grid .event-card { margin-bottom: 0; }
 .event-cover {
   aspect-ratio: 16 / 9; background-size: cover; background-position: center;
-  border-radius: 3px 3px 0 0; margin: -1rem -1.1rem 1rem; width: calc(100% + 2.2rem);
+  border-radius: 10px 10px 0 0; margin: -1rem -1.1rem 1rem; width: calc(100% + 2.2rem);
   background-color: rgba(0, 0, 0, .2);
 }
 .event-title, .video-title { font-size: 1.1rem; font-weight: 700; margin-bottom: .3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -389,6 +408,40 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .video-embed-native { width: 100%; border-radius: 3px; margin-bottom: .8rem; background: #000; display: block; }
 
+/* ── EVENT DETAIL MODAL ──────────────────────────────────────────── */
+
+.event-modal {
+  position: fixed; inset: 0; z-index: 1800; background: rgba(15, 8, 3, .78);
+  display: none; align-items: flex-start; justify-content: center;
+  padding: 3rem 1rem; overflow-y: auto;
+}
+.event-modal.open { display: flex; }
+.event-modal-inner {
+  background: var(--footer-bg); border: 1px solid var(--line); border-radius: 12px;
+  max-width: 640px; width: 100%; padding: 1.6rem 1.6rem 2rem; position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+}
+.event-modal-close {
+  position: absolute; top: .7rem; left: .7rem; background: rgba(255, 255, 255, .08);
+  border: none; color: var(--ink-soft); font-size: 1.1rem; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.event-modal-close:hover { background: rgba(255, 255, 255, .16); color: var(--ink); }
+.event-modal-cover {
+  aspect-ratio: 16 / 9; background-size: cover; background-position: center;
+  border-radius: 10px; margin-bottom: 1rem; background-color: rgba(0, 0, 0, .2);
+}
+.map-links { display: flex; gap: .6rem; margin: .8rem 0; flex-wrap: wrap; }
+.map-link {
+  display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; font-weight: 700;
+  background: rgba(255, 255, 255, .07); border: 1px solid var(--line); color: var(--ink-soft);
+  padding: .4rem .8rem; border-radius: 20px; transition: background .15s, color .15s;
+}
+.map-link:hover { background: rgba(255, 255, 255, .14); color: var(--ink); }
+
+.event-card-compact { cursor: pointer; }
+.event-card-compact .card-media { aspect-ratio: 16 / 10; }
+
 .tag-filter-banner {
   display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem;
   font-size: .9rem; color: var(--ink-soft);
@@ -426,7 +479,7 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
   padding: 2rem;
 }
 .lightbox.open { display: flex; }
-.lightbox img { max-width: 100%; max-height: 90vh; border-radius: 2px; }
+.lightbox img { max-width: 100%; max-height: 90vh; border-radius: 10px; box-shadow: 0 10px 40px rgba(0, 0, 0, .5); }
 .lightbox-close {
   position: absolute; top: 1.25rem; left: 1.25rem;
   background: none; border: none; color: rgba(255, 255, 255, .7);
@@ -435,8 +488,12 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .lightbox-nav {
   position: absolute; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: rgba(255, 255, 255, .7);
-  font-size: 2rem; cursor: pointer; padding: 1rem;
+  cursor: pointer; padding: 1rem;
 }
+.lightbox-nav .chevron { width: 26px; height: 26px; }
+.back-link { display: inline-flex; align-items: center; gap: .3rem; color: var(--ink-soft); }
+.back-link:hover { color: var(--ink); }
+.back-link .chevron { flex-shrink: 0; }
 /* RTL: "next" (forward through the gallery) sits on the right, matching
    right-to-left reading direction; "previous" sits on the left. */
 .lightbox-next { right: .5rem; }
@@ -518,10 +575,11 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .mosaic-item {
   position: relative;
   display: block;
-  border-radius: 4px;
+  border-radius: 10px;
   overflow: hidden;
   background: var(--card-bg);
   border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
 }
 .mosaic-media { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform .2s; }
 .mosaic-item:hover .mosaic-media { transform: scale(1.04); }
@@ -584,7 +642,11 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 
 /* ── UPCOMING STRIP (home page, compact) ──────────────────────────── */
 
-.upcoming-strip { display: flex; gap: .8rem; overflow-x: auto; padding-bottom: .3rem; }
+.upcoming-strip {
+  display: flex; gap: .8rem; overflow-x: auto; padding-bottom: .3rem;
+  scrollbar-width: none;
+}
+.upcoming-strip::-webkit-scrollbar { display: none; }
 .upcoming-card {
   flex: 0 0 190px; background: var(--card-bg); border: 1px solid var(--line);
   border-radius: 4px; padding: .7rem .8rem;
@@ -611,14 +673,16 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .calendar-nav { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 1rem; }
 .calendar-month-wrap { display: flex; flex-direction: column; align-items: center; gap: .1rem; min-width: 10rem; }
 .calendar-month-label { font-size: 1.15rem; font-weight: 700; text-align: center; }
+.calendar-month-heb { font-size: .72rem; font-weight: 400; color: var(--ink-faint); }
 .calendar-gcal-link { font-size: .72rem; color: var(--ink-faint); }
 .calendar-gcal-link:hover { color: var(--accent); }
 .cal-nav-btn {
   background: var(--card-bg); border: 1px solid var(--line); color: var(--ink);
-  width: 34px; height: 34px; border-radius: 50%; font-size: 1.1rem; line-height: 1;
+  width: 34px; height: 34px; border-radius: 50%;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background .15s; flex-shrink: 0;
 }
+.cal-nav-btn .chevron { width: 16px; height: 16px; }
 .cal-nav-btn:hover { background: var(--card-bg-hover); }
 
 .calendar-body { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
@@ -632,7 +696,7 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
   padding: .5rem 0;
 }
 .cal-day {
-  position: relative; min-height: 92px;
+  position: relative; min-height: 92px; min-width: 0; overflow: hidden;
   background: var(--card-bg); border-radius: 4px; cursor: pointer;
   display: flex; flex-direction: column; padding: .3rem .35rem; gap: .15rem;
   transition: background .15s;
@@ -656,7 +720,9 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .calendar-agenda-panel {
   background: var(--card-bg); border: 1px solid var(--line); border-radius: 4px;
   padding: 1rem 1.1rem; max-height: 640px; overflow-y: auto; scroll-behavior: smooth;
+  scrollbar-width: none;
 }
+.calendar-agenda-panel::-webkit-scrollbar { display: none; }
 .calendar-agenda-title { font-weight: 700; margin-bottom: .5rem; font-size: .95rem; color: var(--accent); }
 .agenda-day-heading {
   font-size: .85rem; font-weight: 700; color: var(--ink-soft);
@@ -676,6 +742,13 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 /* ── EMPTY / LOADING STATES ─────────────────────────────────────── */
 
 .state-msg { color: var(--ink-faint); font-size: .95rem; padding: 2rem 0; }
+
+/* Reserve some height for the main listing containers up front so the
+   page doesn't visibly jump/shift once their content finishes loading
+   and replaces the (much shorter) "loading..." placeholder. */
+#events-list, #home-mosaic, #video-grid, #blog-list, #pdfs-grid, #posters-list {
+  min-height: 240px;
+}
 
 /* ── RESPONSIVE ─────────────────────────────────────────────────── */
 

@@ -57,7 +57,7 @@
       wrap.innerHTML = '<h1 class="page-title">דער בלאג נישט געפונען</h1>';
       return;
     }
-    document.title = `${post.title} — מאסדעס וויען`;
+    document.title = `${post.title} — חצר וויען`;
 
     const keys = await api.listFolder(post.folder_url).catch(() => []);
     const gallery = keys.map((k) => api.r2Url(k));
@@ -65,7 +65,7 @@
     wrap.innerHTML = `
       <div class="event-meta">${hebrew.isoToHebrewString(post.date)}${post.category ? ' · ' + util.eh(post.category) : ''}</div>
       <h1 class="page-title" style="border:none;margin-bottom:1rem">${util.eh(post.title)}</h1>
-      <div class="post-body">${post.body || ''}</div>
+      <div class="detail-body">${post.body || ''}</div>
       <div class="stack" data-gallery style="margin-top:1.5rem"></div>
       <div class="event-tags" data-tags></div>
     `;

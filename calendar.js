@@ -48,8 +48,17 @@
 
   agendaEl.innerHTML = '<p class="state-msg">לאדט געשעענישן...</p>';
 
+  function hebrewMonthLabel() {
+    const lastDay = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const h1 = hebrew.isoToHebrew(`${viewYear}-${pad(viewMonth + 1)}-01`);
+    const h2 = hebrew.isoToHebrew(`${viewYear}-${pad(viewMonth + 1)}-${pad(lastDay)}`);
+    const label1 = `${h1.monthName} ${hebrew.yearToHebrew(h1.year)}`;
+    const label2 = `${h2.monthName} ${hebrew.yearToHebrew(h2.year)}`;
+    return label1 === label2 ? label1 : `${label1} — ${label2}`;
+  }
+
   function renderGrid() {
-    labelEl.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+    labelEl.innerHTML = `${MONTH_NAMES[viewMonth]} ${viewYear}<div class="calendar-month-heb">${util.eh(hebrewMonthLabel())}</div>`;
     gridEl.innerHTML = '';
     WEEKDAYS.forEach((w) => {
       const cell = document.createElement('div');

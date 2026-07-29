@@ -87,8 +87,17 @@ window.MOISDES.adminForms = (function () {
     titleInput.value = form.title || '';
     settingsWrap.appendChild(fieldGroup('Title', titleInput));
 
+    const slugInput = el('input');
+    slugInput.type = 'text';
+    slugInput.value = form.slug || '';
+    slugInput.placeholder = 'custom-url-slug';
+    settingsWrap.appendChild(fieldGroup('URL slug (letters, numbers, hyphens)', slugInput));
+
     const linkP = el('p', 'state-msg', `Public URL: <a href="${publicUrl}" target="_blank" rel="noopener">${publicUrl}</a>`);
     settingsWrap.appendChild(linkP);
+    slugInput.addEventListener('input', () => {
+      linkP.innerHTML = `Public URL: <a href="${location.origin}/form/${slugInput.value}" target="_blank" rel="noopener">${location.origin}/form/${slugInput.value}</a>`;
+    });
 
     const descInput = el('textarea');
     descInput.value = settings.description || '';
@@ -119,6 +128,7 @@ window.MOISDES.adminForms = (function () {
       try {
         await api.put(`/api/forms/${form.id}`, {
           title: titleInput.value,
+          slug: slugInput.value.trim().toLowerCase(),
           settings: {
             description: descInput.value,
             status: statusSelect.value,

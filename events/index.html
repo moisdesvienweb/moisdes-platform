@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מעמדים — מאסדעס וויען</title>
+<title>מעמדים — חצר וויען</title>
 <link rel="icon" href="/logo.avif">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
 
 <header id="moisdes-header">
   <div class="header-inner">
-    <a href="/" class="header-logo"><img src="/logo.avif" alt="מאסדעס וויען"></a>
+    <a href="/" class="header-logo"><img src="/logo.avif" alt="חצר וויען"></a>
     <ul class="header-nav">
       <li><a href="/">היים בלאט</a></li>
       <li><a href="/blog">בלאג</a></li>
@@ -34,7 +34,7 @@
 </header>
 <div id="moisdes-mobile">
   <button class="mobile-close" id="mobile-close-btn">&#10005;</button>
-  <img src="/logo.avif" alt="מאסדעס וויען">
+  <img src="/logo.avif" alt="חצר וויען">
   <a href="/">היים בלאט</a>
   <a href="/blog">בלאג</a>
   <a href="/posters">מודעות</a>
@@ -58,9 +58,23 @@
   <div id="events-list"><p class="state-msg">לאדט...</p></div>
 </main>
 
+<div class="event-modal" id="event-modal">
+  <div class="event-modal-inner">
+    <button class="event-modal-close" id="event-modal-close">&#10005;</button>
+    <div id="event-modal-body"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">&#10005;</button>
+  <button class="lightbox-nav lightbox-prev" id="lightbox-prev"><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg></button>
+  <img id="lightbox-img" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lightbox-next"><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></button>
+</div>
+
 <footer id="moisdes-footer">
   <div class="footer-inner">
-    <a href="/" class="footer-logo"><img src="/logo.avif" alt="מאסדעס וויען"></a>
+    <a href="/" class="footer-logo"><img src="/logo.avif" alt="חצר וויען"></a>
     <ul class="footer-nav">
       <li><a href="/">היים בלאט</a></li>
       <li><a href="/blog">בלאג</a></li>
