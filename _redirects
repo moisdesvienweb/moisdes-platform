@@ -1,0 +1,6 @@
+# Cloudflare Pages special-cases "404.html" as a redirect target (it
+# triggers Cloudflare's own built-in not-found redirect instead of
+# serving the file). So the form handler lives in its own file
+# (form.html — same content as 404.html) and gets rewritten in place
+# at 200, keeping the real slug in the URL bar.
+/form/*  /form.html  200
