@@ -144,7 +144,10 @@
         mosaicEl.appendChild(tile);
       }
 
-      remaining = allFlat.filter((it) => !chosenSet.has(itemKey(it.type, it.data)));
+      // "More news" is the full recent list in date order — it's fine
+      // (expected, even) for it to repeat what's already featured above
+      // in the mosaic, rather than hiding those items entirely.
+      remaining = allFlat.slice();
       if (remaining.length) {
         moreBtn.addEventListener('click', loadMoreBatch);
         await loadMoreBatch();

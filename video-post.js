@@ -73,10 +73,13 @@
     wrap.innerHTML = `
       ${videoEmbed}
       <div class="event-meta">${hebrew.isoToHebrewString(v.date)}${v.location ? ' · ' + util.eh(v.location) : ''}${v.category ? ' · ' + util.eh(v.category) : ''}</div>
-      <h1 class="page-title" style="border:none;margin-bottom:1rem">${util.eh(v.title)}</h1>
+      <h1 class="page-title" style="border:none;margin-bottom:.75rem">${util.eh(v.title)}</h1>
+      <div class="detail-top-row">
+        <div class="event-tags" data-tags></div>
+        <div data-share></div>
+      </div>
       <div class="detail-body">${util.eh(v.description || '')}</div>
       <div class="stack" data-gallery style="margin-top:1.5rem"></div>
-      <div class="event-tags" data-tags></div>
     `;
 
     if (v.folder_url) {
@@ -100,10 +103,7 @@
     if (!tagsEl.children.length) tagsEl.remove();
 
     if (window.MOISDES.shareButton) {
-      const shareBar = document.createElement('div');
-      shareBar.style.marginTop = '1.5rem';
-      shareBar.appendChild(window.MOISDES.shareButton(location.href, v.title));
-      wrap.appendChild(shareBar);
+      wrap.querySelector('[data-share]').appendChild(window.MOISDES.shareButton(location.href, v.title));
     }
   } catch (e) {
     wrap.innerHTML = '<p class="state-msg">נישט געקענט לאדן</p>';

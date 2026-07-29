@@ -48,14 +48,27 @@
   if (window.MOISDES.adminSettings) window.MOISDES.adminSettings.init();
   if (window.MOISDES.adminAnalytics) window.MOISDES.adminAnalytics.init();
 
-  // ── Browse export-CSV link (follows the active Browse subtab) ──────
-  const exportLink = document.getElementById('browse-export-csv');
-  function updateExportLink(type) {
-    if (!exportLink) return;
-    exportLink.href = `${window.MOISDES.CFG.apiBase}/api/${type}?format=csv`;
-  }
+  // ── Browse export-XLSX button (follows the active Browse subtab) ──
+  const exportBtn = document.getElementById('browse-export-xlsx');
+  let exportType = 'posts';
   document.querySelectorAll('#browse-subtabs .subtab').forEach((btn) => {
-    btn.addEventListener('click', () => updateExportLink(btn.dataset.type));
+    btn.addEventListener('click', () => { exportType = btn.dataset.type; });
   });
-  updateExportLink('posts');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', async () => {
+      if (!window.XLSX) { alert('Export library did not load.'); return; }
+      exportBtn.disabled = true;
+      try {
+        const data = await api.get(`/api/${exportType}`);
+        const rows = data[exportType] || [];
+        const ws = window.XLSX.utils.json_to_sheet(rows);
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, exportType);
+        window.XLSX.writeFile(wb, `${exportType}.xlsx`);
+      } catch (e) {
+        alert(e.message || 'Export failed.');
+      }
+      exportBtn.disabled = false;
+    });
+  }
 })();

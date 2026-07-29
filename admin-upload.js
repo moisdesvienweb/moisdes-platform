@@ -62,6 +62,13 @@ window.MOISDES.adminUpload = (function () {
   function buildForm(type, container, opts = {}) {
     const existing = opts.existing || null;
     const isEdit = !!existing;
+    // Duplicating: opts.prefill supplies the same text/metadata fields as
+    // an edit would, but isEdit stays false (this is a fresh Publish) and
+    // nothing R2-file-related (gallery, thumbnail, PDF, video file) is
+    // carried over — those always come from `existing` only, so a
+    // duplicate never shares files with (or can delete files from) the
+    // item it was copied from.
+    const prefillSrc = existing || opts.prefill || null;
 
     container.innerHTML = '';
     const form = el('form');
@@ -80,25 +87,25 @@ window.MOISDES.adminUpload = (function () {
 
     const datePickerWrap = el('div');
     form.appendChild(fieldGroup(type === 'simchas' ? 'Date added' : 'Date', datePickerWrap));
-    const datePicker = AF.createDatePicker(datePickerWrap, existing ? (existing.date || existing.date_added || '').slice(0, 10) : '');
+    const datePicker = AF.createDatePicker(datePickerWrap, prefillSrc ? (prefillSrc.date || prefillSrc.date_added || '').slice(0, 10) : '');
 
     let getExtra;
     let gallery;
     let tagInput, categoryInput;
 
     if (type === 'posts') {
-      const title = textInput('Title', existing?.title);
+      const title = textInput('Title', prefillSrc?.title);
       form.appendChild(fieldGroup('Title', title));
-      const body = textarea('Post text...', existing?.body);
+      const body = textarea('Post text...', prefillSrc?.body);
       form.appendChild(fieldGroup('Text', body));
 
       const catWrap = el('div');
       form.appendChild(fieldGroup('Category', catWrap));
-      categoryInput = AF.createCategoryInput(catWrap, existing?.category);
+      categoryInput = AF.createCategoryInput(catWrap, prefillSrc?.category);
 
       const tagWrap = el('div');
       form.appendChild(fieldGroup('Tags', tagWrap));
-      tagInput = AF.createTagInput(tagWrap, existing?.tags);
+      tagInput = AF.createTagInput(tagWrap, prefillSrc?.tags);
 
       const galleryWrap = el('div');
       form.appendChild(fieldGroup('Images', galleryWrap));
@@ -108,7 +115,7 @@ window.MOISDES.adminUpload = (function () {
 
     } else if (type === 'posters') {
       const parshaWrap = el('div');
-      const select = parshaSelect(existing?.parsha);
+      const select = parshaSelect(prefillSrc?.parsha);
       parshaWrap.appendChild(select);
       form.appendChild(fieldGroup('Parsha', parshaWrap));
 
@@ -119,21 +126,21 @@ window.MOISDES.adminUpload = (function () {
       getExtra = () => ({ parsha: select.value });
 
     } else if (type === 'events') {
-      const title = textInput('Title', existing?.title);
+      const title = textInput('Title', prefillSrc?.title);
       form.appendChild(fieldGroup('Title', title));
-      const location = textInput('Location', existing?.location);
+      const location = textInput('Location', prefillSrc?.location);
       form.appendChild(fieldGroup('Location', location));
 
       const catWrap = el('div');
       form.appendChild(fieldGroup('Category', catWrap));
-      categoryInput = AF.createCategoryInput(catWrap, existing?.category);
+      categoryInput = AF.createCategoryInput(catWrap, prefillSrc?.category);
 
-      const description = textarea('Description', existing?.description);
+      const description = textarea('Description', prefillSrc?.description);
       form.appendChild(fieldGroup('Description', description));
 
       const tagWrap = el('div');
       form.appendChild(fieldGroup('Tags', tagWrap));
-      tagInput = AF.createTagInput(tagWrap, existing?.tags);
+      tagInput = AF.createTagInput(tagWrap, prefillSrc?.tags);
 
       // Thumbnail — separate from the photos/audio gallery below, this is
       // what shows on the home page and anywhere else a single preview
@@ -179,19 +186,19 @@ window.MOISDES.adminUpload = (function () {
       form._getEventThumb = () => (eventThumbFile ? { file: eventThumbFile, name: eventThumbFileName } : null);
 
     } else if (type === 'videos') {
-      const title = textInput('Title', existing?.title);
+      const title = textInput('Title', prefillSrc?.title);
       form.appendChild(fieldGroup('Title', title));
-      const location = textInput('Location', existing?.location);
+      const location = textInput('Location', prefillSrc?.location);
       form.appendChild(fieldGroup('Location', location));
 
       const catWrap = el('div');
       form.appendChild(fieldGroup('Category', catWrap));
-      categoryInput = AF.createCategoryInput(catWrap, existing?.category);
+      categoryInput = AF.createCategoryInput(catWrap, prefillSrc?.category);
 
-      const description = textarea('Description', existing?.description);
+      const description = textarea('Description', prefillSrc?.description);
       form.appendChild(fieldGroup('Description', description));
 
-      const videoUrl = textInput('https://youtube.com/watch?v=... (optional)', existing?.video_url);
+      const videoUrl = textInput('https://youtube.com/watch?v=... (optional)', prefillSrc?.video_url);
       form.appendChild(fieldGroup('YouTube URL (optional)', videoUrl));
 
       // Uploading the file directly plays it with a plain <video> tag —
@@ -224,7 +231,7 @@ window.MOISDES.adminUpload = (function () {
 
       const tagWrap = el('div');
       form.appendChild(fieldGroup('Tags', tagWrap));
-      tagInput = AF.createTagInput(tagWrap, existing?.tags);
+      tagInput = AF.createTagInput(tagWrap, prefillSrc?.tags);
 
       const galleryWrap = el('div');
       form.appendChild(fieldGroup('Extra images (optional)', galleryWrap));
@@ -234,22 +241,22 @@ window.MOISDES.adminUpload = (function () {
       form._getVideoFile = () => (videoFile ? { file: videoFile, name: videoFileName } : null);
 
     } else if (type === 'pdfs') {
-      const title = textInput('Title', existing?.title);
+      const title = textInput('Title', prefillSrc?.title);
       form.appendChild(fieldGroup('Title', title));
 
       const catWrap = el('div');
       form.appendChild(fieldGroup('Category', catWrap));
-      categoryInput = AF.createCategoryInput(catWrap, existing?.category);
+      categoryInput = AF.createCategoryInput(catWrap, prefillSrc?.category);
 
-      const language = textInput('e.g. Yiddish / Hebrew / English', existing?.language);
+      const language = textInput('e.g. Yiddish / Hebrew / English', prefillSrc?.language);
       form.appendChild(fieldGroup('Language', language));
 
       const parshaWrap = el('div');
-      const select = parshaSelect(existing?.parsha);
+      const select = parshaSelect(prefillSrc?.parsha);
       parshaWrap.appendChild(select);
       form.appendChild(fieldGroup('Parsha', parshaWrap));
 
-      const year = textInput('Issue year / number', existing?.year);
+      const year = textInput('Issue year / number', prefillSrc?.year);
       form.appendChild(fieldGroup('Year', year));
 
       // PDF file — picking one auto-generates a cover thumbnail from its
@@ -352,7 +359,7 @@ window.MOISDES.adminUpload = (function () {
         : (autoThumbBlob ? { file: autoThumbBlob, name: 'cover.png' } : null);
 
     } else if (type === 'simchas') {
-      const text = textarea('Simcha (e.g. names + occasion)', existing?.text);
+      const text = textarea('Simcha (e.g. names + occasion)', prefillSrc?.text);
       form.appendChild(fieldGroup('Text', text));
       getExtra = () => ({ text: text.value });
     }
@@ -428,7 +435,11 @@ window.MOISDES.adminUpload = (function () {
         } else {
           await api.post(`/api/${type}`, payload);
           setStatus(status, 'Published successfully.', true);
-          buildForm(type, container); // fresh form for the next entry
+          // A modal-driven create (duplicate, or any future opts.onSaved
+          // caller) closes/reloads via the caller; the plain Upload tab
+          // (no onSaved) resets to a fresh form for the next entry.
+          if (opts.onSaved) opts.onSaved();
+          else buildForm(type, container);
         }
       } catch (err) {
         setStatus(status, err.message || 'Something went wrong.', false);

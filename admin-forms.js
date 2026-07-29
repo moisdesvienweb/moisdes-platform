@@ -50,10 +50,36 @@ window.MOISDES.adminForms = (function () {
     forms.forEach((f) => {
       const li = el('li', f.id === activeFormId ? 'active' : '');
       const status = f.settings?.status === 'closed' ? ' (closed)' : '';
-      li.innerHTML = `<span>${escapeHtml(f.title || '(untitled)')}${status}</span>`;
-      li.addEventListener('click', () => selectForm(f.id));
+      const span = el('span', '', `${escapeHtml(f.title || '(untitled)')}${status}`);
+      span.style.cursor = 'pointer';
+      span.addEventListener('click', () => selectForm(f.id));
+      li.appendChild(span);
+      const dupBtn = el('button', 'btn btn-sm', 'Duplicate');
+      dupBtn.style.marginInlineStart = '.5rem';
+      dupBtn.addEventListener('click', (e) => { e.stopPropagation(); duplicateForm(f); });
+      li.appendChild(dupBtn);
       formsListEl.appendChild(li);
     });
+  }
+
+  // Creates a new form with the same settings + fields as `source`, then
+  // selects it so the title/slug/fields can be edited right away — the
+  // original is left untouched.
+  async function duplicateForm(source) {
+    try {
+      const { id } = await api.post('/api/forms', {
+        title: `Copy of ${source.title || 'form'}`,
+        settings: source.settings || {},
+      });
+      const { fields: srcFields } = await api.get(`/api/forms/${source.id}/fields`);
+      if (srcFields.length) await api.post(`/api/forms/${id}/fields`, { fields: srcFields });
+      await loadForms();
+      activeFormId = id;
+      renderFormsList();
+      await renderDetail();
+    } catch (e) {
+      alert(e.message || 'Could not duplicate form');
+    }
   }
 
   async function selectForm(id) {

@@ -75,13 +75,15 @@
     modalBody.innerHTML = `
       ${coverUrl ? `<div class="event-modal-cover" style="background-image:url('${util.eh(coverUrl)}')"></div>` : ''}
       <div class="event-meta">${hebrew.isoToHebrewString(ev.date)}${ev.category ? ' · ' + util.eh(ev.category) : ''}</div>
-      <h2 class="event-title">${util.eh(ev.title)}</h2>
+      <h2 class="event-title" style="margin-bottom:.6rem">${util.eh(ev.title)}</h2>
+      <div class="detail-top-row">
+        <div class="event-tags" data-tags></div>
+        <div data-share></div>
+      </div>
       ${ev.location ? `<div class="event-meta">${util.eh(ev.location)}</div>${mapLinks(ev.location)}` : ''}
       <div class="detail-body">${util.eh(ev.description || '')}</div>
       <div data-player></div>
       <div class="stack" data-gallery style="margin-top:1rem"></div>
-      <div class="event-tags" data-tags></div>
-      <div data-share style="margin-top:1.2rem"></div>
     `;
 
     if (audioKeys.length) {

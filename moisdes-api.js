@@ -51,17 +51,19 @@ window.MOISDES.api = (function () {
     return data;
   }
 
-  // Retries a presigned PUT a couple of times on a genuine network failure
-  // (dropped connection, brief wifi hiccup) before giving up — the presign
-  // URL is valid for an hour, so re-using it on retry is safe.
-  async function putWithRetry(url, body, attempts = 3) {
+  // Retries a presigned PUT a few times on a genuine network failure
+  // (dropped connection, brief wifi hiccup, R2 hiccup) before giving up.
+  // getUrl is called fresh before each attempt — not reused — in case
+  // whatever caused the failure was specific to that one presigned URL.
+  async function putWithRetry(getUrl, body, attempts = 4) {
     let lastErr;
     for (let i = 0; i < attempts; i++) {
       try {
+        const url = await getUrl();
         return await fetch(url, { method: 'PUT', body });
       } catch (networkErr) {
         lastErr = networkErr;
-        if (i < attempts - 1) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
       }
     }
     throw lastErr;
@@ -94,12 +96,14 @@ window.MOISDES.api = (function () {
       if (file.size > MULTIPART_THRESHOLD) {
         return this.uploadFileMultipart(key, file, onProgress);
       }
-      const { url } = await request('POST', '/api/presign', { key, mime: file.type || 'application/octet-stream' });
       let res;
       try {
-        res = await putWithRetry(url, file);
+        res = await putWithRetry(async () => {
+          const { url } = await request('POST', '/api/presign', { key, mime: file.type || 'application/octet-stream' });
+          return url;
+        }, file);
       } catch (networkErr) {
-        throw new Error(`Network error PUTting to R2: ${networkErr.message}`);
+        throw new Error(`Network error PUTting to R2: ${networkErr.message} — if this keeps happening, check that the R2 bucket's CORS policy allows PUT from this site's origin.`);
       }
       if (!res.ok) throw new Error(`Upload failed (${res.status})`);
       if (onProgress) onProgress(1);
@@ -117,12 +121,14 @@ window.MOISDES.api = (function () {
           const partNumber = i + 1;
           const start = i * PART_SIZE;
           const chunk = file.slice(start, Math.min(start + PART_SIZE, file.size));
-          const { url } = await request('POST', '/api/multipart/presign-part', { key, uploadId, partNumber });
           let res;
           try {
-            res = await putWithRetry(url, chunk);
+            res = await putWithRetry(async () => {
+              const { url } = await request('POST', '/api/multipart/presign-part', { key, uploadId, partNumber });
+              return url;
+            }, chunk);
           } catch (networkErr) {
-            throw new Error(`Network error PUTting part ${partNumber}/${totalParts} to R2: ${networkErr.message}`);
+            throw new Error(`Network error PUTting part ${partNumber}/${totalParts} to R2: ${networkErr.message} — if this keeps happening, check that the R2 bucket's CORS policy allows PUT from this site's origin.`);
           }
           if (!res.ok) throw new Error(`Part ${partNumber}/${totalParts} failed (${res.status})`);
           const etag = res.headers.get('ETag');

@@ -6,10 +6,13 @@
 // Molad Zaken, GaTaRaD, BeTuTeKPaT, Lo ADU Rosh) plus Hebrew numeral
 // (gematria) formatting for years and days.
 //
-// Verified anchor: 1 Tishrei 5786 = September 22, 2025.
-// Cross-checked against known dates (Chanukah 5786 = Dec 14 2025,
-// Pesach 5786 = Apr 1 2026) and round-trip tested across 200+ years
-// with zero failures.
+// Verified anchor: 1 Tishrei 5786 = September 23, 2025 — the civil date
+// during whose DAYTIME that Hebrew day is in effect (a Hebrew day runs
+// sunset-to-sunset, so its "wall calendar" civil date is the one after
+// the sunset it begins on, not the one it begins on).
+// Cross-checked against known dates (Chanukah 5786 1st day = Dec 15
+// 2025, Purim 5786 = Mar 3 2026, Pesach 5786 1st day = Apr 2 2026) and
+// round-trip tested across 200+ years with zero failures.
 // ================================================================
 
 window.MOISDES = window.MOISDES || {};
@@ -48,7 +51,7 @@ window.MOISDES = window.MOISDES || {};
   const PARTS_PER_DAY = 25920;
   const MONTH_PARTS = 29 * PARTS_PER_DAY + 12 * PARTS_PER_HOUR + 793; // 29d 12h 793p
   const EPOCH_PARTS = 1 * PARTS_PER_DAY + 5 * PARTS_PER_HOUR + 204; // BaHaRaD
-  const HEBREW_EPOCH = 347995; // calibrated so 1 Tishrei 5786 = JDN of Sep 22 2025
+  const HEBREW_EPOCH = 347996; // calibrated so 1 Tishrei 5786's civil (wall-calendar) date = Sep 23 2025
 
   function isHebrewLeapYear(year) {
     return ((7 * year + 1) % 19) < 7;

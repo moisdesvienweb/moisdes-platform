@@ -64,10 +64,13 @@
 
     wrap.innerHTML = `
       <div class="event-meta">${hebrew.isoToHebrewString(post.date)}${post.category ? ' · ' + util.eh(post.category) : ''}</div>
-      <h1 class="page-title" style="border:none;margin-bottom:1rem">${util.eh(post.title)}</h1>
+      <h1 class="page-title" style="border:none;margin-bottom:.75rem">${util.eh(post.title)}</h1>
+      <div class="detail-top-row">
+        <div class="event-tags" data-tags></div>
+        <div data-share></div>
+      </div>
       <div class="detail-body">${post.body || ''}</div>
       <div class="stack" data-gallery style="margin-top:1.5rem"></div>
-      <div class="event-tags" data-tags></div>
     `;
 
     const galleryEl = wrap.querySelector('[data-gallery]');
@@ -85,10 +88,7 @@
     if (!tagsEl.children.length) tagsEl.remove();
 
     if (window.MOISDES.shareButton) {
-      const shareBar = document.createElement('div');
-      shareBar.style.marginTop = '1.5rem';
-      shareBar.appendChild(window.MOISDES.shareButton(location.href, post.title));
-      wrap.appendChild(shareBar);
+      wrap.querySelector('[data-share]').appendChild(window.MOISDES.shareButton(location.href, post.title));
     }
   } catch (e) {
     wrap.innerHTML = '<p class="state-msg">נישט געקענט לאדן</p>';

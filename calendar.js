@@ -5,6 +5,7 @@
 // today on load — scroll down for later events, up for earlier ones).
 // The grid renders immediately with no event data so the page feels
 // instant; events fill in (grid pills + agenda) once the fetch lands.
+// Clicking an event (grid pill or agenda row) opens a detail popup.
 // ================================================================
 
 (async function () {
@@ -16,8 +17,12 @@
   const prevBtn = document.getElementById('calendar-prev');
   const nextBtn = document.getElementById('calendar-next');
   const agendaEl = document.getElementById('calendar-agenda');
+  const agendaPanel = document.getElementById('calendar-agenda-panel');
   const reportBtn = document.getElementById('report-simcha-btn');
   const gcalBtn = document.getElementById('gcal-add-btn');
+  const modal = document.getElementById('event-modal');
+  const modalBody = document.getElementById('event-modal-body');
+  const modalClose = document.getElementById('event-modal-close');
 
   const slug = window.MOISDES.CFG.simchaFormSlug;
   if (slug) {
@@ -48,6 +53,33 @@
 
   agendaEl.innerHTML = '<p class="state-msg">לאדט געשעענישן...</p>';
 
+  // ── EVENT DETAIL POPUP ─────────────────────────────────────────────
+  function closeModal() { modal.classList.remove('open'); modalBody.innerHTML = ''; }
+  modalClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  function mapLinks(addr) {
+    if (!addr) return '';
+    const q = encodeURIComponent(addr);
+    return `
+      <div class="map-links">
+        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">גוגל מאפס</a>
+        <a class="map-link" href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">וויז</a>
+      </div>`;
+  }
+
+  function openEventModal(ev) {
+    const time = ev.allDay ? '' : new Date(ev.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    modalBody.innerHTML = `
+      <div class="event-meta">${hebrew.isoToHebrewString(ev.date)}${time ? ' · ' + time : ''}</div>
+      <h2 class="event-title" style="margin-bottom:.6rem">${util.eh(ev.summary)}</h2>
+      ${ev.location ? `<div class="event-meta">${util.eh(ev.location)}</div>${mapLinks(ev.location)}` : ''}
+      ${ev.description ? `<div class="detail-body">${util.eh(ev.description)}</div>` : ''}
+    `;
+    modal.classList.add('open');
+  }
+
   function hebrewMonthLabel() {
     const lastDay = new Date(viewYear, viewMonth + 1, 0).getDate();
     const h1 = hebrew.isoToHebrew(`${viewYear}-${pad(viewMonth + 1)}-01`);
@@ -55,6 +87,17 @@
     const label1 = `${h1.monthName} ${hebrew.yearToHebrew(h1.year)}`;
     const label2 = `${h2.monthName} ${hebrew.yearToHebrew(h2.year)}`;
     return label1 === label2 ? label1 : `${label1} — ${label2}`;
+  }
+
+  // Scrolls only the agenda panel's own scroll position — never the
+  // whole page — using live viewport rects (robust regardless of
+  // offsetParent chains) instead of scrollIntoView, which bubbles up
+  // and moves every scrollable ancestor, including the window.
+  function scrollAgendaTo(el, smooth) {
+    if (!el) return;
+    const delta = el.getBoundingClientRect().top - agendaPanel.getBoundingClientRect().top;
+    const top = Math.max(0, agendaPanel.scrollTop + delta - 8);
+    agendaPanel.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
   }
 
   function renderGrid() {
@@ -90,25 +133,31 @@
       const dayEvents = eventsByDay[dayIso] || [];
       const hebDay = hebrew.isoToHebrew(dayIso);
 
-      let eventsHtml = '';
-      if (dayEvents.length) {
-        const shown = dayEvents.slice(0, MAX_PILLS).map((ev) => `<span class="cal-event-pill">${util.eh(ev.summary)}</span>`).join('');
-        const more = dayEvents.length > MAX_PILLS ? `<span class="cal-event-more">+${dayEvents.length - MAX_PILLS}</span>` : '';
-        eventsHtml = `<div class="cal-events">${shown}${more}</div>`;
-      } else if (!eventsLoaded) {
-        eventsHtml = '';
-      }
-
       cell.innerHTML = `
         <div class="cal-day-top">
           <span class="cal-daynum">${d.getDate()}</span>
           <span class="cal-hebday">${util.eh(hebrew.dayToHebrew(hebDay.day))}</span>
         </div>
-        ${eventsHtml}
+        <div class="cal-events"></div>
       `;
+      const eventsWrap = cell.querySelector('.cal-events');
+      dayEvents.slice(0, MAX_PILLS).forEach((ev) => {
+        const pill = document.createElement('span');
+        pill.className = 'cal-event-pill';
+        pill.textContent = ev.summary;
+        pill.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
+        eventsWrap.appendChild(pill);
+      });
+      if (dayEvents.length > MAX_PILLS) {
+        const more = document.createElement('span');
+        more.className = 'cal-event-more';
+        more.textContent = `+${dayEvents.length - MAX_PILLS}`;
+        eventsWrap.appendChild(more);
+      }
+
       cell.addEventListener('click', () => {
         const heading = agendaEl.querySelector(`[data-day="${dayIso}"]`);
-        if (heading) heading.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        scrollAgendaTo(heading, true);
       });
       gridEl.appendChild(cell);
     });
@@ -135,15 +184,17 @@
         const time = ev.allDay ? '' : new Date(ev.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         const row = document.createElement('div');
         row.className = 'search-result';
+        row.style.cursor = 'pointer';
         row.innerHTML = `
           <div class="search-result-title">${util.eh(ev.summary)}${time ? ' · ' + time : ''}</div>
           ${ev.location ? `<div class="search-result-meta">${util.eh(ev.location)}</div>` : ''}
           ${ev.description ? `<div class="search-result-excerpt">${util.eh(ev.description)}</div>` : ''}
         `;
+        row.addEventListener('click', () => openEventModal(ev));
         agendaEl.appendChild(row);
       });
     });
-    if (scrollTarget) scrollTarget.scrollIntoView({ block: 'start' });
+    scrollAgendaTo(scrollTarget, false);
   }
 
   prevBtn.addEventListener('click', () => {

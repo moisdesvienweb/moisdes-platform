@@ -45,11 +45,16 @@ window.MOISDES.adminBrowse = (function () {
         editBtn.className = 'btn btn-sm';
         editBtn.textContent = 'Edit';
         editBtn.addEventListener('click', () => openEdit(row));
+        const dupBtn = document.createElement('button');
+        dupBtn.className = 'btn btn-sm';
+        dupBtn.textContent = 'Duplicate';
+        dupBtn.addEventListener('click', () => openDuplicate(row));
         const delBtn = document.createElement('button');
         delBtn.className = 'btn btn-sm btn-danger';
         delBtn.textContent = 'Delete';
         delBtn.addEventListener('click', () => remove(row));
         actionsTd.appendChild(editBtn);
+        actionsTd.appendChild(dupBtn);
         actionsTd.appendChild(delBtn);
         tr.appendChild(actionsTd);
         tbody.appendChild(tr);
@@ -76,6 +81,18 @@ window.MOISDES.adminBrowse = (function () {
     modalTitle.textContent = `Edit ${currentType.slice(0, 1).toUpperCase() + currentType.slice(1)}`;
     upload.buildForm(currentType, modalBody, {
       existing: row,
+      onSaved: () => { closeModal(); load(currentType); },
+    });
+    modalOverlay.classList.add('open');
+  }
+
+  // Opens a fresh Publish form pre-filled with this row's text/metadata
+  // (title, description, tags, etc.) but no files — edit anything, then
+  // Publish creates a brand new item, leaving the original untouched.
+  function openDuplicate(row) {
+    modalTitle.textContent = `Duplicate ${currentType.slice(0, 1).toUpperCase() + currentType.slice(1)}`;
+    upload.buildForm(currentType, modalBody, {
+      prefill: row,
       onSaved: () => { closeModal(); load(currentType); },
     });
     modalOverlay.classList.add('open');
