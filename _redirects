@@ -1,6 +1,10 @@
 # Cloudflare Pages special-cases "404.html" as a redirect target (it
 # triggers Cloudflare's own built-in not-found redirect instead of
-# serving the file). So the form handler lives in its own file
-# (form.html — same content as 404.html) and gets rewritten in place
-# at 200, keeping the real slug in the URL bar.
-/form/*  /form.html  200
+# serving the file). The form handler also can't be named "form.html":
+# Cloudflare's automatic clean-URL canonicalization treats form.html as
+# the canonical asset for the route /form and issues its own 308 to
+# collapse any /form/<slug> request down to bare /form BEFORE this rule
+# gets a chance to run — the exact bug this file's naming works around.
+# So it lives at form-render.html (content identical to 404.html) and
+# gets rewritten in place at 200, keeping the real slug in the URL bar.
+/form/*  /form-render.html  200
