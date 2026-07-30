@@ -56,6 +56,14 @@ window.MOISDES.zmanim = (function () {
 
   function addMinutes(date, mins) { return new Date(date.getTime() + mins * 60000); }
 
+  // Local calendar date as "YYYY-MM-DD" — deliberately NOT
+  // date.toISOString().slice(0,10), which converts to UTC and rolls to
+  // the next calendar day during evening hours in negative-UTC-offset
+  // timezones (most of the US), well before local midnight.
+  function localIso(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
   // Full zmanim set for one calendar date, fixed-72-minute method for
   // alos/tzeis (matches Tzeis 60/72 below), Gra day = sunrise-sunset.
   function computeZmanim(date, lat, lon) {
@@ -87,7 +95,7 @@ window.MOISDES.zmanim = (function () {
   function currentHebrewDateDisplay(lat, lon) {
     const hebrew = window.MOISDES.hebrew;
     const now = new Date();
-    const todayIso = now.toISOString().slice(0, 10);
+    const todayIso = localIso(now);
     const tToday = getSunTimes(now, lat, lon);
     const rollover = addMinutes(tToday.sunset, 72);
 
@@ -95,7 +103,7 @@ window.MOISDES.zmanim = (function () {
       return { text: hebrew.isoToHebrewString(todayIso), ohrLyom: false, effectiveIso: todayIso };
     }
     const tomorrow = new Date(now.getTime() + dayMs);
-    const tomorrowIso = tomorrow.toISOString().slice(0, 10);
+    const tomorrowIso = localIso(tomorrow);
     const tTomorrow = getSunTimes(tomorrow, lat, lon);
     const stillBeforeSunrise = now < tTomorrow.sunrise;
     const label = hebrew.isoToHebrewString(tomorrowIso);
@@ -128,5 +136,5 @@ window.MOISDES.zmanim = (function () {
     );
   }
 
-  return { getSunTimes, computeZmanim, fmtTime, currentHebrewDateDisplay, withLocation, BROOKLYN };
+  return { getSunTimes, computeZmanim, fmtTime, currentHebrewDateDisplay, withLocation, localIso, BROOKLYN };
 })();

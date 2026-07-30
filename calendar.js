@@ -64,8 +64,8 @@
     const q = encodeURIComponent(addr);
     return `
       <div class="map-links">
-        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">גוגל מאפס</a>
-        <a class="map-link" href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">וויז</a>
+        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Google Maps</a>
+        <a class="map-link" href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">Waze</a>
       </div>`;
   }
 

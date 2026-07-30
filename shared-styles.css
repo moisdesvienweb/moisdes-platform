@@ -692,13 +692,19 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
   .calendar-body { grid-template-columns: 1fr; }
 }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+/* grid-template-rows keeps the weekday-label row (the first row) sized
+   to its own short content; grid-auto-rows then fixes every subsequent
+   (day-cell) row to the same height — without it, a row with an
+   event-heavy day stretches ALL cells in that row (CSS Grid rows
+   default to equal height across their whole row), so weeks with
+   events end up visibly taller than weeks without. */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto; grid-auto-rows: 92px; gap: 3px; }
 .cal-weekday {
   text-align: center; font-size: .75rem; font-weight: 700; color: var(--ink-faint);
   padding: .5rem 0;
 }
 .cal-day {
-  position: relative; min-height: 92px; min-width: 0; overflow: hidden;
+  position: relative; height: 100%; min-width: 0; overflow: hidden;
   background: var(--card-bg); border-radius: 4px; cursor: pointer;
   display: flex; flex-direction: column; padding: .3rem .35rem; gap: .15rem;
   transition: background .15s;
@@ -735,7 +741,8 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .agenda-day-heading.is-today { color: var(--accent); }
 
 @media (max-width: 600px) {
-  .cal-day { min-height: 54px; padding: .2rem; }
+  .cal-grid { grid-auto-rows: 54px; }
+  .cal-day { padding: .2rem; }
   .cal-hebday { display: none; }
   .cal-event-pill { font-size: 0; padding: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); overflow: visible; }
   .cal-event-more { display: none; }

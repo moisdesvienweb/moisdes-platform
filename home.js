@@ -207,7 +207,7 @@
     try {
       const { entries } = await api.get('/api/daf-entries');
       const effectiveIso = await new Promise((resolve) => {
-        if (!window.MOISDES.zmanim) return resolve(new Date().toISOString().slice(0, 10));
+        if (!window.MOISDES.zmanim) return resolve(util.localIso());
         window.MOISDES.zmanim.withLocation((loc) => {
           resolve(window.MOISDES.zmanim.currentHebrewDateDisplay(loc.lat, loc.lon).effectiveIso);
         });
@@ -229,7 +229,7 @@
     if (!upcomingEl) return;
     try {
       const { events } = await api.get('/api/gcal-events');
-      const todayIso = new Date().toISOString().slice(0, 10);
+      const todayIso = util.localIso();
       const recent = events.filter((ev) => ev.date >= todayIso).slice(0, 5);
       if (!recent.length) {
         upcomingEl.innerHTML = '<p class="state-msg">נאך קיין געשעענישן אין קאלענדאר</p>';

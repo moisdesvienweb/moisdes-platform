@@ -67,6 +67,16 @@ window.MOISDES.CFG = {
 window.MOISDES.util = {
   eh(s) { return s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : ''; },
 
+  // Local calendar date as "YYYY-MM-DD" — NOT date.toISOString().slice(0,10),
+  // which converts to UTC and rolls to the next calendar day during evening
+  // hours in negative-UTC-offset timezones (most of the US), well before
+  // local midnight. Use this anywhere "today" needs to match the viewer's
+  // wall clock, not UTC.
+  localIso(date) {
+    const d = date || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  },
+
   // ISO date (YYYY-MM-DD) -> week-of Shabbat's parsha name
   dateToParsha(iso) {
     const CFG = window.MOISDES.CFG;
