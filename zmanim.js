@@ -42,13 +42,20 @@ window.MOISDES.zmanim = (function () {
   }
 
   // Returns { sunrise, sunset, solarNoon } as JS Date objects for the
-  // given calendar date (local calendar day) at (lat, lon).
-  function getSunTimes(date, lat, lon) {
+  // given calendar date (local calendar day) at (lat, lon), optionally
+  // corrected for the observer's elevation in meters.
+  function getSunTimes(date, lat, lon, elevation) {
     const lw = rad * -lon, phi = rad * lat;
     const d = toDays(date), n = julianCycle(d, lw), ds = approxTransit(0, lw, n);
     const M = solarMeanAnomaly(ds), L = eclipticLongitude(M), dec = declination(L, 0);
     const Jnoon = solarTransitJ(ds, M, L);
-    const h0 = (-0.833) * rad;
+    // Standard geometric + refraction depression (-0.833°), plus a
+    // horizon-dip correction when elevation is known: being higher up
+    // lets you see further over the horizon, so sunrise is genuinely a
+    // touch earlier and sunset a touch later. dip(°) ≈ 1.76·√(meters)/60
+    // (standard formula used by most zmanim calculators).
+    const dip = elevation > 0 ? (1.76 * Math.sqrt(elevation)) / 60 : 0;
+    const h0 = (-0.833 - dip) * rad;
     const Jset = getSetJ(h0, lw, phi, dec, n, M, L);
     const Jrise = Jnoon - (Jset - Jnoon);
     return { sunrise: fromJulian(Jrise), sunset: fromJulian(Jset), solarNoon: fromJulian(Jnoon) };
@@ -66,8 +73,8 @@ window.MOISDES.zmanim = (function () {
 
   // Full zmanim set for one calendar date, fixed-72-minute method for
   // alos/tzeis (matches Tzeis 60/72 below), Gra day = sunrise-sunset.
-  function computeZmanim(date, lat, lon) {
-    const { sunrise, sunset, solarNoon } = getSunTimes(date, lat, lon);
+  function computeZmanim(date, lat, lon, elevation) {
+    const { sunrise, sunset, solarNoon } = getSunTimes(date, lat, lon, elevation);
     const alos = addMinutes(sunrise, -72);
     const tzeis72 = addMinutes(sunset, 72);
     const shaaGra = (sunset - sunrise) / 12;
@@ -82,6 +89,12 @@ window.MOISDES.zmanim = (function () {
       sofZmanTfilahLate: new Date(sunrise.getTime() + 4 * shaaGra),
       tzeis60: addMinutes(sunset, 60),
       tzeis72,
+      // "72 minutes zmaniyos" — proportional (halachic-hour-based) rather
+      // than fixed-clock minutes: 1.2 sha'os zmaniyos after sunset. In
+      // summer, when halachic hours run long, this lands later than the
+      // fixed-72 tzeis above — the standard machmir alternative shown
+      // alongside it in most Yiddish/Chassidish zmanim tables.
+      tzeis72Zmaniyos: new Date(sunset.getTime() + shaaGra * 1.2),
     };
   }
 
@@ -92,11 +105,11 @@ window.MOISDES.zmanim = (function () {
   // Current Hebrew calendar date the halachic way: the day rolls over at
   // shkia+72 (not midnight), and shows an "אור ליום" prefix from that
   // rollover until the next sunrise.
-  function currentHebrewDateDisplay(lat, lon) {
+  function currentHebrewDateDisplay(lat, lon, elevation) {
     const hebrew = window.MOISDES.hebrew;
     const now = new Date();
     const todayIso = localIso(now);
-    const tToday = getSunTimes(now, lat, lon);
+    const tToday = getSunTimes(now, lat, lon, elevation);
     const rollover = addMinutes(tToday.sunset, 72);
 
     if (now < rollover) {
@@ -104,35 +117,38 @@ window.MOISDES.zmanim = (function () {
     }
     const tomorrow = new Date(now.getTime() + dayMs);
     const tomorrowIso = localIso(tomorrow);
-    const tTomorrow = getSunTimes(tomorrow, lat, lon);
+    const tTomorrow = getSunTimes(tomorrow, lat, lon, elevation);
     const stillBeforeSunrise = now < tTomorrow.sunrise;
     const label = hebrew.isoToHebrewString(tomorrowIso);
     return { text: stillBeforeSunrise ? `אור ליום ${label}` : label, ohrLyom: stillBeforeSunrise, effectiveIso: tomorrowIso };
   }
 
-  const BROOKLYN = { lat: 40.6782, lon: -73.9442, label: 'Brooklyn, NY' };
+  const BROOKLYN = { lat: 40.6782, lon: -73.9442, elevation: 0, label: 'Brooklyn, NY' };
 
   // Geolocates with a Brooklyn fallback; always calls back with a small
   // "which location" label so the displayed times are never unexplained.
   // The label starts as coordinates (immediate) and upgrades to a city
-  // name via reverse geocoding when that resolves.
+  // name via reverse geocoding when that resolves. GPS altitude (when
+  // the device provides one — mobile GPS usually does, desktop/wifi
+  // geolocation usually doesn't) feeds the horizon-dip correction above.
   function withLocation(cb) {
     if (!navigator.geolocation) return cb(BROOKLYN);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude, lon = pos.coords.longitude;
-        const loc = { lat, lon, label: `${lat.toFixed(2)}, ${lon.toFixed(2)}` };
+        const elevation = typeof pos.coords.altitude === 'number' && pos.coords.altitude > 0 ? pos.coords.altitude : 0;
+        const loc = { lat, lon, elevation, label: `${lat.toFixed(2)}, ${lon.toFixed(2)}` };
         cb(loc);
         fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
           .then((r) => r.json())
           .then((data) => {
             const name = [data.city || data.locality, data.principalSubdivision].filter(Boolean).join(', ');
-            if (name) cb({ lat, lon, label: name });
+            if (name) cb({ lat, lon, elevation, label: name });
           })
           .catch(() => {});
       },
       () => cb(BROOKLYN),
-      { timeout: 5000 }
+      { timeout: 5000, enableHighAccuracy: true }
     );
   }
 

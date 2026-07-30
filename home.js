@@ -168,8 +168,8 @@
       window.MOISDES.zmanim.withLocation((loc) => {
         try {
           const Z = window.MOISDES.zmanim;
-          const heb = Z.currentHebrewDateDisplay(loc.lat, loc.lon);
-          const z = Z.computeZmanim(new Date(), loc.lat, loc.lon);
+          const heb = Z.currentHebrewDateDisplay(loc.lat, loc.lon, loc.elevation);
+          const z = Z.computeZmanim(new Date(), loc.lat, loc.lon, loc.elevation);
           const rows = [
             ['הנץ החמה', Z.fmtTime(z.sunrise)],
             ['סוף זמן ק"ש (מג"א)', Z.fmtTime(z.sofZmanShemaEarly)],
@@ -186,6 +186,7 @@
             <div class="widget-title">${util.eh(heb.text)}</div>
             <div class="widget-eng-date">${util.eh(englishDate)}</div>
             <div class="zmanim-grid">${rows.map(([l, v]) => `<div class="zman-item"><span class="zman-label">${util.eh(l)}</span><span class="zman-value">${util.eh(v)}</span></div>`).join('')}</div>
+            <div class="zman-machmir">צאת (72 זמניות — לחומרא): <span>${util.eh(Z.fmtTime(z.tzeis72Zmaniyos))}</span></div>
             <div class="widget-loc">${util.eh(loc.label)}</div>
           `;
         } catch (e) {
@@ -209,7 +210,7 @@
       const effectiveIso = await new Promise((resolve) => {
         if (!window.MOISDES.zmanim) return resolve(util.localIso());
         window.MOISDES.zmanim.withLocation((loc) => {
-          resolve(window.MOISDES.zmanim.currentHebrewDateDisplay(loc.lat, loc.lon).effectiveIso);
+          resolve(window.MOISDES.zmanim.currentHebrewDateDisplay(loc.lat, loc.lon, loc.elevation).effectiveIso);
         });
       });
       const entry = entries.find((e) => e.date === effectiveIso);

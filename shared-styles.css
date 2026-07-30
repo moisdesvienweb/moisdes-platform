@@ -641,6 +641,8 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .zman-label { color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zman-value { color: var(--ink); direction: ltr; white-space: nowrap; }
 .widget-loc { font-size: .68rem; color: var(--ink-faint); margin-top: .3rem; direction: ltr; unicode-bidi: isolate; text-align: right; }
+.zman-machmir { font-size: .62rem; color: var(--ink-faint); margin-top: .25rem; }
+.zman-machmir span { color: var(--ink-soft); direction: ltr; unicode-bidi: isolate; }
 
 /* ── UPCOMING STRIP (home page, compact) ──────────────────────────── */
 
