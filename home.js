@@ -26,7 +26,7 @@
   const TYPE_META = {
     post: { label: 'בלאג', href: (data) => `/blog/post.html?id=${data.id}` },
     poster: { label: 'מודעה', href: (data) => `${window.MOISDES.CFG.pages.posters}#poster-${data.id}` },
-    event: { label: 'מעמד', href: (data) => `${window.MOISDES.CFG.pages.events}#event-${data.id}` },
+    event: { label: 'מעמד', href: (data) => `/events/post.html?id=${data.id}` },
     video: { label: 'ווידיאו', href: (data) => `/video/post.html?id=${data.id}` },
     pdf: { label: 'גליון', href: (data) => `${window.MOISDES.CFG.pages.pdfs}#pdf-${data.id}` },
   };

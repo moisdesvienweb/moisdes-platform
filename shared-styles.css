@@ -17,6 +17,13 @@
 
 * , *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/* Always reserve the vertical scrollbar's width, whether or not the page
+   is currently tall enough to need one — without this, a page that's
+   just barely too short to scroll (e.g. a 5-week calendar month) renders
+   a few pixels wider than one that scrolls (e.g. a 6-week month), since
+   the scrollbar itself eats into the content width only when present.
+   That's what made calendar day-cell widths shift between some months. */
+html { scrollbar-gutter: stable; }
 
 html {
   background: #2c1608;
@@ -390,7 +397,39 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
   font-size: .88rem; font-weight: 700; color: var(--accent);
   margin-bottom: .6rem;
 }
-.playlist-audio-wrap audio { width: 100%; max-width: none; margin-top: 0; border-radius: 20px; }
+/* The <audio> element itself is headless (no controls attribute) — every
+   control the visitor sees is the custom .audio-player UI below, so the
+   raw element stays invisible and out of layout. */
+.playlist-player audio { display: none; }
+
+.audio-player { display: flex; align-items: center; gap: .7rem; }
+.player-btn {
+  flex-shrink: 0; border: none; cursor: pointer; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .15s, background .15s, color .15s;
+}
+.player-playpause { width: 34px; height: 34px; background: var(--accent); color: #2c1608; }
+.player-playpause:hover { opacity: .88; }
+.player-mute { width: 26px; height: 26px; background: rgba(255, 255, 255, .08); color: var(--ink-soft); }
+.player-mute:hover { color: var(--ink); }
+/* Scrubber always reads left-to-right (standard convention for media
+   controls even inside an RTL page) so "played" visually grows from the
+   left regardless of the page's own text direction. */
+.player-progress-wrap { flex: 1; min-width: 0; direction: ltr; cursor: pointer; padding: .5rem 0; }
+.player-progress-bg { position: relative; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .15); }
+.player-progress-fill { position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 0; background: var(--accent); border-radius: 2px; }
+.player-progress-handle {
+  position: absolute; top: 50%; left: 0; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--accent); transform: translate(-50%, -50%); box-shadow: 0 0 0 3px rgba(217, 165, 92, .25);
+}
+.player-time { flex-shrink: 0; font-size: .72rem; color: var(--ink-faint); direction: ltr; white-space: nowrap; }
+.player-volume { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
+.player-volume-slider { width: 60px; accent-color: var(--accent); }
+@media (max-width: 480px) {
+  .player-volume-slider { display: none; }
+  .player-time { display: none; }
+}
+
 .playlist-tracks {
   list-style: none; margin: .8rem 0 0; padding: 0;
   max-height: 190px; overflow-y: auto;

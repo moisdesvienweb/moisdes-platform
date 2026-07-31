@@ -233,15 +233,14 @@
     const gridStart = new Date(firstOfMonth);
     gridStart.setDate(gridStart.getDate() - gridStart.getDay());
 
-    // Always the full 6 weeks (42 days), even when the last row is
-    // entirely next-month lead-out — a month that trims to 5 rows makes
-    // the grid visibly shorter than a 6-row month, so the page reflows
-    // every time you navigate. Fixed row count = fixed grid size, always.
     const dayCells = [];
     for (let i = 0; i < 42; i++) {
       const d = new Date(gridStart);
       d.setDate(gridStart.getDate() + i);
       dayCells.push(d);
+    }
+    while (dayCells.length > 35 && dayCells.slice(-7).every((d) => d.getMonth() !== viewMonth)) {
+      dayCells.splice(-7, 7);
     }
 
     const startIso = isoOf(dayCells[0]), endIso = isoOf(dayCells[dayCells.length - 1]);

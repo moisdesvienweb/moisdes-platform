@@ -78,6 +78,7 @@
         row.style.display = 'block';
         row.href = source.type === 'posts' ? `/blog/post.html?id=${item.id}`
           : source.type === 'videos' ? `/video/post.html?id=${item.id}`
+          : source.type === 'events' ? `/events/post.html?id=${item.id}`
           : `${source.page}#${source.type.slice(0, -1)}-${item.id}`;
         const meta = item.date ? hebrew.isoToHebrewString(item.date) : '';
         row.innerHTML = `

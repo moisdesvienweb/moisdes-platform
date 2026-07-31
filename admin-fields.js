@@ -310,6 +310,18 @@ window.MOISDES.adminFields = (function () {
     const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'];
     function isImageName(name) { return IMAGE_EXT.includes(String(name).split('.').pop().toLowerCase()); }
 
+    // The rename input only ever edits the name; the extension is fixed
+    // and re-appended automatically. Without this, renaming a file (e.g.
+    // fixing a typo in a long Hebrew audio-track title) could drop the
+    // ".mp3" by accident — the R2 key still renames "successfully", but
+    // the public site's isAudio()/isImageName() extension check then no
+    // longer recognizes it, so the track silently disappears from the
+    // player despite the file still being right there in R2.
+    function splitExt(name) {
+      const m = String(name).match(/^(.+)\.([^.]+)$/);
+      return m ? { base: m[1], ext: m[2] } : { base: name, ext: '' };
+    }
+
     // Existing keys look like "prefix/0001-name.ext" — the zero-padded
     // index is what determines display order, so renaming or reordering
     // an already-uploaded file means renaming its R2 key in place.
@@ -341,13 +353,16 @@ window.MOISDES.adminFields = (function () {
         }
 
         // Rename is purely local (like staged files) until Publish/Save.
+        // Editable base name only — the extension is fixed (see splitExt).
+        const { base, ext } = splitExt(item.name);
         const nameInput = el('input');
         nameInput.type = 'text';
         nameInput.className = 'fname-input';
-        nameInput.value = item.name;
+        nameInput.value = base;
         nameInput.title = 'Rename (applies when you save)';
-        nameInput.addEventListener('input', () => { item.name = nameInput.value; });
+        nameInput.addEventListener('input', () => { item.name = ext ? `${nameInput.value}.${ext}` : nameInput.value; });
         li.appendChild(nameInput);
+        if (ext) li.appendChild(el('span', 'fname-ext', `.${ext}`));
 
         const up = el('button', '', '&#9650;');
         up.type = 'button';
@@ -400,13 +415,16 @@ window.MOISDES.adminFields = (function () {
         }
         // Rename only affects the staged (not-yet-uploaded) file — purely
         // local state until the form's own Publish/Save button uploads it.
+        // Editable base name only — extension fixed, same as existing files.
+        const { base: stagedBase, ext: stagedExt } = splitExt(item.name);
         const nameInput = el('input');
         nameInput.type = 'text';
         nameInput.className = 'fname-input';
-        nameInput.value = item.name;
+        nameInput.value = stagedBase;
         nameInput.title = 'Rename before uploading';
-        nameInput.addEventListener('input', () => { item.name = nameInput.value; });
+        nameInput.addEventListener('input', () => { item.name = stagedExt ? `${nameInput.value}.${stagedExt}` : nameInput.value; });
         li.appendChild(nameInput);
+        if (stagedExt) li.appendChild(el('span', 'fname-ext', `.${stagedExt}`));
 
         const up = el('button', '', '&#9650;');
         up.type = 'button';
