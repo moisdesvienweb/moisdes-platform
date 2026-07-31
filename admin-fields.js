@@ -429,9 +429,15 @@ window.MOISDES.adminFields = (function () {
     sortAZ.addEventListener('click', () => { staged.sort((a, b) => a.name.localeCompare(b.name)); renderStaged(); });
     sortZA.addEventListener('click', () => { staged.sort((a, b) => b.name.localeCompare(a.name)); renderStaged(); });
 
+    // upload() awaits this before touching existingItems.length — without
+    // it, saving quickly after opening Edit (before this fetch resolves)
+    // would upload new files starting at index 0001, colliding with and
+    // silently overwriting whichever existing file already sits at that
+    // key in R2 (a PUT to an occupied key just replaces it, no error).
+    let existingLoadPromise = Promise.resolve();
     if (existingFolder) {
       status.textContent = 'Loading existing files…';
-      api.listFolder(existingFolder).then((keys) => {
+      existingLoadPromise = api.listFolder(existingFolder).then((keys) => {
         existingItems = keys.map((key) => ({ originalKey: key, name: parseKey(key).name }));
         status.textContent = '';
         renderExisting();
@@ -449,6 +455,7 @@ window.MOISDES.adminFields = (function () {
     container.appendChild(status);
 
     async function upload(finalPrefix) {
+      await existingLoadPromise;
       const prefix = existingFolder || finalPrefix || keyPrefix;
 
       // Apply any pending rename/reorder of existing files first — this

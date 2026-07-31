@@ -96,10 +96,17 @@ window.MOISDES.api = (function () {
 
     // Direct browser -> R2 upload via a Worker-issued presigned URL.
     // Files above MULTIPART_THRESHOLD go through chunked multipart upload
-    // instead of a single PUT, since Cloudflare's proxy caps a single
-    // request's body size well under what a recording or video needs.
+    // instead of a single PUT. A single large PUT has to survive
+    // uninterrupted for however long the whole file takes to transfer —
+    // a real recording (e.g. a ~38MB audio file) took 20-100+ seconds and
+    // hit net::ERR_CONNECTION_RESET on every attempt (confirmed via a HAR
+    // capture). Multipart splits that same file into 10MB chunks, each
+    // independently retried, so a mid-upload connection drop loses one
+    // chunk's progress instead of the whole file. Lowered well below the
+    // old 50MB cutoff so recordings/videos in this size range route
+    // through the more resilient path.
     async uploadFile(key, file, onProgress) {
-      const MULTIPART_THRESHOLD = 50 * 1024 * 1024; // 50MB
+      const MULTIPART_THRESHOLD = 15 * 1024 * 1024; // 15MB
       if (file.size > MULTIPART_THRESHOLD) {
         return this.uploadFileMultipart(key, file, onProgress);
       }

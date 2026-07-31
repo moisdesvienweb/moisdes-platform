@@ -102,15 +102,39 @@ window.MOISDES.zmanim = (function () {
   // the fields that actually depend on precise sun-position math. Fixed
   // clock-offset fields (tzeis 60/72, purely "sunset + N minutes") don't
   // need it — those are recomputed locally from whichever sunset resolves.
-  const HEBCAL_FIELD_MAP = {
-    sunrise: 'sunrise',
-    sunset: 'sunset',
-    chatzos: 'chatzot',
-    sofZmanShemaEarly: 'sofZmanShmaMGA',
-    sofZmanShemaLate: 'sofZmanShma',
-    sofZmanTfilahEarly: 'sofZmanTfillaMGA',
-    sofZmanTfilahLate: 'sofZmanTfilla',
+  //
+  // Matched by normalized-substring rather than an exact key name: we
+  // can't live-verify Hebcal's exact field spelling from this dev
+  // environment, and a single wrong exact-match would silently fall back
+  // to the local calculation for that field with no visible sign anything
+  // was wrong. Include/exclude patterns are far more tolerant of whatever
+  // the real casing/spelling turns out to be (sofZmanShma vs sof_zman_shma
+  // vs sofZmanShmaGRA, etc).
+  const HEBCAL_FIELD_RULES = {
+    sunrise: { include: ['sunrise'], exclude: [] },
+    sunset: { include: ['sunset'], exclude: [] },
+    chatzos: { include: ['chatzot'], exclude: ['night'] },
+    sofZmanShemaEarly: { include: ['sofzmanshma'], exclude: ['tfil'] }, // Magen Avraham
+    sofZmanShemaLate: { include: ['sofzmanshma'], exclude: ['tfil', 'mga', 'ma19', 'ma16', 'ma72'] }, // Gra
+    sofZmanTfilahEarly: { include: ['sofzmantfil'], exclude: [] }, // Magen Avraham
+    sofZmanTfilahLate: { include: ['sofzmantfil'], exclude: ['mga', 'ma19', 'ma16', 'ma72'] }, // Gra
   };
+
+  function normalizeKey(k) { return k.toLowerCase().replace(/[^a-z]/g, ''); }
+
+  // Within a field's matching candidates, the MGA (early/stringent)
+  // variant's key normally contains "mga" and the Gra (late) variant's
+  // doesn't — so among all keys matching a field's include/exclude rule,
+  // prefer the one whose "has mga in the name" matches what this field is.
+  function pickHebcalField(times, rule, wantMga) {
+    const candidates = Object.keys(times).filter((k) => {
+      const norm = normalizeKey(k);
+      return rule.include.every((p) => norm.includes(p)) && !rule.exclude.some((p) => norm.includes(p));
+    });
+    if (!candidates.length) return null;
+    const mgaMatch = candidates.find((k) => normalizeKey(k).includes('mga') === wantMga);
+    return times[mgaMatch || candidates[0]];
+  }
 
   async function hebcalTimes(dateIso, lat, lon) {
     try {
@@ -136,8 +160,9 @@ window.MOISDES.zmanim = (function () {
 
     const merged = { ...local };
     let usedAny = false;
-    for (const [ourKey, hebcalKey] of Object.entries(HEBCAL_FIELD_MAP)) {
-      const raw = times[hebcalKey];
+    for (const [ourKey, rule] of Object.entries(HEBCAL_FIELD_RULES)) {
+      const wantMga = ourKey.endsWith('Early');
+      const raw = pickHebcalField(times, rule, wantMga);
       if (!raw) continue;
       const d = new Date(raw);
       if (isNaN(d.getTime())) continue;
@@ -170,6 +195,20 @@ window.MOISDES.zmanim = (function () {
     return { text: stillBeforeSunrise ? `אור ליום ${label}` : label, ohrLyom: stillBeforeSunrise, effectiveIso: tomorrowIso };
   }
 
+  // Hebcal's Hebrew-date strings carry nikud (vowel points) and a
+  // grammatical "ב" prefix on the month ("באב" = "in Av") — neither
+  // matches this site's plain style used everywhere else (e.g. "אב", no
+  // points), so both get stripped rather than shown as Hebcal renders them.
+  const HEB_MONTH_STEMS = ['תשרי', 'מרחשון', 'חשון', 'כסלו', 'טבת', 'שבט', 'אדר א', 'אדר ב', 'אדר', 'ניסן', 'אייר', 'סיון', 'תמוז', 'אב', 'אלול'];
+  function cleanHebcalHebrew(s) {
+    let out = String(s || '').replace(/[֑-ׇ]/g, ''); // strip nikud/cantillation (U+0591-U+05C7)
+    for (const m of HEB_MONTH_STEMS) {
+      const withPrefix = 'ב' + m;
+      if (out.includes(withPrefix)) { out = out.replace(withPrefix, m); break; }
+    }
+    return out;
+  }
+
   // Hebcal-sourced Hebrew-date text for the already-resolved effective
   // date (which date is "in effect" is still decided locally via the
   // shkia+72 rollover above — Hebcal only supplies the display string for
@@ -181,7 +220,8 @@ window.MOISDES.zmanim = (function () {
       if (!api) return null;
       const { hebrew: hebStr } = await api.get(`/api/hebcal-date?date=${encodeURIComponent(effectiveIso)}`);
       if (!hebStr) return null;
-      return ohrLyom ? `אור ליום ${hebStr}` : hebStr;
+      const clean = cleanHebcalHebrew(hebStr);
+      return ohrLyom ? `אור ליום ${clean}` : clean;
     } catch (e) {
       return null;
     }

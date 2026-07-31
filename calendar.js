@@ -23,6 +23,7 @@
   const modal = document.getElementById('event-modal');
   const modalBody = document.getElementById('event-modal-body');
   const modalClose = document.getElementById('event-modal-close');
+  const attributionEl = document.getElementById('cal-attribution');
 
   const slug = window.MOISDES.CFG.simchaFormSlug;
   if (slug) {
@@ -77,13 +78,18 @@
     return overlay;
   }
 
+  // Hebrew cantillation/vowel-point marks (U+0591-U+05C7) — Hebcal's
+  // "hebrew" strings carry nikud, but nothing else on this site does, so
+  // strip it for a consistent plain-letter look everywhere.
+  function stripNikud(s) { return String(s || '').replace(/[֑-ׇ]/g, ''); }
+
   function buildHebcalOverlay(items) {
     const overlay = {};
     (items || []).forEach((it) => {
       const iso = it.date && String(it.date).slice(0, 10);
       if (!iso) return;
-      const label = String(it.hebrew || it.title || '').replace(/^פרשת\s+/, '').replace(/^Parashat\s+/i, '');
-      if (!label) return;
+      const label = stripNikud(it.hebrew || it.title || '').replace(/^פרשת\s+/, '').replace(/^Parashat\s+/i, '');
+      if (!label || label === 'חג הבנות') return;
       const entry = overlay[iso] || (overlay[iso] = emptyOverlayEntry());
       if (it.category === 'parashat') entry.parsha = label;
       else if (it.category === 'roshchodesh') entry.roshChodesh.push(label);
@@ -227,14 +233,15 @@
     const gridStart = new Date(firstOfMonth);
     gridStart.setDate(gridStart.getDate() - gridStart.getDay());
 
+    // Always the full 6 weeks (42 days), even when the last row is
+    // entirely next-month lead-out — a month that trims to 5 rows makes
+    // the grid visibly shorter than a 6-row month, so the page reflows
+    // every time you navigate. Fixed row count = fixed grid size, always.
     const dayCells = [];
     for (let i = 0; i < 42; i++) {
       const d = new Date(gridStart);
       d.setDate(gridStart.getDate() + i);
       dayCells.push(d);
-    }
-    while (dayCells.length > 35 && dayCells.slice(-7).every((d) => d.getMonth() !== viewMonth)) {
-      dayCells.splice(-7, 7);
     }
 
     const startIso = isoOf(dayCells[0]), endIso = isoOf(dayCells[dayCells.length - 1]);
@@ -243,6 +250,7 @@
     fetchHebcalOverlay(startIso, endIso).then((overlay) => {
       if (myToken !== gridRenderToken) return; // user navigated away before this landed
       renderCells(dayCells, overlay);
+      if (attributionEl) attributionEl.style.display = '';
     }).catch(() => { /* keep the local fallback rendered above */ });
   }
 

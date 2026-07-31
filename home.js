@@ -169,8 +169,10 @@
         try {
           const Z = window.MOISDES.zmanim;
           const heb = Z.currentHebrewDateDisplay(loc.lat, loc.lon, loc.elevation);
-          const hebText = (await Z.hebcalDateText(heb.effectiveIso, heb.ohrLyom)) || heb.text;
+          const hebcalText = await Z.hebcalDateText(heb.effectiveIso, heb.ohrLyom);
+          const hebText = hebcalText || heb.text;
           const { zmanim: z, source } = await Z.computeZmanimWithHebcal(new Date(), loc.lat, loc.lon, loc.elevation, util.localIso());
+          const usedHebcal = source === 'hebcal' || !!hebcalText;
           const rows = [
             ['הנץ החמה', Z.fmtTime(z.sunrise)],
             ['סוף זמן ק"ש (מג"א)', Z.fmtTime(z.sofZmanShemaEarly)],
@@ -188,7 +190,7 @@
             <div class="widget-eng-date">${util.eh(englishDate)}</div>
             <div class="zmanim-grid">${rows.map(([l, v]) => `<div class="zman-item"><span class="zman-label">${util.eh(l)}</span><span class="zman-value">${util.eh(v)}</span></div>`).join('')}</div>
             <div class="zman-machmir">נא להחמיר על הזמנים בכמה דקות.</div>
-            ${source === 'hebcal' ? `<div class="zman-attribution">Zmanim via <a href="https://www.hebcal.com" target="_blank" rel="noopener">Hebcal.com</a></div>` : ''}
+            ${usedHebcal ? `<div class="zman-attribution">Date &amp; zmanim via <a href="https://www.hebcal.com" target="_blank" rel="noopener">Hebcal.com</a></div>` : ''}
             <div class="widget-loc">${util.eh(loc.label)}</div>
           `;
         } catch (e) {
@@ -217,11 +219,13 @@
       });
       const entry = entries.find((e) => e.date === effectiveIso);
       dafEl.innerHTML = `
-        <div class="widget-title-row">
-          <div class="widget-title">ובהם נהגה</div>
+        <div class="daf-widget-row">
           <img class="daf-source-logo" src="/daf-logo.png" alt="חבורת ובהם נהגה">
+          <div class="daf-widget-content">
+            <div class="widget-title">ובהם נהגה</div>
+            <div>${entry ? util.eh(entry.text) : 'נאך נישט אריינגעשטעלט'}</div>
+          </div>
         </div>
-        <div>${entry ? util.eh(entry.text) : 'נאך נישט אריינגעשטעלט'}</div>
       `;
     } catch (e) {
       dafEl.innerHTML = '<p class="state-msg">נישט געקענט לאדן</p>';

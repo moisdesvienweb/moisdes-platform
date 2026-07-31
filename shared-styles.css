@@ -155,7 +155,12 @@ p { margin: 0 0 1em; }
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 999;
+  /* Must outrank the sticky header's z-index (1000) — otherwise the
+     header (and its burger button) renders on top of this full-screen
+     overlay, so a tap in that corner hits the still-active burger button
+     (re-opening, a no-op since it's already open) instead of the X below it,
+     making the menu look like it opens but never closes. */
+  z-index: 1001;
   background: rgba(45, 24, 9, .99);
   flex-direction: column;
   align-items: center;
@@ -657,9 +662,14 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .zman-attribution a { color: var(--ink-soft); }
 .zman-attribution a:hover { color: var(--accent); }
 
-.widget-title-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .05rem; }
-.widget-title-row .widget-title { margin-bottom: 0; }
-.daf-source-logo { flex-shrink: 0; height: 26px; width: auto; }
+/* The logo stretches to the full height of the row next to it (title +
+   daf text stacked) rather than a small fixed-size icon — needs
+   align-items:stretch (not center) plus height:100% on the image itself,
+   since a flex item's cross-size only stretches the box, not an <img>'s
+   own intrinsic sizing unless told to fill it. */
+.daf-widget-row { display: flex; align-items: stretch; gap: .7rem; }
+.daf-source-logo { flex-shrink: 0; height: 100%; width: auto; max-width: 40%; object-fit: contain; }
+.daf-widget-content { flex: 1; min-width: 0; }
 
 /* ── UPCOMING STRIP (home page, compact) ──────────────────────────── */
 
@@ -748,6 +758,10 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
   min-width: 0; max-width: 100%; cursor: pointer; box-sizing: border-box;
 }
 .cal-event-more { font-size: .62rem; color: var(--ink-faint); padding: 0 .35rem; }
+
+.cal-attribution { font-size: .68rem; color: var(--ink-faint); margin-top: .5rem; text-align: center; direction: ltr; }
+.cal-attribution a { color: var(--ink-soft); }
+.cal-attribution a:hover { color: var(--accent); }
 
 .calendar-agenda-panel {
   background: var(--card-bg); border: 1px solid var(--line); border-radius: 4px;
