@@ -169,6 +169,56 @@ window.MOISDES = window.MOISDES || {};
     return `${dayToHebrew(day)} ${monthNames(year)[month - 1]} ${yearToHebrew(year)}`;
   }
 
+  // ── Yom Tov / major holidays (fixed Hebrew calendar dates) ─────────
+  // Diaspora lengths (this is a US community: 2-day Rosh Hashana, 8-day
+  // Pesach/Sukkos-through-Simchas Torah, 2-day Shavuos). Scoped to the
+  // Torah-mandated Shalosh Regalim + Rosh Hashana/Yom Kippur, plus
+  // Chanukah and Purim (the two widely-observed Rabbinic Yamim Tovim) —
+  // minor fast days (Tzom Gedaliah, 10 Teves, Taanis Esther, 17 Tammuz,
+  // Tisha B'Av) are deliberately left out of a "holidays" list.
+  const HOLIDAYS = [
+    { month: 'תשרי', day: 1, len: 2, name: 'ראש השנה' },
+    { month: 'תשרי', day: 10, len: 1, name: 'יום כיפור' },
+    { month: 'תשרי', day: 15, len: 7, name: 'סוכות', lastDayName: 'הושענא רבה' },
+    { month: 'תשרי', day: 22, len: 1, name: 'שמיני עצרת' },
+    { month: 'תשרי', day: 23, len: 1, name: 'שמחת תורה' },
+    { month: 'כסלו', day: 25, len: 8, name: 'חנוכה' },
+    { month: 'אדר', day: 14, len: 1, name: 'פורים' }, // resolved to אדר ב in a leap year
+    { month: 'ניסן', day: 15, len: 8, name: 'פסח' },
+    { month: 'סיון', day: 6, len: 2, name: 'שבועות' },
+  ];
+  const HEB_ORDINALS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ז׳', 'ח׳'];
+
+  function holidayStartIso(year, monthName, day) {
+    const resolved = (monthName === 'אדר' && isHebrewLeapYear(year)) ? 'אדר ב' : monthName;
+    const monthNum = monthNames(year).indexOf(resolved) + 1;
+    const g = jdnToGregorian(hebrewToJDN(year, monthNum, day));
+    return `${g.year}-${String(g.month).padStart(2, '0')}-${String(g.day).padStart(2, '0')}`;
+  }
+
+  function addDaysIso(iso, n) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    dt.setUTCDate(dt.getUTCDate() + n);
+    return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+  }
+
+  // Hebrew year -> every holiday day in it, e.g.
+  // [{iso:'2026-09-12', name:'ראש השנה א׳'}, {iso:'2026-09-13', name:'ראש השנה ב׳'}, ...]
+  function holidaysForHebrewYear(year) {
+    const out = [];
+    HOLIDAYS.forEach((h) => {
+      const startIso = holidayStartIso(year, h.month, h.day);
+      for (let i = 0; i < h.len; i++) {
+        const iso = i === 0 ? startIso : addDaysIso(startIso, i);
+        let name = h.name;
+        if (h.len > 1) name = (h.lastDayName && i === h.len - 1) ? h.lastDayName : `${h.name} ${HEB_ORDINALS[i] || i + 1}`;
+        out.push({ iso, name });
+      }
+    });
+    return out;
+  }
+
   // ── Public API ─────────────────────────────────────────────────────
 
   window.MOISDES.hebrew = {
@@ -201,6 +251,19 @@ window.MOISDES = window.MOISDES || {};
       const now = new Date();
       const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       return this.isoToHebrew(iso).year;
+    },
+
+    holidaysForHebrewYear,
+
+    // Every holiday day (Gregorian ISO) falling within [startIso, endIso]
+    // inclusive — spans a year either side of the range's own Hebrew years
+    // so nothing near a Rosh Hashana boundary gets missed.
+    holidaysInRange(startIso, endIso) {
+      const y1 = this.isoToHebrew(startIso).year;
+      const y2 = this.isoToHebrew(endIso).year;
+      const all = [];
+      for (let y = y1 - 1; y <= y2 + 1; y++) all.push(...holidaysForHebrewYear(y));
+      return all.filter((h) => h.iso >= startIso && h.iso <= endIso);
     },
   };
 })();

@@ -9,17 +9,26 @@ window.MOISDES = window.MOISDES || {};
 window.MOISDES.api = (function () {
   const TOKEN_KEY = 'moisdes_token';
   const USER_KEY = 'moisdes_user';
+  const PERMS_KEY = 'moisdes_permissions';
 
   function base() { return window.MOISDES.CFG.apiBase; }
   function getToken() { return localStorage.getItem(TOKEN_KEY); }
   function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) { return null; } }
-  function setSession(token, user) {
+  // Per-section {read,write} map for the logged-in user (admin/superadmin
+  // get every section true; an editor gets exactly what was granted).
+  // Only meaningful for hiding/disabling UI — the Worker enforces the
+  // real boundary server-side regardless of what's cached here.
+  function getPermissions() { try { return JSON.parse(localStorage.getItem(PERMS_KEY) || 'null'); } catch (e) { return null; } }
+  function setPermissions(permissions) { localStorage.setItem(PERMS_KEY, JSON.stringify(permissions || {})); }
+  function setSession(token, user, permissions) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    if (permissions) setPermissions(permissions);
   }
   function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(PERMS_KEY);
   }
 
   async function request(method, path, body) {
@@ -51,26 +60,24 @@ window.MOISDES.api = (function () {
     return data;
   }
 
-  // Retries a presigned PUT a few times on a genuine network failure
-  // (dropped connection, brief wifi hiccup, R2 hiccup) before giving up.
-  // getUrl is called fresh before each attempt — not reused — in case
-  // whatever caused the failure was specific to that one presigned URL.
-  async function putWithRetry(getUrl, body, attempts = 4) {
+  // Retries a presigned PUT a couple of times on a genuine network failure
+  // (dropped connection, brief wifi hiccup) before giving up — the presign
+  // URL is valid for an hour, so re-using it on retry is safe.
+  async function putWithRetry(url, body, attempts = 3) {
     let lastErr;
     for (let i = 0; i < attempts; i++) {
       try {
-        const url = await getUrl();
         return await fetch(url, { method: 'PUT', body });
       } catch (networkErr) {
         lastErr = networkErr;
-        if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
       }
     }
     throw lastErr;
   }
 
   return {
-    getToken, getUser, setSession, clearSession,
+    getToken, getUser, setSession, clearSession, getPermissions, setPermissions,
     get: (path) => request('GET', path),
     post: (path, body) => request('POST', path, body || {}),
     put: (path, body) => request('PUT', path, body || {}),
@@ -78,7 +85,7 @@ window.MOISDES.api = (function () {
 
     async login(email, password) {
       const data = await request('POST', '/api/login', { email, password });
-      setSession(data.token, data.user);
+      setSession(data.token, data.user, data.permissions);
       return data.user;
     },
     async logout() {
@@ -96,12 +103,10 @@ window.MOISDES.api = (function () {
       if (file.size > MULTIPART_THRESHOLD) {
         return this.uploadFileMultipart(key, file, onProgress);
       }
+      const { url } = await request('POST', '/api/presign', { key, mime: file.type || 'application/octet-stream' });
       let res;
       try {
-        res = await putWithRetry(async () => {
-          const { url } = await request('POST', '/api/presign', { key, mime: file.type || 'application/octet-stream' });
-          return url;
-        }, file);
+        res = await putWithRetry(url, file);
       } catch (networkErr) {
         throw new Error(`Network error PUTting to R2: ${networkErr.message} — if this keeps happening, check that the R2 bucket's CORS policy allows PUT from this site's origin.`);
       }
@@ -121,12 +126,10 @@ window.MOISDES.api = (function () {
           const partNumber = i + 1;
           const start = i * PART_SIZE;
           const chunk = file.slice(start, Math.min(start + PART_SIZE, file.size));
+          const { url } = await request('POST', '/api/multipart/presign-part', { key, uploadId, partNumber });
           let res;
           try {
-            res = await putWithRetry(async () => {
-              const { url } = await request('POST', '/api/multipart/presign-part', { key, uploadId, partNumber });
-              return url;
-            }, chunk);
+            res = await putWithRetry(url, chunk);
           } catch (networkErr) {
             throw new Error(`Network error PUTting part ${partNumber}/${totalParts} to R2: ${networkErr.message} — if this keeps happening, check that the R2 bucket's CORS policy allows PUT from this site's origin.`);
           }

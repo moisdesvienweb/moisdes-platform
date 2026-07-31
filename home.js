@@ -165,11 +165,12 @@
     if (!zmanimEl || !window.MOISDES.zmanim) return Promise.resolve();
     return new Promise((resolve) => {
       let settled = false;
-      window.MOISDES.zmanim.withLocation((loc) => {
+      window.MOISDES.zmanim.withLocation(async (loc) => {
         try {
           const Z = window.MOISDES.zmanim;
           const heb = Z.currentHebrewDateDisplay(loc.lat, loc.lon, loc.elevation);
-          const z = Z.computeZmanim(new Date(), loc.lat, loc.lon, loc.elevation);
+          const hebText = (await Z.hebcalDateText(heb.effectiveIso, heb.ohrLyom)) || heb.text;
+          const { zmanim: z, source } = await Z.computeZmanimWithHebcal(new Date(), loc.lat, loc.lon, loc.elevation, util.localIso());
           const rows = [
             ['הנץ החמה', Z.fmtTime(z.sunrise)],
             ['סוף זמן ק"ש (מג"א)', Z.fmtTime(z.sofZmanShemaEarly)],
@@ -183,10 +184,11 @@
           ];
           const englishDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
           zmanimEl.innerHTML = `
-            <div class="widget-title">${util.eh(heb.text)}</div>
+            <div class="widget-title">${util.eh(hebText)}</div>
             <div class="widget-eng-date">${util.eh(englishDate)}</div>
             <div class="zmanim-grid">${rows.map(([l, v]) => `<div class="zman-item"><span class="zman-label">${util.eh(l)}</span><span class="zman-value">${util.eh(v)}</span></div>`).join('')}</div>
-            <div class="zman-machmir">צאת (72 זמניות — לחומרא): <span>${util.eh(Z.fmtTime(z.tzeis72Zmaniyos))}</span></div>
+            <div class="zman-machmir">נא להחמיר על הזמנים בכמה דקות.</div>
+            ${source === 'hebcal' ? `<div class="zman-attribution">Zmanim via <a href="https://www.hebcal.com" target="_blank" rel="noopener">Hebcal.com</a></div>` : ''}
             <div class="widget-loc">${util.eh(loc.label)}</div>
           `;
         } catch (e) {
@@ -215,7 +217,10 @@
       });
       const entry = entries.find((e) => e.date === effectiveIso);
       dafEl.innerHTML = `
-        <div class="widget-title">ובהם נהגה</div>
+        <div class="widget-title-row">
+          <div class="widget-title">ובהם נהגה</div>
+          <img class="daf-source-logo" src="/daf-logo.png" alt="חבורת ובהם נהגה">
+        </div>
         <div>${entry ? util.eh(entry.text) : 'נאך נישט אריינגעשטעלט'}</div>
       `;
     } catch (e) {

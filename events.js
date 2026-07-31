@@ -61,16 +61,6 @@
     else if (modal.classList.contains('open')) closeModal();
   });
 
-  function mapLinks(addr) {
-    if (!addr) return '';
-    const q = encodeURIComponent(addr);
-    return `
-      <div class="map-links">
-        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Google Maps</a>
-        <a class="map-link" href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">Waze</a>
-      </div>`;
-  }
-
   function openEventModal(ev, coverUrl, audioKeys, imageKeys) {
     modalBody.innerHTML = `
       ${coverUrl ? `<div class="event-modal-cover" style="background-image:url('${util.eh(coverUrl)}')"></div>` : ''}
@@ -80,7 +70,7 @@
         <div class="event-tags" data-tags></div>
         <div data-share></div>
       </div>
-      ${ev.location ? `<div class="event-meta">${util.eh(ev.location)}</div>${mapLinks(ev.location)}` : ''}
+      ${ev.location ? `<div class="event-meta">${util.eh(ev.location)}</div>` : ''}
       <div class="detail-body">${util.eh(ev.description || '')}</div>
       <div data-player></div>
       <div class="stack" data-gallery style="margin-top:1rem"></div>

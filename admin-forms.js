@@ -33,6 +33,12 @@ window.MOISDES.adminForms = (function () {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  function canWrite() {
+    const role = api.getUser()?.role;
+    if (role === 'admin' || role === 'superadmin') return true;
+    return !!api.getPermissions()?.forms?.write;
+  }
+
   async function loadForms() {
     formsListEl.innerHTML = '<li>Loading…</li>';
     try {
@@ -54,10 +60,12 @@ window.MOISDES.adminForms = (function () {
       span.style.cursor = 'pointer';
       span.addEventListener('click', () => selectForm(f.id));
       li.appendChild(span);
-      const dupBtn = el('button', 'btn btn-sm', 'Duplicate');
-      dupBtn.style.marginInlineStart = '.5rem';
-      dupBtn.addEventListener('click', (e) => { e.stopPropagation(); duplicateForm(f); });
-      li.appendChild(dupBtn);
+      if (canWrite()) {
+        const dupBtn = el('button', 'btn btn-sm', 'Duplicate');
+        dupBtn.style.marginInlineStart = '.5rem';
+        dupBtn.addEventListener('click', (e) => { e.stopPropagation(); duplicateForm(f); });
+        li.appendChild(dupBtn);
+      }
       formsListEl.appendChild(li);
     });
   }
@@ -145,42 +153,47 @@ window.MOISDES.adminForms = (function () {
     thankMsg.placeholder = 'אייער ענטפער איז אנגענומען געווארן.';
     settingsWrap.appendChild(fieldGroup('Thank-you message', thankMsg));
 
-    const saveSettingsBtn = el('button', 'btn btn-primary', 'Save settings');
-    const settingsStatus = el('span', 'status-msg', '');
-    settingsWrap.appendChild(saveSettingsBtn);
-    settingsWrap.appendChild(settingsStatus);
-    saveSettingsBtn.addEventListener('click', async () => {
-      saveSettingsBtn.disabled = true;
-      try {
-        await api.put(`/api/forms/${form.id}`, {
-          title: titleInput.value,
-          slug: slugInput.value.trim().toLowerCase(),
-          settings: {
-            description: descInput.value,
-            status: statusSelect.value,
-            thankYouTitle: thankTitle.value,
-            thankYouMessage: thankMsg.value,
-          },
-        });
-        settingsStatus.textContent = 'Saved.';
-        settingsStatus.className = 'status-msg ok';
-        await loadForms();
-      } catch (e) {
-        settingsStatus.textContent = e.message || 'Failed to save';
-        settingsStatus.className = 'status-msg err';
-      }
-      saveSettingsBtn.disabled = false;
-    });
+    if (canWrite()) {
+      const saveSettingsBtn = el('button', 'btn btn-primary', 'Save settings');
+      const settingsStatus = el('span', 'status-msg', '');
+      settingsWrap.appendChild(saveSettingsBtn);
+      settingsWrap.appendChild(settingsStatus);
+      saveSettingsBtn.addEventListener('click', async () => {
+        saveSettingsBtn.disabled = true;
+        try {
+          await api.put(`/api/forms/${form.id}`, {
+            title: titleInput.value,
+            slug: slugInput.value.trim().toLowerCase(),
+            settings: {
+              description: descInput.value,
+              status: statusSelect.value,
+              thankYouTitle: thankTitle.value,
+              thankYouMessage: thankMsg.value,
+            },
+          });
+          settingsStatus.textContent = 'Saved.';
+          settingsStatus.className = 'status-msg ok';
+          await loadForms();
+        } catch (e) {
+          settingsStatus.textContent = e.message || 'Failed to save';
+          settingsStatus.className = 'status-msg err';
+        }
+        saveSettingsBtn.disabled = false;
+      });
 
-    const deleteFormBtn = el('button', 'btn btn-danger', 'Delete form');
-    deleteFormBtn.style.marginLeft = '.5rem';
-    deleteFormBtn.addEventListener('click', async () => {
-      if (!confirm('Delete this form and its responses?')) return;
-      await api.del(`/api/forms/${form.id}`);
-      activeFormId = null;
-      await loadForms();
-    });
-    settingsWrap.appendChild(deleteFormBtn);
+      const deleteFormBtn = el('button', 'btn btn-danger', 'Delete form');
+      deleteFormBtn.style.marginLeft = '.5rem';
+      deleteFormBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this form and its responses?')) return;
+        await api.del(`/api/forms/${form.id}`);
+        activeFormId = null;
+        await loadForms();
+      });
+      settingsWrap.appendChild(deleteFormBtn);
+    } else {
+      [titleInput, slugInput, descInput, statusSelect, thankTitle, thankMsg].forEach((i) => { i.disabled = true; });
+      settingsWrap.appendChild(el('p', 'state-msg', 'View only — you don\'t have write access to Forms.'));
+    }
 
     detailEl.appendChild(settingsWrap);
     detailEl.appendChild(el('hr'));
@@ -189,22 +202,27 @@ window.MOISDES.adminForms = (function () {
     const builderWrap = el('div');
     builderWrap.appendChild(el('h2', '', 'Fields'));
 
-    const palette = el('div', 'field-palette');
-    FIELD_TYPES.forEach(([type, label]) => {
-      const btn = el('button', 'palette-btn', `+ ${label}`);
-      btn.type = 'button';
-      btn.addEventListener('click', () => { fields.push({ type, label: label, placeholder: '', options: [], required: false }); renderFieldList(); });
-      palette.appendChild(btn);
-    });
-    builderWrap.appendChild(palette);
+    const formsWritable = canWrite();
+    if (formsWritable) {
+      const palette = el('div', 'field-palette');
+      FIELD_TYPES.forEach(([type, label]) => {
+        const btn = el('button', 'palette-btn', `+ ${label}`);
+        btn.type = 'button';
+        btn.addEventListener('click', () => { fields.push({ type, label: label, placeholder: '', options: [], required: false }); renderFieldList(); });
+        palette.appendChild(btn);
+      });
+      builderWrap.appendChild(palette);
+    }
 
     const fieldListEl = el('div');
     builderWrap.appendChild(fieldListEl);
 
     const saveFieldsBtn = el('button', 'btn btn-primary', 'Save fields');
     const fieldsStatus = el('span', 'status-msg', '');
-    builderWrap.appendChild(saveFieldsBtn);
-    builderWrap.appendChild(fieldsStatus);
+    if (formsWritable) {
+      builderWrap.appendChild(saveFieldsBtn);
+      builderWrap.appendChild(fieldsStatus);
+    }
 
     function renderFieldList() {
       fieldListEl.innerHTML = '';
@@ -338,7 +356,9 @@ window.MOISDES.adminForms = (function () {
   function init() {
     formsListEl = document.getElementById('forms-list');
     detailEl = document.getElementById('forms-detail');
-    document.getElementById('new-form-btn').addEventListener('click', createForm);
+    const newFormBtn = document.getElementById('new-form-btn');
+    if (canWrite()) newFormBtn.addEventListener('click', createForm);
+    else newFormBtn.style.display = 'none';
     loadForms();
   }
 

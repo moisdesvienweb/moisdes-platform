@@ -89,17 +89,64 @@ window.MOISDES.zmanim = (function () {
       sofZmanTfilahLate: new Date(sunrise.getTime() + 4 * shaaGra),
       tzeis60: addMinutes(sunset, 60),
       tzeis72,
-      // "72 minutes zmaniyos" — proportional (halachic-hour-based) rather
-      // than fixed-clock minutes: 1.2 sha'os zmaniyos after sunset. In
-      // summer, when halachic hours run long, this lands later than the
-      // fixed-72 tzeis above — the standard machmir alternative shown
-      // alongside it in most Yiddish/Chassidish zmanim tables.
-      tzeis72Zmaniyos: new Date(sunset.getTime() + shaaGra * 1.2),
     };
   }
 
   function fmtTime(d) {
     return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  // ── HEBCAL.COM ZMANIM (via the Worker's /api/hebcal-zmanim proxy) ──
+  // Hebcal's own solar/astronomical engine is the community-trusted
+  // reference most zmanim apps use; when it's reachable we prefer it for
+  // the fields that actually depend on precise sun-position math. Fixed
+  // clock-offset fields (tzeis 60/72, purely "sunset + N minutes") don't
+  // need it — those are recomputed locally from whichever sunset resolves.
+  const HEBCAL_FIELD_MAP = {
+    sunrise: 'sunrise',
+    sunset: 'sunset',
+    chatzos: 'chatzot',
+    sofZmanShemaEarly: 'sofZmanShmaMGA',
+    sofZmanShemaLate: 'sofZmanShma',
+    sofZmanTfilahEarly: 'sofZmanTfillaMGA',
+    sofZmanTfilahLate: 'sofZmanTfilla',
+  };
+
+  async function hebcalTimes(dateIso, lat, lon) {
+    try {
+      const api = window.MOISDES.api;
+      if (!api) return null;
+      const { times } = await api.get(`/api/hebcal-zmanim?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&date=${encodeURIComponent(dateIso)}`);
+      return times || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Same shape as computeZmanim(), but tries Hebcal first and only falls
+  // back to the in-house calculation (per field, not all-or-nothing) when
+  // Hebcal is unreachable or a particular field is missing from its
+  // response — a Hebcal outage or a renamed field degrades quietly
+  // instead of blanking out the widget. Returns { zmanim, source } so the
+  // caller can show attribution only when Hebcal's numbers were actually used.
+  async function computeZmanimWithHebcal(date, lat, lon, elevation, dateIso) {
+    const local = computeZmanim(date, lat, lon, elevation);
+    const times = await hebcalTimes(dateIso, lat, lon);
+    if (!times) return { zmanim: local, source: 'local' };
+
+    const merged = { ...local };
+    let usedAny = false;
+    for (const [ourKey, hebcalKey] of Object.entries(HEBCAL_FIELD_MAP)) {
+      const raw = times[hebcalKey];
+      if (!raw) continue;
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) continue;
+      merged[ourKey] = d;
+      usedAny = true;
+    }
+    merged.tzeis60 = addMinutes(merged.sunset, 60);
+    merged.tzeis72 = addMinutes(merged.sunset, 72);
+    return { zmanim: merged, source: usedAny ? 'hebcal' : 'local' };
   }
 
   // Current Hebrew calendar date the halachic way: the day rolls over at
@@ -121,6 +168,23 @@ window.MOISDES.zmanim = (function () {
     const stillBeforeSunrise = now < tTomorrow.sunrise;
     const label = hebrew.isoToHebrewString(tomorrowIso);
     return { text: stillBeforeSunrise ? `אור ליום ${label}` : label, ohrLyom: stillBeforeSunrise, effectiveIso: tomorrowIso };
+  }
+
+  // Hebcal-sourced Hebrew-date text for the already-resolved effective
+  // date (which date is "in effect" is still decided locally via the
+  // shkia+72 rollover above — Hebcal only supplies the display string for
+  // that date). Returns null on any failure so callers fall back to
+  // currentHebrewDateDisplay()'s own in-house .text field.
+  async function hebcalDateText(effectiveIso, ohrLyom) {
+    try {
+      const api = window.MOISDES.api;
+      if (!api) return null;
+      const { hebrew: hebStr } = await api.get(`/api/hebcal-date?date=${encodeURIComponent(effectiveIso)}`);
+      if (!hebStr) return null;
+      return ohrLyom ? `אור ליום ${hebStr}` : hebStr;
+    } catch (e) {
+      return null;
+    }
   }
 
   const BROOKLYN = { lat: 40.6782, lon: -73.9442, elevation: 0, label: 'Brooklyn, NY' };
@@ -152,5 +216,5 @@ window.MOISDES.zmanim = (function () {
     );
   }
 
-  return { getSunTimes, computeZmanim, fmtTime, currentHebrewDateDisplay, withLocation, localIso, BROOKLYN };
+  return { getSunTimes, computeZmanim, computeZmanimWithHebcal, fmtTime, currentHebrewDateDisplay, hebcalDateText, withLocation, localIso, BROOKLYN };
 })();

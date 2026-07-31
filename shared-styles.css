@@ -252,10 +252,12 @@ p { margin: 0 0 1em; }
 @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
 
 /* Vertical stack for image galleries (posts/posters/events) — full-view,
-   uncropped, one per row, instead of a cropped thumbnail grid. */
+   uncropped, one per row, instead of a cropped thumbnail grid. Every
+   image renders at the same width; height follows its own aspect
+   ratio (no cap), so a tall image is simply tall. */
 .stack { display: flex; flex-direction: column; gap: .9rem; align-items: center; }
 .stack img {
-  max-width: min(480px, 100%); max-height: 480px; width: auto; height: auto;
+  width: min(480px, 100%); height: auto;
   border-radius: 10px; cursor: zoom-in; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
 }
 
@@ -471,6 +473,14 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
   padding: .4rem .6rem; border-radius: 3px; border: 1px solid var(--line);
   background: rgba(255, 255, 255, .06); color: var(--ink); font-family: inherit; font-size: .85rem;
 }
+/* The closed <select> picks up the dark theme fine, but the native open
+   dropdown list doesn't inherit a semi-transparent background — it falls
+   back to the OS default (usually white), while the inherited white text
+   color stays white, making every option invisible until highlighted. */
+.pdf-filters select option {
+  background: #2c1608;
+  color: #fff;
+}
 
 /* ── LIGHTBOX ───────────────────────────────────────────────────── */
 
@@ -643,6 +653,13 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .widget-loc { font-size: .68rem; color: var(--ink-faint); margin-top: .3rem; direction: ltr; unicode-bidi: isolate; text-align: right; }
 .zman-machmir { font-size: .62rem; color: var(--ink-faint); margin-top: .25rem; }
 .zman-machmir span { color: var(--ink-soft); direction: ltr; unicode-bidi: isolate; }
+.zman-attribution { font-size: .6rem; color: var(--ink-faint); margin-top: .15rem; direction: ltr; text-align: right; }
+.zman-attribution a { color: var(--ink-soft); }
+.zman-attribution a:hover { color: var(--accent); }
+
+.widget-title-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .05rem; }
+.widget-title-row .widget-title { margin-bottom: 0; }
+.daf-source-logo { flex-shrink: 0; height: 26px; width: auto; }
 
 /* ── UPCOMING STRIP (home page, compact) ──────────────────────────── */
 
@@ -700,7 +717,7 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
    event-heavy day stretches ALL cells in that row (CSS Grid rows
    default to equal height across their whole row), so weeks with
    events end up visibly taller than weeks without. */
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto; grid-auto-rows: 92px; gap: 3px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto; grid-auto-rows: 118px; gap: 3px; }
 .cal-weekday {
   text-align: center; font-size: .75rem; font-weight: 700; color: var(--ink-faint);
   padding: .5rem 0;
@@ -720,6 +737,10 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .cal-day-top { display: flex; align-items: baseline; justify-content: space-between; min-width: 0; }
 .cal-daynum { font-size: .85rem; font-weight: 700; }
 .cal-hebday { font-size: .6rem; color: var(--ink-faint); }
+.cal-holiday { font-size: .62rem; font-weight: 700; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-fast { font-size: .58rem; color: var(--ink-faint); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-roshchodesh { font-size: .58rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-parsha { font-size: .6rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cal-events { display: flex; flex-direction: column; gap: .12rem; margin-top: .1rem; min-width: 0; }
 .cal-event-pill {
   font-size: .65rem; background: rgba(217, 165, 92, .18); color: var(--accent);
@@ -743,9 +764,12 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .agenda-day-heading.is-today { color: var(--accent); }
 
 @media (max-width: 600px) {
-  .cal-grid { grid-auto-rows: 54px; }
+  .cal-grid { grid-auto-rows: 68px; }
   .cal-day { padding: .2rem; }
   .cal-hebday { display: none; }
+  .cal-parsha { display: none; }
+  .cal-fast, .cal-roshchodesh { display: none; }
+  .cal-holiday { font-size: .56rem; }
   .cal-event-pill { font-size: 0; padding: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); overflow: visible; }
   .cal-event-more { display: none; }
   .cal-events { flex-direction: row; flex-wrap: wrap; gap: .2rem; }

@@ -8,6 +8,12 @@ window.MOISDES = window.MOISDES || {};
 window.MOISDES.adminSettings = (function () {
   const api = window.MOISDES.api;
 
+  function canWrite() {
+    const role = api.getUser()?.role;
+    if (role === 'admin' || role === 'superadmin') return true;
+    return !!api.getPermissions()?.settings?.write;
+  }
+
   function init() {
     const form = document.getElementById('settings-form');
     const urlInput = document.getElementById('settings-newsletter-url');
@@ -17,6 +23,13 @@ window.MOISDES.adminSettings = (function () {
     api.get('/api/settings').then(({ settings }) => {
       urlInput.value = settings.newsletter_url || '';
     }).catch(() => {});
+
+    if (!canWrite()) {
+      urlInput.disabled = true;
+      form.querySelector('button[type=submit]').style.display = 'none';
+      msg.textContent = "View only — you don't have write access to Settings.";
+      return;
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

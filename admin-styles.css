@@ -156,6 +156,15 @@ tr:hover td { background: var(--panel-2); }
 
 .empty-msg, .state-msg { color: var(--ink-faint); font-size: .88rem; padding: 1rem 0; }
 
+/* ── PER-USER SECTION PERMISSIONS (Users panel) ───────────────────── */
+
+.perm-row td { background: var(--panel-2); white-space: normal; }
+.perm-editor { padding: .5rem 0; max-width: 420px; }
+.perm-table { font-size: .82rem; margin-bottom: 0; }
+.perm-table th, .perm-table td { padding: .35rem .6rem; white-space: nowrap; }
+.perm-table th:first-child, .perm-table td:first-child { text-align: right; white-space: normal; }
+.perm-table th:not(:first-child), .perm-table td:not(:first-child) { text-align: center; }
+
 /* ── MODAL ──────────────────────────────────────────────────────── */
 
 .modal-overlay {

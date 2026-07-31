@@ -69,17 +69,28 @@ window.MOISDES.adminDaf = (function () {
     }
   }
 
+  function canWrite() {
+    const role = api.getUser()?.role;
+    if (role === 'admin' || role === 'superadmin') return true;
+    return !!api.getPermissions()?.daf?.write;
+  }
+
   function init() {
     fileInput = document.getElementById('daf-file-input');
     msgEl = document.getElementById('daf-upload-msg');
     tbody = document.querySelector('#daf-table tbody');
     if (!fileInput) return;
 
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (file) handleFile(file);
-      fileInput.value = '';
-    });
+    if (canWrite()) {
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (file) handleFile(file);
+        fileInput.value = '';
+      });
+    } else {
+      fileInput.style.display = 'none';
+      setMsg("View only — you don't have write access to the Daf Calendar.");
+    }
     loadTable();
   }
 
