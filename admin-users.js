@@ -104,6 +104,21 @@ window.MOISDES.adminUsers = (function () {
     }
   }
 
+  // Prompts for a new password and saves it — works for any account
+  // (editor, admin, or superadmin), since a locked-out user of any role
+  // has no other way back in except an admin resetting it for them.
+  async function setPassword(u) {
+    const pw = prompt(`New password for ${u.name} (${u.email}) — at least 6 characters:`);
+    if (pw === null) return; // cancelled
+    if (pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
+    try {
+      await api.put(`/api/users/${u.id}/password`, { password: pw });
+      alert(`Password updated for ${u.name}.`);
+    } catch (e) {
+      alert(e.message || 'Could not update password.');
+    }
+  }
+
   async function load() {
     const tbody = document.querySelector('#users-table tbody');
     tbody.innerHTML = '<tr><td colspan="6">Loading…</td></tr>';
@@ -125,10 +140,13 @@ window.MOISDES.adminUsers = (function () {
           permBtn.textContent = 'Permissions';
           permBtn.addEventListener('click', () => openPermissions(u, tr));
           actionsTd.appendChild(permBtn);
-        } else {
-          actionsTd.className = 'state-msg';
-          actionsTd.textContent = 'Full access';
         }
+        const pwBtn = document.createElement('button');
+        pwBtn.className = 'btn btn-sm';
+        pwBtn.textContent = 'Set password';
+        pwBtn.style.marginInlineStart = u.role === 'editor' ? '.4rem' : '0';
+        pwBtn.addEventListener('click', () => setPassword(u));
+        actionsTd.appendChild(pwBtn);
         tr.appendChild(actionsTd);
         tbody.appendChild(tr);
       });

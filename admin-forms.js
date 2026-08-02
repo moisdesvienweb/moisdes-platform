@@ -68,6 +68,26 @@ window.MOISDES.adminForms = (function () {
     }
   }
 
+  // Lightweight re-fetch used for the periodic unread-notification poll —
+  // only rebuilds the forms list (unread counts + nav badge), never
+  // touches detailEl, so it can't clobber an in-progress field-builder
+  // edit or a scrolled responses table for whichever form is open.
+  async function refreshUnreadCounts() {
+    try {
+      const data = await api.get('/api/forms');
+      forms = data.forms;
+      renderFormsList();
+    } catch (e) { /* silent — this is a background refresh, not a user action */ }
+  }
+
+  function updateNavBadge() {
+    const badge = document.getElementById('forms-unread-badge');
+    if (!badge) return;
+    const total = forms.reduce((sum, f) => sum + (f.unread_count || 0), 0);
+    badge.textContent = String(total);
+    badge.style.display = total > 0 ? '' : 'none';
+  }
+
   function renderFormsList() {
     formsListEl.innerHTML = '';
     forms.forEach((f) => {
@@ -77,6 +97,7 @@ window.MOISDES.adminForms = (function () {
       span.style.cursor = 'pointer';
       span.addEventListener('click', () => selectForm(f.id));
       li.appendChild(span);
+      if (f.unread_count > 0) li.appendChild(el('span', 'nav-badge', String(f.unread_count)));
       if (canWrite()) {
         const dupBtn = el('button', 'btn btn-sm', 'Duplicate');
         dupBtn.style.marginInlineStart = '.5rem';
@@ -85,6 +106,7 @@ window.MOISDES.adminForms = (function () {
       }
       formsListEl.appendChild(li);
     });
+    updateNavBadge();
   }
 
   // Creates a new form with the same settings + fields as `source`, then
@@ -340,8 +362,31 @@ window.MOISDES.adminForms = (function () {
 
   // -- Responses section ----------------------------------------------
 
+  // Toggles one response's read/unread state, then keeps the sidebar's
+  // per-form and nav-total unread badges in sync locally (no full
+  // reload) by patching the matching entry in the already-loaded
+  // `forms` array and re-running the cheap, detail-safe renderFormsList().
+  async function toggleResponseRead(form, r, tr, btn) {
+    const nextRead = !r.read_at;
+    btn.disabled = true;
+    try {
+      await api.put(`/api/forms/${form.id}/responses/${r.id}/read`, { read: nextRead });
+      r.read_at = nextRead ? new Date().toISOString() : null;
+      tr.classList.toggle('response-row-unread', !r.read_at);
+      btn.textContent = r.read_at ? 'Mark unread' : 'Mark read';
+      const listForm = forms.find((f) => f.id === form.id);
+      if (listForm) {
+        listForm.unread_count = Math.max(0, (listForm.unread_count || 0) + (nextRead ? -1 : 1));
+        renderFormsList();
+      }
+    } catch (e) {
+      alert(e.message || 'Could not update read status.');
+    }
+    btn.disabled = false;
+  }
+
   // Same detached-build pattern as buildFieldBuilderSection above.
-  async function buildResponsesSection(form) {
+  async function buildResponsesSection(form, writable) {
     const wrap = el('div', 'response-table-wrap');
     wrap.appendChild(el('h2', '', 'Responses'));
     const exportBtn = el('button', 'btn', 'Export XLSX');
@@ -356,9 +401,28 @@ window.MOISDES.adminForms = (function () {
       const data = await api.get(`/api/forms/${form.id}/responses`);
       responseFields = data.fields;
       responseRows = data.responses;
-      table.innerHTML = `<thead><tr><th>Submitted</th>${responseFields.map((f) => `<th>${escapeHtml(f.label)}</th>`).join('')}</tr></thead>` +
-        `<tbody>${responseRows.map((r) => `<tr><td>${escapeHtml(r.submitted_at)}</td>${responseFields.map((f) => `<td class="wrap">${escapeHtml(r.answers[f.id] || '')}</td>`).join('')}</tr>`).join('') ||
-          `<tr><td colspan="${responseFields.length + 1}">No responses yet.</td></tr>`}</tbody>`;
+
+      const thead = el('thead');
+      thead.innerHTML = `<tr><th>Submitted</th>${responseFields.map((f) => `<th>${escapeHtml(f.label)}</th>`).join('')}${writable ? '<th>Read</th>' : ''}</tr>`;
+      const tbody = el('tbody');
+      if (!responseRows.length) {
+        tbody.innerHTML = `<tr><td colspan="${responseFields.length + 1}">No responses yet.</td></tr>`;
+      }
+      responseRows.forEach((r) => {
+        const tr = el('tr', r.read_at ? '' : 'response-row-unread');
+        tr.innerHTML = `<td>${escapeHtml(r.submitted_at)}</td>` +
+          responseFields.map((f) => `<td class="wrap">${escapeHtml(r.answers[f.id] || '')}</td>`).join('');
+        if (writable) {
+          const td = el('td', 'response-read-toggle');
+          const btn = el('button', 'btn btn-sm', r.read_at ? 'Mark unread' : 'Mark read');
+          btn.addEventListener('click', () => toggleResponseRead(form, r, tr, btn));
+          td.appendChild(btn);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+      table.appendChild(thead);
+      table.appendChild(tbody);
     } catch (e) {
       table.innerHTML = `<tbody><tr><td>${escapeHtml(e.message || 'Failed to load responses')}</td></tr></tbody>`;
     }
@@ -393,7 +457,7 @@ window.MOISDES.adminForms = (function () {
     // in the meantime.
     const [fieldsSection, responsesSection] = await Promise.all([
       buildFieldBuilderSection(form, writable),
-      buildResponsesSection(form),
+      buildResponsesSection(form, writable),
     ]);
     if (myToken !== renderToken) return; // a newer selectForm() ran while these were loading
 
@@ -412,6 +476,12 @@ window.MOISDES.adminForms = (function () {
     if (canWrite()) newFormBtn.addEventListener('click', createForm);
     else newFormBtn.style.display = 'none';
     loadForms();
+
+    // Background poll so a new submission's unread badge shows up while
+    // an admin is sitting on the page, not just on next full page load.
+    // Only touches the forms list/badges (see refreshUnreadCounts) — never
+    // the open form's detail view, so it can't disrupt in-progress edits.
+    setInterval(refreshUnreadCounts, 90000);
   }
 
   return { init };

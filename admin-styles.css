@@ -49,6 +49,13 @@ button, input, select, textarea { font-family: inherit; }
 .sidebar-link.active { background: var(--panel-2); color: var(--ink); font-weight: 700; }
 .sidebar-logout { margin-top: auto; color: var(--danger); }
 
+.nav-badge {
+  display: inline-block; margin-inline-start: .4rem;
+  background: var(--accent); color: #2c1608;
+  font-size: .7rem; font-weight: 700; line-height: 1;
+  padding: .2rem .4rem; border-radius: 10px;
+}
+
 /* ── MAIN / PANELS ──────────────────────────────────────────────── */
 
 .admin-main { flex: 1; padding: 2rem 2.5rem 4rem; max-width: 1100px; }
@@ -220,6 +227,9 @@ tr:hover td { background: var(--panel-2); }
 }
 .forms-list li:hover { background: var(--panel-2); }
 .forms-list li.active { background: var(--panel-2); color: var(--ink); font-weight: 700; }
+
+.response-row-unread { font-weight: 700; }
+.response-read-toggle { white-space: nowrap; }
 .forms-detail-col { flex: 1; min-width: 0; }
 
 .field-palette { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
