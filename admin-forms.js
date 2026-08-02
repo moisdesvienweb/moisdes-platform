@@ -21,7 +21,11 @@ window.MOISDES.adminForms = (function () {
   let formsListEl, detailEl;
   let forms = [];
   let activeFormId = null;
-  let fields = []; // working copy for the field builder
+  // Bumped on every selectForm()/renderDetail() call; an in-flight async
+  // load checks it before touching the DOM or any shared state, so
+  // switching forms quickly can never have a slow-to-resolve fetch for
+  // the PREVIOUS form overwrite data for the form actually on screen now.
+  let renderToken = 0;
 
   function el(tag, cls, html) {
     const e = document.createElement(tag);
@@ -32,7 +36,15 @@ window.MOISDES.adminForms = (function () {
   function escapeHtml(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
-
+  function fieldGroup(labelText, inputEl) {
+    const g = el('div', 'field-group');
+    g.appendChild(el('label', '', labelText));
+    g.appendChild(inputEl);
+    return g;
+  }
+  function publicFormUrl(slug) {
+    return `${location.origin}/form.html?slug=${encodeURIComponent(slug || '')}`;
+  }
   function canWrite() {
     const role = api.getUser()?.role;
     if (role === 'admin' || role === 'superadmin') return true;
@@ -82,9 +94,7 @@ window.MOISDES.adminForms = (function () {
       const { fields: srcFields } = await api.get(`/api/forms/${source.id}/fields`);
       if (srcFields.length) await api.post(`/api/forms/${id}/fields`, { fields: srcFields });
       await loadForms();
-      activeFormId = id;
-      renderFormsList();
-      await renderDetail();
+      await selectForm(id);
     } catch (e) {
       alert(e.message || 'Could not duplicate form');
     }
@@ -99,69 +109,63 @@ window.MOISDES.adminForms = (function () {
   async function createForm() {
     const { id } = await api.post('/api/forms', { title: 'New form', settings: {} });
     await loadForms();
-    activeFormId = id;
-    renderFormsList();
-    await renderDetail();
+    await selectForm(id);
   }
 
-  async function renderDetail() {
-    const form = forms.find((f) => f.id === activeFormId);
-    if (!form) { detailEl.innerHTML = '<p class="empty-msg">Select or create a form.</p>'; return; }
-    detailEl.innerHTML = '';
+  // -- Settings section --------------------------------------------------
 
+  function renderSettingsSection(container, form, writable) {
+    const wrap = el('div');
+    wrap.appendChild(el('h2', '', 'Settings'));
     const settings = form.settings || {};
-    const publicFormUrl = (slug) => `${location.origin}/form.html?slug=${encodeURIComponent(slug)}`;
-    const publicUrl = publicFormUrl(form.slug);
-
-    // -- Settings --
-    const settingsWrap = el('div');
-    settingsWrap.appendChild(el('h2', '', 'Settings'));
 
     const titleInput = el('input');
     titleInput.type = 'text';
     titleInput.value = form.title || '';
-    settingsWrap.appendChild(fieldGroup('Title', titleInput));
+    wrap.appendChild(fieldGroup('Title', titleInput));
 
     const slugInput = el('input');
     slugInput.type = 'text';
     slugInput.value = form.slug || '';
     slugInput.placeholder = 'custom-url-slug';
-    settingsWrap.appendChild(fieldGroup('URL slug (letters, numbers, hyphens)', slugInput));
+    wrap.appendChild(fieldGroup('URL slug (letters, numbers, hyphens)', slugInput));
 
-    const linkP = el('p', 'state-msg', `Public URL: <a href="${publicUrl}" target="_blank" rel="noopener">${publicUrl}</a>`);
-    settingsWrap.appendChild(linkP);
-    slugInput.addEventListener('input', () => {
+    const linkP = el('p', 'state-msg', '');
+    function refreshLink() {
       const u = publicFormUrl(slugInput.value);
       linkP.innerHTML = `Public URL: <a href="${u}" target="_blank" rel="noopener">${u}</a>`;
-    });
+    }
+    refreshLink();
+    slugInput.addEventListener('input', refreshLink);
+    wrap.appendChild(linkP);
 
     const descInput = el('textarea');
     descInput.value = settings.description || '';
-    settingsWrap.appendChild(fieldGroup('Description (shown above the form)', descInput));
+    wrap.appendChild(fieldGroup('Description (shown above the form)', descInput));
 
     const statusSelect = el('select');
     statusSelect.innerHTML = '<option value="open">Open</option><option value="closed">Closed</option>';
     statusSelect.value = settings.status === 'closed' ? 'closed' : 'open';
-    settingsWrap.appendChild(fieldGroup('Status', statusSelect));
+    wrap.appendChild(fieldGroup('Status', statusSelect));
 
     const thankTitle = el('input');
     thankTitle.type = 'text';
     thankTitle.value = settings.thankYouTitle || '';
     thankTitle.placeholder = 'א דאנק!';
-    settingsWrap.appendChild(fieldGroup('Thank-you title', thankTitle));
+    wrap.appendChild(fieldGroup('Thank-you title', thankTitle));
 
     const thankMsg = el('textarea');
     thankMsg.value = settings.thankYouMessage || '';
     thankMsg.placeholder = 'אייער ענטפער איז אנגענומען געווארן.';
-    settingsWrap.appendChild(fieldGroup('Thank-you message', thankMsg));
+    wrap.appendChild(fieldGroup('Thank-you message', thankMsg));
 
-    if (canWrite()) {
-      const saveSettingsBtn = el('button', 'btn btn-primary', 'Save settings');
-      const settingsStatus = el('span', 'status-msg', '');
-      settingsWrap.appendChild(saveSettingsBtn);
-      settingsWrap.appendChild(settingsStatus);
-      saveSettingsBtn.addEventListener('click', async () => {
-        saveSettingsBtn.disabled = true;
+    if (writable) {
+      const saveBtn = el('button', 'btn btn-primary', 'Save settings');
+      const status = el('span', 'status-msg', '');
+      wrap.appendChild(saveBtn);
+      wrap.appendChild(status);
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
         try {
           await api.put(`/api/forms/${form.id}`, {
             title: titleInput.value,
@@ -173,154 +177,176 @@ window.MOISDES.adminForms = (function () {
               thankYouMessage: thankMsg.value,
             },
           });
-          settingsStatus.textContent = 'Saved.';
-          settingsStatus.className = 'status-msg ok';
+          status.textContent = 'Saved.';
+          status.className = 'status-msg ok';
           await loadForms();
         } catch (e) {
-          settingsStatus.textContent = e.message || 'Failed to save';
-          settingsStatus.className = 'status-msg err';
+          status.textContent = e.message || 'Failed to save';
+          status.className = 'status-msg err';
         }
-        saveSettingsBtn.disabled = false;
+        saveBtn.disabled = false;
       });
 
-      const deleteFormBtn = el('button', 'btn btn-danger', 'Delete form');
-      deleteFormBtn.style.marginLeft = '.5rem';
-      deleteFormBtn.addEventListener('click', async () => {
+      const deleteBtn = el('button', 'btn btn-danger', 'Delete form');
+      deleteBtn.style.marginLeft = '.5rem';
+      deleteBtn.addEventListener('click', async () => {
         if (!confirm('Delete this form and its responses?')) return;
         await api.del(`/api/forms/${form.id}`);
         activeFormId = null;
         await loadForms();
       });
-      settingsWrap.appendChild(deleteFormBtn);
+      wrap.appendChild(deleteBtn);
     } else {
       [titleInput, slugInput, descInput, statusSelect, thankTitle, thankMsg].forEach((i) => { i.disabled = true; });
-      settingsWrap.appendChild(el('p', 'state-msg', 'View only — you don\'t have write access to Forms.'));
+      wrap.appendChild(el('p', 'state-msg', "View only — you don't have write access to Forms."));
     }
 
-    detailEl.appendChild(settingsWrap);
-    detailEl.appendChild(el('hr'));
+    container.appendChild(wrap);
+  }
 
-    // -- Field builder --
-    const builderWrap = el('div');
-    builderWrap.appendChild(el('h2', '', 'Fields'));
+  // -- Field builder section ----------------------------------------------
 
-    const formsWritable = canWrite();
-    if (formsWritable) {
-      const palette = el('div', 'field-palette');
-      FIELD_TYPES.forEach(([type, label]) => {
-        const btn = el('button', 'palette-btn', `+ ${label}`);
-        btn.type = 'button';
-        btn.addEventListener('click', () => { fields.push({ type, label: label, placeholder: '', options: [], required: false }); renderFieldList(); });
-        palette.appendChild(btn);
-      });
-      builderWrap.appendChild(palette);
+  function renderFieldBuilderCard(field, index, fieldsArr, onChange) {
+    const card = el('div', 'builder-field');
+    const head = el('div', 'builder-field-head');
+    head.appendChild(el('span', 'type-badge', field.type));
+    head.appendChild(el('span', 'spacer'));
+
+    const up = el('button', 'btn btn-sm', '&#9650;');
+    up.type = 'button';
+    up.disabled = index === 0;
+    up.addEventListener('click', () => {
+      [fieldsArr[index - 1], fieldsArr[index]] = [fieldsArr[index], fieldsArr[index - 1]];
+      onChange();
+    });
+    const down = el('button', 'btn btn-sm', '&#9660;');
+    down.type = 'button';
+    down.disabled = index === fieldsArr.length - 1;
+    down.addEventListener('click', () => {
+      [fieldsArr[index + 1], fieldsArr[index]] = [fieldsArr[index], fieldsArr[index + 1]];
+      onChange();
+    });
+    const rm = el('button', 'btn btn-sm btn-danger', 'Remove');
+    rm.type = 'button';
+    rm.addEventListener('click', () => { fieldsArr.splice(index, 1); onChange(); });
+    head.appendChild(up);
+    head.appendChild(down);
+    head.appendChild(rm);
+    card.appendChild(head);
+
+    const labelInput = el('input');
+    labelInput.type = 'text';
+    labelInput.value = field.label || '';
+    labelInput.placeholder = NO_LABEL_FIELD.has(field.type) ? 'Text to display' : 'Field label';
+    labelInput.addEventListener('input', () => { field.label = labelInput.value; });
+    card.appendChild(fieldGroup('Label', labelInput));
+
+    if (HAS_PLACEHOLDER.has(field.type)) {
+      const ph = el('input');
+      ph.type = 'text';
+      ph.value = field.placeholder || '';
+      ph.addEventListener('input', () => { field.placeholder = ph.value; });
+      card.appendChild(fieldGroup('Placeholder', ph));
     }
 
-    const fieldListEl = el('div');
-    builderWrap.appendChild(fieldListEl);
-
-    const saveFieldsBtn = el('button', 'btn btn-primary', 'Save fields');
-    const fieldsStatus = el('span', 'status-msg', '');
-    if (formsWritable) {
-      builderWrap.appendChild(saveFieldsBtn);
-      builderWrap.appendChild(fieldsStatus);
+    if (HAS_OPTIONS.has(field.type)) {
+      const opts = el('input');
+      opts.type = 'text';
+      opts.value = (field.options || []).join(', ');
+      opts.placeholder = 'Option 1, Option 2, Option 3';
+      opts.addEventListener('input', () => { field.options = opts.value.split(',').map((s) => s.trim()).filter(Boolean); });
+      card.appendChild(fieldGroup('Options (comma-separated)', opts));
     }
 
-    function renderFieldList() {
-      fieldListEl.innerHTML = '';
-      fields.forEach((f, i) => {
-        const card = el('div', 'builder-field');
-        const head = el('div', 'builder-field-head');
-        head.appendChild(el('span', 'type-badge', f.type));
-        head.appendChild(el('span', 'spacer'));
-        const up = el('button', 'btn btn-sm', '&#9650;');
-        up.type = 'button';
-        up.addEventListener('click', () => { if (i > 0) { [fields[i - 1], fields[i]] = [fields[i], fields[i - 1]]; renderFieldList(); } });
-        const down = el('button', 'btn btn-sm', '&#9660;');
-        down.type = 'button';
-        down.addEventListener('click', () => { if (i < fields.length - 1) { [fields[i + 1], fields[i]] = [fields[i], fields[i + 1]]; renderFieldList(); } });
-        const rm = el('button', 'btn btn-sm btn-danger', 'Remove');
-        rm.type = 'button';
-        rm.addEventListener('click', () => { fields.splice(i, 1); renderFieldList(); });
-        head.appendChild(up);
-        head.appendChild(down);
-        head.appendChild(rm);
-        card.appendChild(head);
-
-        const labelInput = el('input');
-        labelInput.type = 'text';
-        labelInput.value = f.label || '';
-        labelInput.placeholder = NO_LABEL_FIELD.has(f.type) ? 'Text to display' : 'Field label';
-        labelInput.addEventListener('input', () => { f.label = labelInput.value; });
-        card.appendChild(fieldGroup('Label', labelInput));
-
-        if (HAS_PLACEHOLDER.has(f.type)) {
-          const ph = el('input');
-          ph.type = 'text';
-          ph.value = f.placeholder || '';
-          ph.addEventListener('input', () => { f.placeholder = ph.value; });
-          card.appendChild(fieldGroup('Placeholder', ph));
-        }
-
-        if (HAS_OPTIONS.has(f.type)) {
-          const opts = el('input');
-          opts.type = 'text';
-          opts.value = (f.options || []).join(', ');
-          opts.placeholder = 'Option 1, Option 2, Option 3';
-          opts.addEventListener('input', () => { f.options = opts.value.split(',').map((s) => s.trim()).filter(Boolean); });
-          card.appendChild(fieldGroup('Options (comma-separated)', opts));
-        }
-
-        if (!NO_LABEL_FIELD.has(f.type)) {
-          const reqLabel = el('label');
-          const reqInput = el('input');
-          reqInput.type = 'checkbox';
-          reqInput.checked = !!f.required;
-          reqInput.style.width = 'auto';
-          reqInput.addEventListener('change', () => { f.required = reqInput.checked; });
-          reqLabel.appendChild(reqInput);
-          reqLabel.appendChild(document.createTextNode(' Required'));
-          card.appendChild(reqLabel);
-        }
-
-        fieldListEl.appendChild(card);
-      });
+    if (!NO_LABEL_FIELD.has(field.type)) {
+      const reqLabel = el('label');
+      const reqInput = el('input');
+      reqInput.type = 'checkbox';
+      reqInput.checked = !!field.required;
+      reqInput.style.width = 'auto';
+      reqInput.addEventListener('change', () => { field.required = reqInput.checked; });
+      reqLabel.appendChild(reqInput);
+      reqLabel.appendChild(document.createTextNode(' Required'));
+      card.appendChild(reqLabel);
     }
 
+    return card;
+  }
+
+  // Returns the built (detached) section instead of appending itself —
+  // renderDetail() only appends it after confirming this is still the
+  // most recent form selected, so a slow-to-resolve fetch for a form the
+  // admin has since navigated away from can never inject its markup into
+  // whatever's now on screen.
+  async function buildFieldBuilderSection(form, writable) {
+    const wrap = el('div');
+    wrap.appendChild(el('h2', '', 'Fields'));
+
+    let fields = [];
     try {
       const { fields: loaded } = await api.get(`/api/forms/${form.id}/fields`);
       fields = loaded.map((f) => ({ type: f.type, label: f.label, placeholder: f.placeholder, options: f.options || [], required: !!f.required }));
     } catch (e) {
       fields = [];
     }
+
+    if (writable) {
+      const palette = el('div', 'field-palette');
+      FIELD_TYPES.forEach(([type, label]) => {
+        const btn = el('button', 'palette-btn', `+ ${label}`);
+        btn.type = 'button';
+        btn.addEventListener('click', () => {
+          fields.push({ type, label, placeholder: '', options: [], required: false });
+          renderFieldList();
+        });
+        palette.appendChild(btn);
+      });
+      wrap.appendChild(palette);
+    }
+
+    const fieldListEl = el('div');
+    wrap.appendChild(fieldListEl);
+
+    function renderFieldList() {
+      fieldListEl.innerHTML = '';
+      fields.forEach((f, i) => fieldListEl.appendChild(renderFieldBuilderCard(f, i, fields, renderFieldList)));
+    }
     renderFieldList();
 
-    saveFieldsBtn.addEventListener('click', async () => {
-      saveFieldsBtn.disabled = true;
-      try {
-        await api.post(`/api/forms/${form.id}/fields`, { fields });
-        fieldsStatus.textContent = 'Saved.';
-        fieldsStatus.className = 'status-msg ok';
-      } catch (e) {
-        fieldsStatus.textContent = e.message || 'Failed to save';
-        fieldsStatus.className = 'status-msg err';
-      }
-      saveFieldsBtn.disabled = false;
-    });
+    if (writable) {
+      const saveBtn = el('button', 'btn btn-primary', 'Save fields');
+      const status = el('span', 'status-msg', '');
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        try {
+          await api.post(`/api/forms/${form.id}/fields`, { fields });
+          status.textContent = 'Saved.';
+          status.className = 'status-msg ok';
+        } catch (e) {
+          status.textContent = e.message || 'Failed to save';
+          status.className = 'status-msg err';
+        }
+        saveBtn.disabled = false;
+      });
+      wrap.appendChild(saveBtn);
+      wrap.appendChild(status);
+    }
 
-    detailEl.appendChild(builderWrap);
-    detailEl.appendChild(el('hr'));
+    return wrap;
+  }
 
-    // -- Responses --
-    const responsesWrap = el('div', 'response-table-wrap');
-    responsesWrap.appendChild(el('h2', '', 'Responses'));
+  // -- Responses section ----------------------------------------------
+
+  // Same detached-build pattern as buildFieldBuilderSection above.
+  async function buildResponsesSection(form) {
+    const wrap = el('div', 'response-table-wrap');
+    wrap.appendChild(el('h2', '', 'Responses'));
     const exportBtn = el('button', 'btn', 'Export XLSX');
-    responsesWrap.appendChild(exportBtn);
+    wrap.appendChild(exportBtn);
     const table = el('table');
     const tableWrap = el('div', 'table-wrap');
     tableWrap.appendChild(table);
-    responsesWrap.appendChild(tableWrap);
-    detailEl.appendChild(responsesWrap);
+    wrap.appendChild(tableWrap);
 
     let responseFields = [], responseRows = [];
     try {
@@ -346,13 +372,34 @@ window.MOISDES.adminForms = (function () {
       window.XLSX.utils.book_append_sheet(wb, ws, 'Responses');
       window.XLSX.writeFile(wb, `${form.slug}-responses.xlsx`);
     });
+
+    return wrap;
   }
 
-  function fieldGroup(labelText, inputEl) {
-    const g = el('div', 'field-group');
-    g.appendChild(el('label', '', labelText));
-    g.appendChild(inputEl);
-    return g;
+  // -- Detail panel orchestration --------------------------------------
+
+  async function renderDetail() {
+    const myToken = ++renderToken;
+    const form = forms.find((f) => f.id === activeFormId);
+    if (!form) { detailEl.innerHTML = '<p class="empty-msg">Select or create a form.</p>'; return; }
+
+    const writable = canWrite();
+    // Both fetches kick off in parallel — each builds its section
+    // detached from the live DOM, so neither one touches detailEl until
+    // both are ready and we've confirmed no newer selectForm() happened
+    // in the meantime.
+    const [fieldsSection, responsesSection] = await Promise.all([
+      buildFieldBuilderSection(form, writable),
+      buildResponsesSection(form),
+    ]);
+    if (myToken !== renderToken) return; // a newer selectForm() ran while these were loading
+
+    detailEl.innerHTML = '';
+    renderSettingsSection(detailEl, form, writable);
+    detailEl.appendChild(el('hr'));
+    detailEl.appendChild(fieldsSection);
+    detailEl.appendChild(el('hr'));
+    detailEl.appendChild(responsesSection);
   }
 
   function init() {
