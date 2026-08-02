@@ -101,6 +101,11 @@
           <label>Newsletter signup URL (footer button — leave blank to hide the button)</label>
           <input type="text" id="settings-newsletter-url" placeholder="https://... (a form link, mailing list, etc.)">
         </div>
+        <div class="field-group" style="width:100%">
+          <label>Footer buttons (shown in a row next to the newsletter/contact buttons)</label>
+          <div id="footer-buttons-list"></div>
+          <button type="button" class="btn btn-sm" id="footer-buttons-add" style="margin-top:.5rem">+ Add button</button>
+        </div>
         <button type="submit" class="btn btn-primary">Save</button>
       </form>
       <div class="state-msg" id="settings-msg"></div>
@@ -155,6 +160,7 @@
 <script src="/shared-config.js"></script>
 <script src="/hebrew-dates.js"></script>
 <script src="/moisdes-api.js"></script>
+<script src="/richtext.js"></script>
 <script src="/admin-fields.js"></script>
 <script src="/admin-upload.js"></script>
 <script src="/admin-browse.js"></script>

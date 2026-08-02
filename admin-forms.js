@@ -42,6 +42,11 @@ window.MOISDES.adminForms = (function () {
     g.appendChild(inputEl);
     return g;
   }
+  function richTextField(labelText, initialHtml) {
+    const host = el('div');
+    const editor = window.MOISDES.richtext.createEditor(host, initialHtml || '');
+    return { group: fieldGroup(labelText, host), editor };
+  }
   function publicFormUrl(slug) {
     return `${location.origin}/form.html?slug=${encodeURIComponent(slug || '')}`;
   }
@@ -139,9 +144,8 @@ window.MOISDES.adminForms = (function () {
     slugInput.addEventListener('input', refreshLink);
     wrap.appendChild(linkP);
 
-    const descInput = el('textarea');
-    descInput.value = settings.description || '';
-    wrap.appendChild(fieldGroup('Description (shown above the form)', descInput));
+    const descField = richTextField('Description (shown above the form)', settings.description);
+    wrap.appendChild(descField.group);
 
     const statusSelect = el('select');
     statusSelect.innerHTML = '<option value="open">Open</option><option value="closed">Closed</option>';
@@ -154,10 +158,8 @@ window.MOISDES.adminForms = (function () {
     thankTitle.placeholder = 'א דאנק!';
     wrap.appendChild(fieldGroup('Thank-you title', thankTitle));
 
-    const thankMsg = el('textarea');
-    thankMsg.value = settings.thankYouMessage || '';
-    thankMsg.placeholder = 'אייער ענטפער איז אנגענומען געווארן.';
-    wrap.appendChild(fieldGroup('Thank-you message', thankMsg));
+    const thankMsgField = richTextField('Thank-you message', settings.thankYouMessage);
+    wrap.appendChild(thankMsgField.group);
 
     if (writable) {
       const saveBtn = el('button', 'btn btn-primary', 'Save settings');
@@ -171,10 +173,10 @@ window.MOISDES.adminForms = (function () {
             title: titleInput.value,
             slug: slugInput.value.trim().toLowerCase(),
             settings: {
-              description: descInput.value,
+              description: descField.editor.getHtml(),
               status: statusSelect.value,
               thankYouTitle: thankTitle.value,
-              thankYouMessage: thankMsg.value,
+              thankYouMessage: thankMsgField.editor.getHtml(),
             },
           });
           status.textContent = 'Saved.';
@@ -197,7 +199,8 @@ window.MOISDES.adminForms = (function () {
       });
       wrap.appendChild(deleteBtn);
     } else {
-      [titleInput, slugInput, descInput, statusSelect, thankTitle, thankMsg].forEach((i) => { i.disabled = true; });
+      [titleInput, slugInput, statusSelect, thankTitle].forEach((i) => { i.disabled = true; });
+      [descField, thankMsgField].forEach((f) => { f.group.querySelector('.rte-editor').contentEditable = 'false'; });
       wrap.appendChild(el('p', 'state-msg', "View only — you don't have write access to Forms."));
     }
 

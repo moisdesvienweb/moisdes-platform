@@ -18,11 +18,13 @@
   const util = window.MOISDES.util;
   const app = document.getElementById('app');
 
+  // body is rendered as raw HTML (rich-text content from the admin
+  // builder, e.g. the thank-you message) — only title is plain text.
   function showMessage(title, body) {
     app.innerHTML = `
       <div class="form-wrap">
         <h1 class="page-title">${util.eh(title)}</h1>
-        ${body ? `<p>${util.eh(body)}</p>` : ''}
+        ${body ? `<div>${body}</div>` : ''}
       </div>`;
   }
 
@@ -93,6 +95,15 @@
     if (f.type === 'radio' || f.type === 'checkbox') {
       const group = document.createElement('div');
       group.className = 'choice-group';
+      // Radio: native `required` on every input in the (shared-name) group
+      // correctly means "at least one must be checked" per the HTML spec.
+      // Checkbox: each box is its own separate control (name="...[]"), so
+      // there's no native way to express "at least one of these" — native
+      // `required` on every box would instead demand ALL of them checked.
+      // That case is validated by hand in the submit handler below instead
+      // (see requiredCheckboxGroups), so `required` is deliberately never
+      // set on checkbox inputs here.
+      if (f.required) group.dataset.requiredGroup = f.type;
       (f.options || []).forEach((option, i) => {
         const row = document.createElement('div');
         row.className = 'choice-row';
@@ -101,6 +112,7 @@
         input.name = f.type === 'radio' ? name : `${name}[]`;
         input.value = option;
         input.id = `${name}-${i}`;
+        if (f.required && f.type === 'radio') input.required = true;
         const label = document.createElement('label');
         label.setAttribute('for', input.id);
         label.textContent = option;
@@ -179,9 +191,9 @@
   wrap.appendChild(titleEl);
 
   if (settings.description) {
-    const desc = document.createElement('p');
+    const desc = document.createElement('div');
     desc.className = 'form-paragraph';
-    desc.textContent = settings.description;
+    desc.innerHTML = settings.description; // rich-text content from the admin builder
     wrap.appendChild(desc);
   }
 
@@ -193,7 +205,7 @@
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
   submitBtn.className = 'form-submit';
-  submitBtn.textContent = 'שיקן';
+  submitBtn.textContent = 'שיקט';
   formEl.appendChild(submitBtn);
 
   const errorEl = document.createElement('div');
@@ -204,11 +216,28 @@
   app.innerHTML = '';
   app.appendChild(wrap);
 
+  // Required checkbox groups can't be validated with the native
+  // `required` attribute (see the comment above where they're built), so
+  // it's checked by hand here: every group.dataset.requiredGroup ===
+  // 'checkbox' must have at least one box checked before submitting.
+  function checkRequiredCheckboxGroups() {
+    for (const group of formEl.querySelectorAll('[data-required-group="checkbox"]')) {
+      if (!group.querySelector('input[type=checkbox]:checked')) return false;
+    }
+    return true;
+  }
+
   formEl.addEventListener('submit', async (e) => {
     e.preventDefault();
+    errorEl.textContent = '';
+
+    if (!checkRequiredCheckboxGroups()) {
+      errorEl.textContent = 'ביטע אויסקלייבן כאטש איין אפציע וואו עס איז פארלאנגט.';
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'שיקט...';
-    errorEl.textContent = '';
 
     try {
       const answers = {};
@@ -221,7 +250,7 @@
     } catch (err) {
       errorEl.textContent = err.message || 'עפעס איז נישט אין ארדנונג. פרובירט נאכאמאל.';
       submitBtn.disabled = false;
-      submitBtn.textContent = 'שיקן';
+      submitBtn.textContent = 'שיקט';
     }
   });
 })();

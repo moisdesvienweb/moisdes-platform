@@ -228,7 +228,7 @@ p { margin: 0 0 1em; }
   display: flex; align-items: center; gap: .3rem; direction: ltr;
   font-size: .68rem; color: var(--ink-faint); white-space: nowrap;
 }
-.powered-by img { height: 14px; width: auto; opacity: .85; }
+.powered-by img { height: 28px; width: auto; opacity: .85; }
 .powered-by:hover { color: var(--ink-soft); }
 .footer-copy { direction: ltr; font-size: .72rem; color: var(--ink-faint); white-space: nowrap; }
 
@@ -777,7 +777,12 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
    which month happens to be shown. (Previously put on .cal-grid itself,
    which doesn't work — .cal-grid isn't the grid item, its wrapper is.) */
 .calendar-grid-col { min-width: 0; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto; grid-auto-rows: 118px; gap: 3px; }
+/* grid-template-rows is spelled out as a fixed 6-row track list (not
+   grid-auto-rows) so a 5-week month reserves the exact same total grid
+   height as a 6-week month — its unused 6th row just stays blank
+   instead of the whole calendar box shrinking and jumping in height
+   when the user navigates between months. */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto repeat(6, 118px); gap: 3px; }
 .cal-weekday {
   text-align: center; font-size: .75rem; font-weight: 700; color: var(--ink-faint);
   padding: .5rem 0;
@@ -828,7 +833,7 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
 .agenda-day-heading.is-today { color: var(--accent); }
 
 @media (max-width: 600px) {
-  .cal-grid { grid-auto-rows: 68px; }
+  .cal-grid { grid-template-rows: auto repeat(6, 68px); }
   .cal-day { padding: .2rem; }
   .cal-hebday { display: none; }
   .cal-parsha { display: none; }

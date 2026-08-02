@@ -108,4 +108,26 @@ window.MOISDES.util = {
     if (!d) return false;
     return (Date.now() - d.getTime()) < weeks * 7 * 86400000;
   },
+
+  // For DB `created_at` timestamps (SQLite `datetime('now')`, formatted
+  // "YYYY-MM-DD HH:MM:SS" UTC with no timezone suffix) rather than the
+  // date-only "YYYY-MM-DD" strings weeksAgo() above expects — used for
+  // "new" badges that should track actual upload time, not a content date.
+  isRecent(createdAt, days) {
+    if (!createdAt) return false;
+    const iso = String(createdAt).includes('T') ? createdAt : createdAt.replace(' ', 'T') + 'Z';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return false;
+    return (Date.now() - d.getTime()) < days * 86400000;
+  },
+
+  // Position of a parsha name (individual or already-combined, e.g.
+  // "ויקהל-פקודי") in the Torah-reading-order rotation — for sorting
+  // dropdowns/lists so פ' בראשית comes before פ' נח etc, instead of
+  // Hebrew alphabetical order. Unknown names sort last.
+  parshaOrder(name) {
+    const CFG = window.MOISDES.CFG;
+    const idx = CFG.parshiyot.findIndex((p) => (CFG.combined[p] || p) === name || p === name);
+    return idx === -1 ? CFG.parshiyot.length : idx;
+  },
 };

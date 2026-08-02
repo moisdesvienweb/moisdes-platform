@@ -44,7 +44,13 @@ window.MOISDES.zmanim = (function () {
   // Returns { sunrise, sunset, solarNoon } as JS Date objects for the
   // given calendar date (local calendar day) at (lat, lon), optionally
   // corrected for the observer's elevation in meters.
-  function getSunTimes(date, lat, lon, elevation) {
+  //
+  // This simplified formula (SunCalc-style, low-order series) is kept
+  // only as a fallback for the rare case spa.js failed to load — the
+  // real engine is NREL's Solar Position Algorithm (spa.js), a far
+  // higher-precision reference implementation (full VSOP87 + nutation
+  // series vs. this formula's handful of terms). See getSunTimes() below.
+  function getSunTimesNoaa(date, lat, lon, elevation) {
     const lw = rad * -lon, phi = rad * lat;
     const d = toDays(date), n = julianCycle(d, lw), ds = approxTransit(0, lw, n);
     const M = solarMeanAnomaly(ds), L = eclipticLongitude(M), dec = declination(L, 0);
@@ -59,6 +65,14 @@ window.MOISDES.zmanim = (function () {
     const Jset = getSetJ(h0, lw, phi, dec, n, M, L);
     const Jrise = Jnoon - (Jset - Jnoon);
     return { sunrise: fromJulian(Jrise), sunset: fromJulian(Jset), solarNoon: fromJulian(Jnoon) };
+  }
+
+  // Prefers the NREL Solar Position Algorithm (spa.js) when it's loaded
+  // on the page; falls back to the simplified formula above otherwise.
+  function getSunTimes(date, lat, lon, elevation) {
+    const spa = window.MOISDES.spa;
+    if (spa) return spa.sunTimes(date, lat, lon, elevation);
+    return getSunTimesNoaa(date, lat, lon, elevation);
   }
 
   function addMinutes(date, mins) { return new Date(date.getTime() + mins * 60000); }

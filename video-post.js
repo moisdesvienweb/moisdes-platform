@@ -78,7 +78,7 @@
         <div class="event-tags" data-tags></div>
         <div data-share></div>
       </div>
-      <div class="detail-body">${util.eh(v.description || '')}</div>
+      <div class="detail-body">${v.description || ''}</div>
       <div class="stack" data-gallery style="margin-top:1.5rem"></div>
     `;
 

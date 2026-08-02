@@ -49,11 +49,11 @@
 
   function itemKey(type, data) { return `${type}-${data.id}`; }
 
-  async function renderMosaicTile(type, data, big) {
+  async function renderMosaicTile(type, data, sizeClass) {
     const meta = TYPE_META[type];
     const img = await imageFor(type, data);
     const tile = document.createElement('a');
-    tile.className = 'mosaic-item' + (big ? ' mosaic-big' : '');
+    tile.className = 'mosaic-item' + (sizeClass ? ' ' + sizeClass : '');
     tile.href = meta.href(data);
     tile.innerHTML = `
       ${img ? `<div class="mosaic-media" style="background-image:url('${util.eh(img)}')"></div>` : ''}
@@ -138,9 +138,14 @@
       chosen.sort((a, b) => util.dateDesc(a.data.date, b.data.date));
 
       mosaicEl.innerHTML = '';
-      const featuredKey = featuredPost ? itemKey('post', featuredPost) : null;
-      for (const { type, data } of chosen) {
-        const tile = await renderMosaicTile(type, data, itemKey(type, data) === featuredKey);
+      // First tile (newest post) is always the big feature. Beyond that,
+      // a couple of tiles in each half of the grid get a wide/tall span
+      // for a proper magazine rhythm — otherwise every non-featured tile
+      // is a uniform 1x1, which looks flat next to the one big tile.
+      const SIZE_BY_INDEX = { 0: 'mosaic-big', 2: 'mosaic-tall', 3: 'mosaic-wide', 7: 'mosaic-tall', 8: 'mosaic-wide' };
+      for (let i = 0; i < chosen.length; i++) {
+        const { type, data } = chosen[i];
+        const tile = await renderMosaicTile(type, data, SIZE_BY_INDEX[i] || '');
         mosaicEl.appendChild(tile);
       }
 

@@ -56,22 +56,38 @@
   } catch (e) { /* ticker just stays hidden */ }
 })();
 
-// ── NEWSLETTER + CONTACT FOOTER BUTTONS (shared across every page) —
-// newsletter shows once a URL is set via Admin → Settings; contact shows
-// once a form with the configured slug exists (Admin → Forms).
+// ── NEWSLETTER + CONTACT + CUSTOM FOOTER BUTTONS (shared across every
+// page) — newsletter shows once a URL is set via Admin → Settings;
+// contact shows once a form with the configured slug exists (Admin →
+// Forms); any number of additional custom buttons (label + URL, added
+// from Admin → Settings) render alongside them, same size, one row.
 (async function () {
   if (!window.MOISDES || !window.MOISDES.api) return;
   const newsletterBtn = document.getElementById('newsletter-btn');
   const contactBtn = document.getElementById('contact-btn');
+  const actionsEl = document.querySelector('.footer-actions');
 
-  if (newsletterBtn) {
-    window.MOISDES.api.get('/api/settings').then(({ settings }) => {
-      if (settings.newsletter_url) {
-        newsletterBtn.href = settings.newsletter_url;
-        newsletterBtn.style.display = '';
+  window.MOISDES.api.get('/api/settings').then(({ settings }) => {
+    if (newsletterBtn && settings.newsletter_url) {
+      newsletterBtn.href = settings.newsletter_url;
+      newsletterBtn.style.display = '';
+    }
+    if (actionsEl) {
+      let buttons = [];
+      try { buttons = JSON.parse(settings.footer_buttons || '[]'); } catch (e) { buttons = []; }
+      if (Array.isArray(buttons)) {
+        buttons.forEach(({ label, url }) => {
+          if (!label || !url) return;
+          const a = document.createElement('a');
+          a.className = 'btn btn-sm newsletter-btn';
+          a.href = url;
+          if (/^https?:\/\//i.test(url)) { a.target = '_blank'; a.rel = 'noopener'; }
+          a.textContent = label;
+          actionsEl.appendChild(a);
+        });
       }
-    }).catch(() => {});
-  }
+    }
+  }).catch(() => {});
 
   const contactSlug = window.MOISDES.CFG && window.MOISDES.CFG.contactFormSlug;
   if (contactBtn && contactSlug) {

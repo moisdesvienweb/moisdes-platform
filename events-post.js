@@ -223,7 +223,7 @@
         <div data-share></div>
       </div>
       ${ev.location ? `<div class="event-meta">${util.eh(ev.location)}</div>` : ''}
-      <div class="detail-body">${util.eh(ev.description || '')}</div>
+      <div class="detail-body">${ev.description || ''}</div>
       <div data-player></div>
       <div class="stack" data-gallery style="margin-top:1rem"></div>
     `;

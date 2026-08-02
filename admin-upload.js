@@ -35,6 +35,15 @@ window.MOISDES.adminUpload = (function () {
     if (value) t.value = value;
     return t;
   }
+  // Rich-text (bold/italic/underline/font/size/alignment/RTL-LTR) field
+  // for "description"-style content — replaces a plain textarea. Returns
+  // the wrapped <div class="field-group"> to append, plus the editor
+  // object (.getHtml() used at submit time instead of reading .value).
+  function richTextField(labelText, initialHtml) {
+    const host = el('div');
+    const editor = window.MOISDES.richtext.createEditor(host, initialHtml || '');
+    return { group: fieldGroup(labelText, host), editor };
+  }
   function statusEl() { return el('div', 'status-msg'); }
   function setStatus(node, message, ok) {
     node.textContent = message;
@@ -51,6 +60,39 @@ window.MOISDES.adminUpload = (function () {
       s.appendChild(o);
     });
     return s;
+  }
+
+  // Same free-text-input + "pick an existing one" dropdown pattern as
+  // AF.createCategoryInput, but for PDF issue years — existing years are
+  // pulled from the already-published PDFs (no dedicated backend table
+  // needed, since years live directly on the pdfs rows). Picking an
+  // existing year still doesn't block typing a new one.
+  function yearInput(initialValue) {
+    const row = el('div', 'field-row');
+    const input = el('input');
+    input.type = 'text';
+    input.placeholder = 'Issue year / number';
+    input.value = initialValue || '';
+    const select = el('select');
+    select.innerHTML = '<option value="">Existing years…</option>';
+    select.addEventListener('change', () => { if (select.value) { input.value = select.value; select.value = ''; } });
+    row.appendChild(input);
+    row.appendChild(select);
+
+    api.get('/api/pdfs').then(({ pdfs }) => {
+      const years = [...new Set((pdfs || []).map((p) => p.year).filter(Boolean))].sort((a, b) => {
+        const na = parseFloat(a), nb = parseFloat(b);
+        if (!isNaN(na) && !isNaN(nb)) return nb - na;
+        return String(b).localeCompare(String(a));
+      });
+      years.forEach((y) => {
+        const o = el('option', '', y);
+        o.value = y;
+        select.appendChild(o);
+      });
+    }).catch(() => {});
+
+    return { row, getValue: () => input.value.trim() };
   }
 
   // ── FORM BUILDER — shared by "Upload" (create) and "Browse & Edit" (edit) ──
@@ -96,8 +138,8 @@ window.MOISDES.adminUpload = (function () {
     if (type === 'posts') {
       const title = textInput('Title', prefillSrc?.title);
       form.appendChild(fieldGroup('Title', title));
-      const body = textarea('Post text...', prefillSrc?.body);
-      form.appendChild(fieldGroup('Text', body));
+      const bodyField = richTextField('Text', prefillSrc?.body);
+      form.appendChild(bodyField.group);
 
       const catWrap = el('div');
       form.appendChild(fieldGroup('Category', catWrap));
@@ -111,7 +153,7 @@ window.MOISDES.adminUpload = (function () {
       form.appendChild(fieldGroup('Images', galleryWrap));
       gallery = AF.createGalleryUploader(galleryWrap, { accept: 'image/*', existingFolder: existing?.folder_url });
 
-      getExtra = () => ({ title: title.value, body: body.value, category: categoryInput.getValue(), tags: tagInput.getValue() });
+      getExtra = () => ({ title: title.value, body: bodyField.editor.getHtml(), category: categoryInput.getValue(), tags: tagInput.getValue() });
 
     } else if (type === 'posters') {
       const parshaWrap = el('div');
@@ -135,8 +177,8 @@ window.MOISDES.adminUpload = (function () {
       form.appendChild(fieldGroup('Category', catWrap));
       categoryInput = AF.createCategoryInput(catWrap, prefillSrc?.category);
 
-      const description = textarea('Description', prefillSrc?.description);
-      form.appendChild(fieldGroup('Description', description));
+      const descriptionField = richTextField('Description', prefillSrc?.description);
+      form.appendChild(descriptionField.group);
 
       const tagWrap = el('div');
       form.appendChild(fieldGroup('Tags', tagWrap));
@@ -182,7 +224,7 @@ window.MOISDES.adminUpload = (function () {
       form.appendChild(fieldGroup('Photos & audio', galleryWrap));
       gallery = AF.createGalleryUploader(galleryWrap, { existingFolder: existing?.folder_url });
 
-      getExtra = () => ({ title: title.value, location: location.value, category: categoryInput.getValue(), description: description.value, tags: tagInput.getValue() });
+      getExtra = () => ({ title: title.value, location: location.value, category: categoryInput.getValue(), description: descriptionField.editor.getHtml(), tags: tagInput.getValue() });
       form._getEventThumb = () => (eventThumbFile ? { file: eventThumbFile, name: eventThumbFileName } : null);
 
     } else if (type === 'videos') {
@@ -195,8 +237,8 @@ window.MOISDES.adminUpload = (function () {
       form.appendChild(fieldGroup('Category', catWrap));
       categoryInput = AF.createCategoryInput(catWrap, prefillSrc?.category);
 
-      const description = textarea('Description', prefillSrc?.description);
-      form.appendChild(fieldGroup('Description', description));
+      const descriptionField = richTextField('Description', prefillSrc?.description);
+      form.appendChild(descriptionField.group);
 
       const videoUrl = textInput('https://youtube.com/watch?v=... (optional)', prefillSrc?.video_url);
       form.appendChild(fieldGroup('YouTube URL (optional)', videoUrl));
@@ -237,7 +279,7 @@ window.MOISDES.adminUpload = (function () {
       form.appendChild(fieldGroup('Extra images (optional)', galleryWrap));
       gallery = AF.createGalleryUploader(galleryWrap, { accept: 'image/*', existingFolder: existing?.folder_url });
 
-      getExtra = () => ({ title: title.value, location: location.value, category: categoryInput.getValue(), description: description.value, video_url: videoUrl.value, tags: tagInput.getValue() });
+      getExtra = () => ({ title: title.value, location: location.value, category: categoryInput.getValue(), description: descriptionField.editor.getHtml(), video_url: videoUrl.value, tags: tagInput.getValue() });
       form._getVideoFile = () => (videoFile ? { file: videoFile, name: videoFileName } : null);
 
     } else if (type === 'pdfs') {
@@ -256,8 +298,8 @@ window.MOISDES.adminUpload = (function () {
       parshaWrap.appendChild(select);
       form.appendChild(fieldGroup('Parsha', parshaWrap));
 
-      const year = textInput('Issue year / number', prefillSrc?.year);
-      form.appendChild(fieldGroup('Year', year));
+      const year = yearInput(prefillSrc?.year);
+      form.appendChild(fieldGroup('Year', year.row));
 
       // PDF file — picking one auto-generates a cover thumbnail from its
       // first page (via pdf.js) and lets the filename be renamed before
@@ -351,7 +393,7 @@ window.MOISDES.adminUpload = (function () {
       });
       thumbNameInput.addEventListener('input', () => { manualThumbFileName = thumbNameInput.value; });
 
-      getExtra = () => ({ title: title.value, category: categoryInput.getValue(), language: language.value, parsha: select.value, year: year.value });
+      getExtra = () => ({ title: title.value, category: categoryInput.getValue(), language: language.value, parsha: select.value, year: year.getValue() });
 
       form._getPdfFile = () => ({ file: pdfFile, name: pdfFileName });
       form._getThumb = () => manualThumbFile
