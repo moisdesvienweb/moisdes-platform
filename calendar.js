@@ -28,7 +28,7 @@
   const slug = window.MOISDES.CFG.simchaFormSlug;
   if (slug) {
     api.get(`/api/forms/${slug}/public`).then(() => {
-      reportBtn.href = `/form/${slug}`;
+      reportBtn.href = `/form.html?slug=${encodeURIComponent(slug)}`;
       reportBtn.style.display = '';
     }).catch(() => {});
   }

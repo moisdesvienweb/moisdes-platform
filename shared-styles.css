@@ -766,7 +766,18 @@ audio { width: 100%; max-width: 400px; margin-top: .5rem; }
    event-heavy day stretches ALL cells in that row (CSS Grid rows
    default to equal height across their whole row), so weeks with
    events end up visibly taller than weeks without. */
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto; grid-auto-rows: 118px; gap: 3px; }
+/* min-width:0 is the actual fix for the width-varies-between-months bug:
+   .cal-grid is itself a grid item inside .calendar-body's 1fr column, and
+   a bare "1fr" track's minimum size defaults to auto (= its content's
+   min-content width), not 0. Some months show a long nowrap holiday/parsha
+   label; without this, THAT month's .cal-grid (and so its whole 7-column
+   width) would refuse to shrink below that label's width, while a month
+   without one shrinks to the "true" 1fr share — different pixel widths
+   for the identical layout depending on which month happens to be shown.
+   (scrollbar-gutter:stable, tried previously, addressed a real but
+   different width-affecting issue — this is the one that actually
+   varied per-month.) */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: auto; grid-auto-rows: 118px; gap: 3px; min-width: 0; }
 .cal-weekday {
   text-align: center; font-size: .75rem; font-weight: 700; color: var(--ink-faint);
   padding: .5rem 0;

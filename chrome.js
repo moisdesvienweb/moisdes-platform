@@ -76,7 +76,7 @@
   const contactSlug = window.MOISDES.CFG && window.MOISDES.CFG.contactFormSlug;
   if (contactBtn && contactSlug) {
     window.MOISDES.api.get(`/api/forms/${contactSlug}/public`).then(() => {
-      contactBtn.href = `/form/${contactSlug}`;
+      contactBtn.href = `/form.html?slug=${encodeURIComponent(contactSlug)}`;
       contactBtn.style.display = '';
     }).catch(() => {});
   }

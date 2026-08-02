@@ -110,7 +110,8 @@ window.MOISDES.adminForms = (function () {
     detailEl.innerHTML = '';
 
     const settings = form.settings || {};
-    const publicUrl = `${location.origin}/form/${form.slug}`;
+    const publicFormUrl = (slug) => `${location.origin}/form.html?slug=${encodeURIComponent(slug)}`;
+    const publicUrl = publicFormUrl(form.slug);
 
     // -- Settings --
     const settingsWrap = el('div');
@@ -130,7 +131,8 @@ window.MOISDES.adminForms = (function () {
     const linkP = el('p', 'state-msg', `Public URL: <a href="${publicUrl}" target="_blank" rel="noopener">${publicUrl}</a>`);
     settingsWrap.appendChild(linkP);
     slugInput.addEventListener('input', () => {
-      linkP.innerHTML = `Public URL: <a href="${location.origin}/form/${slugInput.value}" target="_blank" rel="noopener">${location.origin}/form/${slugInput.value}</a>`;
+      const u = publicFormUrl(slugInput.value);
+      linkP.innerHTML = `Public URL: <a href="${u}" target="_blank" rel="noopener">${u}</a>`;
     });
 
     const descInput = el('textarea');

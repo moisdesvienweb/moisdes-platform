@@ -111,15 +111,21 @@
   const util = window.MOISDES.util;
   const app = document.getElementById('app');
 
-  const m = location.pathname.match(/^\/form\/([^/]+)\/?$/);
-  if (!m) {
+  // Query string, not a path segment (was /form/<slug>) — Cloudflare
+  // Pages' automatic clean-URL canonicalization treats a literal
+  // form.html as the canonical asset for the route /form and issues its
+  // own redirect collapsing any /form/<slug> path down to bare /form,
+  // stripping the slug before a custom _redirects rule ever got a chance
+  // to run. A query string is immune to that whole class of routing
+  // ambiguity: /form.html?slug=<slug> is just this one real file, loaded
+  // directly, with the slug read from the query string client-side.
+  const slug = new URLSearchParams(location.search).get('slug');
+  if (!slug) {
     app.innerHTML = `
       <h1 class="page-title">דאס בלאט איז נישט געפונען געווארן</h1>
       <p><a href="/">צוריק צום הויפט בלאט</a></p>`;
     return;
   }
-
-  const slug = m[1];
 
   let data;
   try {
@@ -133,6 +139,7 @@
 
   const { form, fields } = data;
   const settings = form.settings || {};
+  if (form.title) document.title = `${form.title} — חצר וויען`;
 
   if (settings.status === 'closed') {
     app.innerHTML = `

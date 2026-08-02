@@ -15,6 +15,11 @@
   const params = new URLSearchParams(location.search);
   const activeTag = params.get('tag');
 
+  function excerpt(html, len) {
+    const text = String(html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text.length > len ? text.slice(0, len) + '…' : text;
+  }
+
   // Old-style "#event-<id>" links (from before events got their own
   // pages) redirect straight to the new detail URL instead of landing on
   // a dead anchor.
@@ -39,21 +44,20 @@
     }
     const sorted = [...filtered].sort((a, b) => util.dateDesc(a.date, b.date));
     list.innerHTML = '';
-    list.classList.add('events-grid');
 
     for (const ev of sorted) {
       const coverUrl = ev.thumb_url ? api.r2Url(ev.thumb_url) : await api.firstImageUrl(ev.folder_url);
 
       const card = document.createElement('a');
-      card.className = 'card event-card-compact';
       card.href = `/events/post.html?id=${ev.id}`;
+      card.className = 'card';
       card.innerHTML = `
         <div class="card-media">${coverUrl ? `<img src="${util.eh(coverUrl)}" alt="">` : ''}</div>
         <div class="card-body">
           <div class="card-date">${hebrew.isoToHebrewString(ev.date)}${ev.location ? ' · ' + util.eh(ev.location) : ''}</div>
           <div class="card-title">${util.eh(ev.title)}</div>
-        </div>
-      `;
+          <p class="card-excerpt">${util.eh(excerpt(ev.description, 90))}</p>
+        </div>`;
       list.appendChild(card);
     }
   } catch (e) {
