@@ -1,17 +1,25 @@
 /* ================================================================
    MOISDES ADMIN — styles (LTR, English)
+   Navy/cyan/white theme, matching the Everything Shul portal brand
+   (same family used on the "Powered by Everything Shul" email footer).
    ================================================================ */
 
 :root {
-  --bg: #1c1c1e;
-  --panel: #242426;
-  --panel-2: #2c2c2f;
-  --line: rgba(255, 255, 255, .1);
-  --ink: #f2f2f2;
-  --ink-soft: rgba(255, 255, 255, .62);
-  --ink-faint: rgba(255, 255, 255, .38);
-  --accent: #d9a55c;
-  --danger: #e26a5f;
+  --bg: #eef3f9;
+  --panel: #ffffff;
+  --panel-2: #f2f6fb;
+  --line: #dbe4ee;
+  --ink: #1c2f4d;
+  --ink-soft: #33475b;
+  --ink-faint: #75879c;
+  --accent: #25a9ea;
+  --accent-ink: #0d2b45;
+  --danger: #c0392b;
+  --header-bg: #1e3766;
+  --header-bg-2: #16294d;
+  --header-link: #a9c4e6;
+  --header-link-active-bg: rgba(37, 169, 234, .28);
+  --header-link-active-ink: #6cc9f2;
 }
 
 * , *::before, *::after { box-sizing: border-box; }
@@ -24,41 +32,41 @@ body {
 }
 button, input, select, textarea { font-family: inherit; }
 
-#admin-root { display: flex; min-height: 100vh; }
+#admin-root { display: flex; flex-direction: column; min-height: 100vh; }
 
-/* ── SIDEBAR ────────────────────────────────────────────────────── */
+/* ── TOP NAV ────────────────────────────────────────────────────── */
 
-.sidebar {
-  width: 210px;
-  flex-shrink: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem 0;
+.app-header {
+  display: flex; align-items: center; gap: 1.5rem;
+  background: var(--header-bg);
+  padding: 0 1.5rem;
+  flex-wrap: wrap;
 }
-.sidebar-logo { padding: 0 1.5rem 1.5rem; }
-.sidebar-logo img { height: 34px; }
-.sidebar-nav { display: flex; flex-direction: column; gap: .1rem; padding: 0 .75rem; }
+.app-header-brand { display: flex; align-items: center; gap: .6rem; padding: .85rem 0; flex-shrink: 0; }
+.app-header-brand img { height: 30px; }
+.app-header-brand span { color: var(--header-link-active-ink); font-weight: 700; font-size: .95rem; }
+.sidebar-nav { display: flex; align-items: center; gap: .15rem; flex: 1; flex-wrap: wrap; }
 .sidebar-link {
   text-align: left;
-  background: none; border: none; color: var(--ink-soft);
-  padding: .65rem 1rem; border-radius: 4px; cursor: pointer; font-size: .92rem; font-weight: 500;
+  background: none; border: none; color: var(--header-link);
+  padding: .6rem .85rem; border-radius: 5px; cursor: pointer; font-size: .86rem; font-weight: 500;
+  white-space: nowrap;
 }
-.sidebar-link:hover { background: var(--panel-2); color: var(--ink); }
-.sidebar-link.active { background: var(--panel-2); color: var(--ink); font-weight: 700; }
-.sidebar-logout { margin-top: auto; color: var(--danger); }
+.sidebar-link:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.sidebar-link.active { background: var(--header-link-active-bg); color: var(--header-link-active-ink); font-weight: 700; }
+.sidebar-logout { color: #f3b4ac; margin-inline-start: auto; }
+.sidebar-logout:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 
 .nav-badge {
   display: inline-block; margin-inline-start: .4rem;
-  background: var(--accent); color: #2c1608;
+  background: var(--accent); color: var(--accent-ink);
   font-size: .7rem; font-weight: 700; line-height: 1;
   padding: .2rem .4rem; border-radius: 10px;
 }
 
 /* ── MAIN / PANELS ──────────────────────────────────────────────── */
 
-.admin-main { flex: 1; padding: 2rem 2.5rem 4rem; max-width: 1100px; }
+.admin-main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
 .panel { display: none; }
 .panel.active { display: block; }
 h1 { font-size: 1.4rem; margin: 0 0 1.25rem; }
@@ -120,8 +128,8 @@ h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
   border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
   padding: .5rem 1rem; border-radius: 4px; cursor: pointer; font-size: .85rem; font-weight: 600;
 }
-.btn:hover { background: #343437; }
-.btn-primary { background: var(--accent); color: #241505; border-color: var(--accent); }
+.btn:hover { background: #e3ecf5; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn-primary:hover { filter: brightness(1.08); }
 .btn-danger { color: var(--danger); }
 .btn-sm { padding: .3rem .6rem; font-size: .78rem; }
@@ -134,7 +142,7 @@ h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
   background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-soft);
   padding: .35rem .7rem; border-radius: 4px; cursor: pointer; font-size: .78rem;
 }
-.date-mode-btn.active { background: var(--accent); color: #241505; border-color: var(--accent); font-weight: 700; }
+.date-mode-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
 .date-mode-panel { display: none; }
 .date-mode-panel.active { display: block; }
 .date-resolved { font-size: .82rem; color: var(--ink-faint); margin-top: .4rem; }
@@ -178,7 +186,7 @@ h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
 .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width .2s; }
 
 .status-msg { font-size: .85rem; min-height: 1.2rem; margin-top: .5rem; }
-.status-msg.ok { color: #7fd88f; }
+.status-msg.ok { color: #2e7d4f; }
 .status-msg.err { color: var(--danger); }
 
 /* ── BROWSE TABLE ───────────────────────────────────────────────── */
